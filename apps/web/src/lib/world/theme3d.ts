@@ -1,0 +1,78 @@
+export const THEME_3D_CONFIG = {
+  dark: {
+    ambient: { color: '#ffffff', intensity: 0.3 },
+    directional: { color: '#ffffff', intensity: 1.2 },
+    pointLight: { color: '#c0c0ff', intensity: 0.8 },
+    hemi: { sky: '#111133', ground: '#000000', intensity: 0.4 },
+    core: {
+      color: '#1a1a1a',
+      emissive: '#ffffff',
+      emissiveIntensity: 0.04,
+      ringColor: '#ffffff',
+    },
+    orb: {
+      color: '#2a2a2a',
+      emissive: '#ffffff',
+      emissiveIntensity: 0.06,
+      ringColor: '#cccccc',
+      highlightColor: '#ffffff',
+    },
+    crystal: {
+      color: '#1a1a2e',
+      emissive: '#6060ff',
+      emissiveIntensity: 0.12,
+      edgeColor: '#4040cc',
+      highlightColor: '#8888ff',
+    },
+    device: {
+      color: '#1e1e1e',
+      emissive: '#ffffff',
+      emissiveIntensity: 0.05,
+      layerColor: '#2a2a2a',
+      edgeColor: '#888888',
+      highlightColor: '#dddddd',
+    },
+    label: {
+      defaultColor: '#8a8a8a',
+      hoveredColor: '#f0f0f0',
+    },
+  },
+  light: {
+    ambient: { color: '#ffffff', intensity: 0.5 },
+    directional: { color: '#fff8f0', intensity: 1.8 },
+    pointLight: { color: '#4040ff', intensity: 0.4 },
+    hemi: { sky: '#e0e8ff', ground: '#a0a060', intensity: 0.3 },
+    core: {
+      color: '#f0f0f0',
+      emissive: '#000000',
+      emissiveIntensity: 0.02,
+      ringColor: '#1a1a1a',
+    },
+    orb: {
+      color: '#e8e8e8',
+      emissive: '#000000',
+      emissiveIntensity: 0.03,
+      ringColor: '#444444',
+      highlightColor: '#0a0a0a',
+    },
+    crystal: {
+      color: '#dde0ff',
+      emissive: '#2020aa',
+      emissiveIntensity: 0.06,
+      edgeColor: '#4444cc',
+      highlightColor: '#2222aa',
+    },
+    device: {
+      color: '#f0f0f0',
+      emissive: '#000000',
+      emissiveIntensity: 0.02,
+      layerColor: '#e0e0e0',
+      edgeColor: '#555555',
+      highlightColor: '#0a0a0a',
+    },
+    label: {
+      defaultColor: '#6b6b6b',
+      hoveredColor: '#0a0a0a',
+    },
+  },
+} as const

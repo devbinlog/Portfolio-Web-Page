@@ -1,0 +1,13 @@
+{
+  "name": "@portfolio/config",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./tailwind": "./tailwind/index.js",
+    "./eslint": "./eslint/index.js",
+    "./tsconfig": "./tsconfig"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}

@@ -1,0 +1,153 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ──────────────────────────────────────────
+   시맨틱 색상 토큰 — 라이트 테마 (기본)
+   ────────────────────────────────────────── */
+:root {
+  /* surface */
+  --surface-base: #fafafa;
+  --surface-elevated: #ffffff;
+  --surface-overlay: rgba(250, 250, 250, 0.94);
+  --surface-input: #f4f4f4;
+
+  /* text */
+  --text-primary: #0a0a0a;
+  --text-secondary: #3d3d3d;
+  --text-disabled: #7a7a7a;
+  --text-inverse: #ffffff;
+  --text-link: #1a1a1a;
+
+  /* border */
+  --border-default: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.16);
+  --border-focus: rgba(0, 0, 0, 0.5);
+
+  /* accent */
+  --accent-primary: #0a0a0a;
+  --accent-secondary: #3a3a3a;
+  --accent-muted: rgba(0, 0, 0, 0.06);
+  --accent-default: #0a0a0a;
+  --accent-hover: #2a2a2a;
+
+  /* feedback */
+  --feedback-success: #16a34a;
+  --feedback-warning: #d97706;
+  --feedback-error: #dc2626;
+  --feedback-info: #2563eb;
+}
+
+/* ──────────────────────────────────────────
+   시맨틱 색상 토큰 — 다크 테마
+   ────────────────────────────────────────── */
+.dark {
+  /* surface */
+  --surface-base: #0a0a0a;
+  --surface-elevated: #141414;
+  --surface-overlay: rgba(10, 10, 10, 0.92);
+  --surface-input: #1a1a1a;
+
+  /* text */
+  --text-primary: #f0f0f0;
+  --text-secondary: #c0c0c0;
+  --text-disabled: #787878;
+  --text-inverse: #0a0a0a;
+  --text-link: #e0e0e0;
+
+  /* border */
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-focus: rgba(255, 255, 255, 0.5);
+
+  /* accent */
+  --accent-primary: #ffffff;
+  --accent-secondary: #c0c0c0;
+  --accent-muted: rgba(255, 255, 255, 0.08);
+  --accent-default: #ffffff;
+  --accent-hover: #d0d0d0;
+
+  /* feedback */
+  --feedback-success: #4ade80;
+  --feedback-warning: #facc15;
+  --feedback-error: #f87171;
+  --feedback-info: #60a5fa;
+}
+
+/* ──────────────────────────────────────────
+   기반 스타일
+   ────────────────────────────────────────── */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--surface-base);
+    color: var(--text-primary);
+    transition: background-color 0s, color 0s;
+  }
+
+  /* 포커스 링 전역 기준 */
+  :focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
+  }
+
+  /* 스크롤바 다크 테마 */
+  .dark ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .dark ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 3px;
+  }
+}
+
+/* ──────────────────────────────────────────
+   감소된 모션 처리
+   ────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ──────────────────────────────────────────
+   어드민 폼 유틸리티
+   ────────────────────────────────────────── */
+@layer components {
+  .input-base {
+    @apply w-full px-3 py-2 rounded bg-surface-input border border-border-default
+      text-sm text-text-primary placeholder:text-text-disabled
+      focus:outline-none focus:border-border-focus transition-colors;
+  }
+}
+
+/* ──────────────────────────────────────────
+   3D Canvas 기반 스타일
+   ────────────────────────────────────────── */
+.world-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+}
+
+.world-canvas canvas {
+  display: block;
+}
