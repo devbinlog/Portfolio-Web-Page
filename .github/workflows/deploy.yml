@@ -20,8 +20,8 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install
-      - run: cd packages/types && npx tsc --noEmit
-      - run: cd packages/utils && npx tsc --noEmit
+      - run: cd packages/types && pnpm exec tsc --noEmit
+      - run: cd packages/utils && pnpm exec tsc --noEmit
 
   # Vercel은 GitHub 연동 후 자동 배포
   # Railway는 GitHub 연동 후 자동 배포
