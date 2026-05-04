@@ -165,6 +165,8 @@ User (Fan)          User (Artist)        User (Venue Manager)
  ├── Quantity Management
  └── Booking Confirmation`,
       techStack: ["Next.js 15", "React 19", "TypeScript", "Tailwind CSS v4", "Prisma", "Supabase", "NextAuth.js", "Vercel"],
+            thumbnailUrl: "/images/projects/bandstage-hero.png",
+      heroImageUrl: "/images/projects/bandstage-hero.png",
       isFeatured: true,
       featuredOrder: 1,
       isPublished: true,
@@ -218,6 +220,8 @@ User (Fan)          User (Artist)        User (Venue Manager)
  ├── Quantity Management
  └── Booking Confirmation`,
       techStack: ["Next.js 15", "React 19", "TypeScript", "Tailwind CSS v4", "Prisma", "Supabase", "NextAuth.js", "Vercel"],
+            thumbnailUrl: "/images/projects/bandstage-hero.png",
+      heroImageUrl: "/images/projects/bandstage-hero.png",
       isFeatured: true,
       featuredOrder: 1,
       isPublished: true,
@@ -315,6 +319,8 @@ User Input (Mouse / Keyboard / Touch / Gyroscope)
                       |
             Card Data -> 3D Scene`,
       techStack: ["React 18", "TypeScript", "Three.js", "React Three Fiber", "Zustand", "Firebase", "Spotify API", "Vite"],
+            thumbnailUrl: "/images/projects/page-of-artist-hero.png",
+      heroImageUrl: "/images/projects/page-of-artist-hero.png",
       isFeatured: true,
       featuredOrder: 2,
       isPublished: true,
@@ -402,6 +408,8 @@ User Input (Mouse / Keyboard / Touch / Gyroscope)
                       |
             Card Data -> 3D Scene`,
       techStack: ["React 18", "TypeScript", "Three.js", "React Three Fiber", "Zustand", "Firebase", "Spotify API", "Vite"],
+            thumbnailUrl: "/images/projects/page-of-artist-hero.png",
+      heroImageUrl: "/images/projects/page-of-artist-hero.png",
       isFeatured: true,
       featuredOrder: 2,
       isPublished: true,
@@ -489,6 +497,8 @@ User Input
           v
  Result UI`,
       techStack: ["Python", "FastAPI", "Next.js", "TypeScript", "SQLAlchemy", "Stable Diffusion", "ComfyUI", "PostgreSQL"],
+            thumbnailUrl: "/images/projects/mde-hero.png",
+      heroImageUrl: "/images/projects/mde-hero.png",
       isFeatured: true,
       featuredOrder: 3,
       isPublished: true,
@@ -568,6 +578,8 @@ User Input
           v
  Result UI`,
       techStack: ["Python", "FastAPI", "Next.js", "TypeScript", "SQLAlchemy", "Stable Diffusion", "ComfyUI", "PostgreSQL"],
+            thumbnailUrl: "/images/projects/mde-hero.png",
+      heroImageUrl: "/images/projects/mde-hero.png",
       isFeatured: true,
       featuredOrder: 3,
       isPublished: true,
@@ -639,6 +651,8 @@ faster-whisper 기반 STT를 적용해 실시간 음성 인식을 처리하고,
                                                          ↓
                               TTS(감정 톤 제어) ← LLM(감정 컨텍스트 반영)`,
       techStack: ["Python", "FastAPI", "WebSocket", "faster-whisper", "Ollama", "Claude API", "Next.js 14", "Tailwind CSS"],
+            thumbnailUrl: "/images/projects/emotion-hero.png",
+      heroImageUrl: "/images/projects/emotion-hero.png",
       isFeatured: true,
       featuredOrder: 4,
       isPublished: true,
@@ -700,6 +714,8 @@ faster-whisper 기반 STT를 적용해 실시간 음성 인식을 처리하고,
                                                          ↓
                               TTS(감정 톤 제어) ← LLM(감정 컨텍스트 반영)`,
       techStack: ["Python", "FastAPI", "WebSocket", "faster-whisper", "Ollama", "Claude API", "Next.js 14", "Tailwind CSS"],
+            thumbnailUrl: "/images/projects/emotion-hero.png",
+      heroImageUrl: "/images/projects/emotion-hero.png",
       isFeatured: true,
       featuredOrder: 4,
       isPublished: true,
@@ -796,6 +812,8 @@ WebCam Feed (30fps)
     v
 [MIDI/OSC Output] → External DAW`,
       techStack: ["React 18", "TypeScript", "Tauri", "Rust", "MediaPipe", "Web Audio API", "Zustand", "Vite"],
+            thumbnailUrl: "/images/projects/muse-hero.png",
+      heroImageUrl: "/images/projects/muse-hero.png",
       isFeatured: true,
       featuredOrder: 5,
       isPublished: true,
@@ -883,6 +901,8 @@ WebCam Feed (30fps)
     v
 [MIDI/OSC Output] → External DAW`,
       techStack: ["React 18", "TypeScript", "Tauri", "Rust", "MediaPipe", "Web Audio API", "Zustand", "Vite"],
+            thumbnailUrl: "/images/projects/muse-hero.png",
+      heroImageUrl: "/images/projects/muse-hero.png",
       isFeatured: true,
       featuredOrder: 5,
       isPublished: true,
@@ -979,6 +999,8 @@ Output Files
  ├── components/Header.tsx
  └── app/page.tsx`,
       techStack: ["Next.js 15", "TypeScript", "Tailwind CSS v4", "Python", "FastAPI", "Ollama", "Claude API", "PostgreSQL"],
+            thumbnailUrl: "/images/projects/designflow-hero.png",
+      heroImageUrl: "/images/projects/designflow-hero.png",
       isFeatured: true,
       featuredOrder: 6,
       isPublished: true,
@@ -1067,6 +1089,8 @@ Output Files
  ├── components/Header.tsx
  └── app/page.tsx`,
       techStack: ["Next.js 15", "TypeScript", "Tailwind CSS v4", "Python", "FastAPI", "Ollama", "Claude API", "PostgreSQL"],
+            thumbnailUrl: "/images/projects/designflow-hero.png",
+      heroImageUrl: "/images/projects/designflow-hero.png",
       isFeatured: true,
       featuredOrder: 6,
       isPublished: true,
