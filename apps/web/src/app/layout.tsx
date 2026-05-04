@@ -6,6 +6,7 @@ import { LoadingScreen } from '@/components/LoadingScreen'
 import '@/styles/globals.css'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://binlog-devbinlog.vercel.app'),
   title: {
     template: '%s | binlog',
     default: 'binlog — AI / LLM Engineer & Frontend Developer',
