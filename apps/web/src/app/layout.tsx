@@ -6,25 +6,25 @@ import '@/styles/globals.css'
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | Taebin Kim',
-    default: 'Taebin Kim — Frontend Developer',
+    template: '%s | binlog',
+    default: 'binlog — AI / LLM Engineer & Frontend Developer',
   },
   description:
-    'Building imagination through structure and interaction. Interactive web, 3D experience, and structured product thinking.',
-  keywords: ['Frontend Developer', 'React', 'Next.js', '3D', 'Interactive Web', 'Taebin Kim'],
-  authors: [{ name: 'Taebin Kim' }],
-  creator: 'Taebin Kim',
+    'Designing systems that transform unstructured input into structured user experiences.',
+  keywords: ['Frontend Developer', 'AI Engineer', 'LLM', 'React', 'Next.js', '3D', 'binlog'],
+  authors: [{ name: 'binlog' }],
+  creator: 'binlog',
   openGraph: {
     type: 'website',
     locale: 'ko_KR',
-    siteName: 'Taebin Kim Portfolio',
-    title: 'Taebin Kim — Frontend Developer',
-    description: 'Building imagination through structure and interaction.',
+    siteName: 'binlog Portfolio',
+    title: 'binlog — AI / LLM Engineer & Frontend Developer',
+    description: 'Designing systems that transform unstructured input into structured user experiences.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Taebin Kim — Frontend Developer',
-    description: 'Building imagination through structure and interaction.',
+    title: 'binlog — AI / LLM Engineer & Frontend Developer',
+    description: 'Designing systems that transform unstructured input into structured user experiences.',
   },
   robots: {
     index: true,
