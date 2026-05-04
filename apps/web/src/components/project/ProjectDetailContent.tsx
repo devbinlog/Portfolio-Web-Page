@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import type { ProjectDetail, CodeSnippet } from '@portfolio/types'
 import { TechBadge } from '@/components/ui/TechBadge'
-import { PlaceholderSlot } from './PlaceholderSlot'
 import { KeyCodeSection } from './CodeBlock'
 
 interface ProjectDetailContentProps {
@@ -156,44 +155,34 @@ export function ProjectDetailContent({ project }: ProjectDetailContentProps) {
       )}
 
       {/* 미디어 갤러리 */}
-      {project.media.length > 0 && (
+      {project.media.filter((m) => !m.isPlaceholder).length > 0 && (
         <section className="mb-14">
           <p className="text-xs font-mono text-text-disabled uppercase tracking-widest mb-4">Media</p>
           <div className="space-y-4">
-            {project.media.map((media) =>
-              media.isPlaceholder ? (
-                <PlaceholderSlot
-                  key={media.id}
-                  type={media.type === 'VIDEO_PLACEHOLDER' ? 'video' : 'image'}
-                  label={media.placeholderLabel}
-                />
-              ) : media.type === 'IMAGE' && media.url ? (
-                <div key={media.id} className="rounded-lg overflow-hidden bg-surface-input">
-                  <img src={media.url} alt={media.altText || ''} className="w-full" />
-                  {media.caption && (
-                    <p className="px-3 py-2 text-xs text-text-secondary">{media.caption}</p>
-                  )}
-                </div>
-              ) : null,
-            )}
+            {project.media
+              .filter((media) => !media.isPlaceholder)
+              .map((media) =>
+                media.type === 'IMAGE' && media.url ? (
+                  <div key={media.id} className="rounded-lg overflow-hidden bg-surface-input">
+                    <img src={media.url} alt={media.altText || ''} className="w-full" />
+                    {media.caption && (
+                      <p className="px-3 py-2 text-xs text-text-secondary">{media.caption}</p>
+                    )}
+                  </div>
+                ) : null,
+              )}
           </div>
         </section>
       )}
 
       {/* 문서 */}
-      {project.documents.length > 0 && (
+      {project.documents.filter((d) => !d.isPlaceholder).length > 0 && (
         <section className="mb-14">
           <p className="text-xs font-mono text-text-disabled uppercase tracking-widest mb-4">Documents</p>
           <div className="space-y-3">
-            {project.documents.map((doc) =>
-              doc.isPlaceholder ? (
-                <PlaceholderSlot
-                  key={doc.id}
-                  type="document"
-                  label={doc.placeholderLabel}
-                  title={doc.title}
-                />
-              ) : (
+            {project.documents
+              .filter((doc) => !doc.isPlaceholder)
+              .map((doc) => (
                 <a
                   key={doc.id}
                   href={doc.url!}
@@ -204,8 +193,7 @@ export function ProjectDetailContent({ project }: ProjectDetailContentProps) {
                   <span className="text-sm text-text-primary">{doc.title}</span>
                   <span className="text-xs text-text-secondary ml-auto">{doc.type}</span>
                 </a>
-              ),
-            )}
+              ))}
           </div>
         </section>
       )}
