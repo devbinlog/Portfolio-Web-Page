@@ -1,0 +1,15 @@
+FROM node:20-alpine
+RUN npm install -g pnpm
+
+WORKDIR /app
+COPY package.json pnpm-workspace.yaml ./
+COPY apps/web/package.json ./apps/web/
+COPY packages/types/package.json ./packages/types/
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/config/package.json ./packages/config/
+COPY packages/ui/package.json ./packages/ui/
+RUN pnpm install
+
+WORKDIR /app/apps/web
+EXPOSE 3000
+CMD ["pnpm", "dev"]

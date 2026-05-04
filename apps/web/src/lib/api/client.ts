@@ -1,4 +1,14 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1'
+function resolveApiUrl(): string {
+  if (typeof window === 'undefined') {
+    // 서버 컴포넌트: absolute URL 필요
+    // VERCEL_URL은 Vercel이 자동으로 주입 (https:// 없이 제공됨)
+    const base =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+    return `${base}/api/v1`
+  }
+  return '/api/v1'
+}
 
 interface FetchOptions extends RequestInit {
   token?: string
@@ -16,7 +26,7 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
     headers['Authorization'] = `Bearer ${token}`
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetch(`${resolveApiUrl()}${path}`, {
     ...fetchOptions,
     headers,
   })

@@ -25,7 +25,6 @@ export interface HealthStatus {
   uptime?: number
   services: {
     database: 'ok' | 'error'
-    redis: 'ok' | 'error'
   }
 }
 

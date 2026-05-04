@@ -24,10 +24,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export async function generateStaticParams() {
-  const slugs = await getAllProjectSlugs()
-  return slugs.map((slug) => ({ slug }))
-}
+export const dynamic = 'force-dynamic'
 
 export default async function ProjectDetailPage({ params }: PageProps) {
   const [project, profile] = await Promise.all([

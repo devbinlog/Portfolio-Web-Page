@@ -38,6 +38,9 @@ Thumbs.db
 # Turbo
 .turbo
 
+# TypeScript build info
+*.tsbuildinfo
+
 # 테스트
 coverage
 playwright-report
@@ -57,3 +60,4 @@ apps/api/prisma/migrations/migration_lock.toml
 
 # Vitest
 coverage/
+.vercel
