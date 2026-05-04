@@ -19,15 +19,15 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'ko_KR',
-    siteName: 'binlog Portfolio',
-    title: 'binlog — AI / LLM Engineer & Frontend Developer',
-    description: 'Designing systems that transform unstructured input into structured user experiences.',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'binlog Portfolio' }],
+    siteName: 'devbinlog - Portfolio',
+    title: 'devbinlog - Portfolio',
+    description: '여기를 눌러 링크를 확인하세요.',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'devbinlog Portfolio' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'binlog — AI / LLM Engineer & Frontend Developer',
-    description: 'Designing systems that transform unstructured input into structured user experiences.',
+    title: 'devbinlog - Portfolio',
+    description: '여기를 눌러 링크를 확인하세요.',
     images: ['/og-image.png'],
   },
   robots: {
