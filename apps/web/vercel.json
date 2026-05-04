@@ -1,4 +1,6 @@
 {
+  "buildCommand": "cd ../.. && pnpm --filter=web build",
+  "outputDirectory": ".next",
   "env": {
     "NEXT_PUBLIC_ENABLE_3D": "true"
   }
