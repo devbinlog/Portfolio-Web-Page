@@ -42,7 +42,7 @@ export function HomeAboutSection({ profile }: Props) {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/profile-photo.jpeg"
-              alt="Taebin Kim"
+              alt="binlog"
               className="w-36 h-36 md:w-44 md:h-44 rounded-full object-cover select-none border border-border-default" style={{ objectPosition: 'center 3%' }}
             />
           </div>

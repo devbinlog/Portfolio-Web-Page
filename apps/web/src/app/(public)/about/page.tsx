@@ -8,7 +8,7 @@ import { getProfile } from '@/lib/api/profile'
 export const metadata: Metadata = {
   title: 'About',
   description:
-    'Taebin Kim에 대해. 문제를 구조적으로 분해하고, 설계 후 구현하며, 배포와 유지보수를 처음부터 고려하는 개발자.',
+    'binlog에 대해. 문제를 구조적으로 분해하고, 설계 후 구현하며, 배포와 유지보수를 처음부터 고려하는 개발자.',
 }
 
 export default async function AboutPage() {

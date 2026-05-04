@@ -9,7 +9,7 @@ export async function GET() {
 
     if (!profile) {
       return ok({
-        name: 'Taebin Kim',
+        name: 'binlog',
         roleTitle: 'Frontend Developer',
         tagline: 'Building imagination through structure and interaction.',
         bio: '',

@@ -37,7 +37,7 @@ export async function PUT(req: NextRequest) {
 
     const created = await prisma.profile.create({
       data: {
-        name: body.name ?? 'Taebin Kim',
+        name: body.name ?? 'binlog',
         roleTitle: body.roleTitle ?? 'Frontend Developer',
         tagline: body.tagline ?? '',
         bio: body.bio ?? '',

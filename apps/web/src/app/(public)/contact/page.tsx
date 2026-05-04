@@ -5,7 +5,7 @@ import { getProfile } from '@/lib/api/profile'
 
 export const metadata: Metadata = {
   title: 'Contact',
-  description: 'Taebin Kim에게 연락하기. LLM 시스템 협업, 채용 문의, 프로젝트 제안 환영합니다.',
+  description: 'binlog에게 연락하기. LLM 시스템 협업, 채용 문의, 프로젝트 제안 환영합니다.',
 }
 
 export default async function ContactPage() {

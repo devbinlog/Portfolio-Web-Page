@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: project.title,
     description: project.summary,
     openGraph: {
-      title: `${project.title} | Taebin Kim`,
+      title: `${project.title} | binlog`,
       description: project.summary,
       images: project.heroImageUrl ? [project.heroImageUrl] : [],
     },

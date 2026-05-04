@@ -8,7 +8,7 @@ export async function getProfile(): Promise<Profile> {
     // API 미연결 시 기본값 반환 (개발 환경용)
     return {
       id: 'default',
-      name: 'Taebin Kim',
+      name: 'binlog',
       roleTitle: 'Frontend Developer',
       tagline: 'Building imagination through structure and interaction.',
       bio: '구조와 인터랙션으로 상상을 현실로 만드는 프론트엔드 개발자입니다.',

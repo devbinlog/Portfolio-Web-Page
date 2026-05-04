@@ -7,7 +7,7 @@ import { getProfile } from '@/lib/api/profile'
 
 export const metadata: Metadata = {
   title: 'Projects',
-  description: 'Taebin Kim의 프로젝트 아카이브. BandStage, PageOfArtist, MUSE 외 다수.',
+  description: 'binlog의 프로젝트 아카이브. BandStage, PageOfArtist, MUSE 외 다수.',
 }
 
 export default async function ProjectsPage() {

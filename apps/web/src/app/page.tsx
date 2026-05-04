@@ -13,7 +13,7 @@ import { getFeaturedProjects } from '@/lib/api/projects'
 import { getProfile } from '@/lib/api/profile'
 
 export const metadata: Metadata = {
-  title: 'Taebin Kim — AI / LLM Engineer & Frontend Developer',
+  title: 'binlog — AI / LLM Engineer & Frontend Developer',
   description:
     'LLM / Search Systems / Interactive Web / 3D Experience. Designing systems that transform unstructured input into structured user experiences.',
 }

@@ -53,7 +53,7 @@ export function HomeContactSection() {
 
         {/* 푸터 */}
         <p className="text-xs font-mono text-text-disabled mt-16">
-          © {new Date().getFullYear()} Taebin Kim
+          © {new Date().getFullYear()} binlog
         </p>
       </div>
     </section>
