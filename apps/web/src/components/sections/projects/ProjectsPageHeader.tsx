@@ -56,9 +56,9 @@ export function ProjectsPageHeader({ count }: ProjectsPageHeaderProps) {
       <h1 className="text-display-md font-bold text-text-primary mb-12">Projects</h1>
 
       {/* 통계 카운터 */}
-      <div className="flex items-center gap-10 mb-10 pb-10 border-b border-border-default">
+      <div className="flex items-center gap-6 md:gap-10 mb-10 pb-10 border-b border-border-default">
         <div>
-          <p className="text-5xl font-bold tabular-nums tracking-tight text-text-primary leading-none">
+          <p className="text-4xl md:text-5xl font-bold tabular-nums tracking-tight text-text-primary leading-none">
             {projectCount}
           </p>
           <p className="text-xs font-mono text-text-disabled uppercase tracking-widest mt-2">
@@ -69,7 +69,7 @@ export function ProjectsPageHeader({ count }: ProjectsPageHeaderProps) {
         <div className="w-px h-10 bg-border-default" />
 
         <div>
-          <p className="text-5xl font-bold tabular-nums tracking-tight text-text-primary leading-none">
+          <p className="text-4xl md:text-5xl font-bold tabular-nums tracking-tight text-text-primary leading-none">
             {techCount}+
           </p>
           <p className="text-xs font-mono text-text-disabled uppercase tracking-widest mt-2">
@@ -80,7 +80,7 @@ export function ProjectsPageHeader({ count }: ProjectsPageHeaderProps) {
         <div className="w-px h-10 bg-border-default" />
 
         <div>
-          <p className="text-5xl font-bold tabular-nums tracking-tight text-text-primary leading-none">
+          <p className="text-4xl md:text-5xl font-bold tabular-nums tracking-tight text-text-primary leading-none">
             2026
           </p>
           <p className="text-xs font-mono text-text-disabled uppercase tracking-widest mt-2">

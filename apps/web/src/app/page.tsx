@@ -25,7 +25,7 @@ export default async function HomePage() {
   ])
 
   return (
-    <div className="bg-surface-base cursor-none">
+    <div className="bg-surface-base md:cursor-none">
       <MainNav profile={profile} />
       <ProjectOverlay />
 
