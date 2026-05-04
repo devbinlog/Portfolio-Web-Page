@@ -1,112 +1,150 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-const client_1 = require("@prisma/client");
-const bcrypt = __importStar(require("bcrypt"));
-const prisma = new client_1.PrismaClient();
-// description 필드 구조:  "Problem\n\n---\n\nLimitation"
-// workingApproach 필드 구조: "Solution\n\n---\n\nArchitecture diagram"
+const { PrismaClient } = require("@prisma/client");
+const bcrypt = require("bcrypt");
+const prisma = new PrismaClient();
+
 async function main() {
-    console.log('Seeding database...');
-    // 카테고리
-    const musicCategory = await prisma.category.upsert({
-        where: { slug: 'music_projects' },
-        update: {},
-        create: { name: 'Music Projects', slug: 'music_projects', objectFamily: 'signal_orb', order: 1 },
-    });
-    const aiCategory = await prisma.category.upsert({
-        where: { slug: 'ai_projects' },
-        update: {},
-        create: { name: 'AI Projects', slug: 'ai_projects', objectFamily: 'data_crystal', order: 2 },
-    });
-    const designCategory = await prisma.category.upsert({
-        where: { slug: 'design_projects' },
-        update: {},
-        create: { name: 'Design Projects', slug: 'design_projects', objectFamily: 'layered_device', order: 3 },
-    });
-    // 태그
-    const tags = await Promise.all([
-        prisma.tag.upsert({ where: { slug: 'react' }, update: {}, create: { name: 'React', slug: 'react' } }),
-        prisma.tag.upsert({ where: { slug: 'nextjs' }, update: {}, create: { name: 'Next.js', slug: 'nextjs' } }),
-        prisma.tag.upsert({ where: { slug: 'typescript' }, update: {}, create: { name: 'TypeScript', slug: 'typescript' } }),
-        prisma.tag.upsert({ where: { slug: 'python' }, update: {}, create: { name: 'Python', slug: 'python' } }),
-        prisma.tag.upsert({ where: { slug: 'fastapi' }, update: {}, create: { name: 'FastAPI', slug: 'fastapi' } }),
-        prisma.tag.upsert({ where: { slug: 'ai' }, update: {}, create: { name: 'AI', slug: 'ai' } }),
-        prisma.tag.upsert({ where: { slug: 'threejs' }, update: {}, create: { name: 'Three.js', slug: 'threejs' } }),
-        prisma.tag.upsert({ where: { slug: 'tauri' }, update: {}, create: { name: 'Tauri', slug: 'tauri' } }),
-        prisma.tag.upsert({ where: { slug: 'mediapipe' }, update: {}, create: { name: 'MediaPipe', slug: 'mediapipe' } }),
-        prisma.tag.upsert({ where: { slug: 'prisma' }, update: {}, create: { name: 'Prisma', slug: 'prisma' } }),
-    ]);
-    const [reactTag, nextjsTag, typescriptTag, pythonTag, fastapiTag, aiTag, threejsTag, tauriTag, mediapipeTag, prismaTag] = tags;
-    // 프로필
-    await prisma.profile.upsert({
-        where: { id: 'default' },
-        update: {
-            name: 'Taebin Kim',
-            roleTitle: 'AI / LLM Engineer & Frontend Developer',
-            tagline: 'Designing systems that transform unstructured input into structured user experiences.',
-            bio: 'LLM 파이프라인과 검색 시스템 설계부터 3D 인터랙션까지, 비정형 입력을 구조화된 사용자 경험으로 변환하는 End-to-End 시스템을 만듭니다. 구현보다 설계를 먼저, 기능보다 구조를 먼저 생각합니다.',
-            location: 'Seoul, Korea',
-        },
-        create: {
-            id: 'default',
-            name: 'Taebin Kim',
-            roleTitle: 'AI / LLM Engineer & Frontend Developer',
-            tagline: 'Designing systems that transform unstructured input into structured user experiences.',
-            bio: 'LLM 파이프라인과 검색 시스템 설계부터 3D 인터랙션까지, 비정형 입력을 구조화된 사용자 경험으로 변환하는 End-to-End 시스템을 만듭니다. 구현보다 설계를 먼저, 기능보다 구조를 먼저 생각합니다.',
-            workingMethod: '',
-            location: 'Seoul, Korea',
-            socialLinks: {
-                create: [
-                    { platform: 'GitHub', url: 'https://github.com/devbinlog', order: 1 },
-                ],
-            },
-        },
-    });
-    // ── 1. BandStage ──────────────────────────────────────────────────────────
-    const bandstage = await prisma.project.upsert({
-        where: { slug: 'bandstage' },
-        update: {
-            title: 'BandStage',
-            summary: '지역 기반 라이브 음악 플랫폼 — 밴드, 공연장, 공연, 예매를 하나로 연결합니다.',
-            description: `국내 공연 생태계는 정보가 분산되어 있습니다. 아티스트는 공연을 홍보할 통합 채널이 없고, 팬은 "서울 홍대 인근 인디 밴드 공연"을 한 번에 탐색할 방법이 없습니다. 공연장 관리자, 아티스트, 팬 세 주체가 각자의 채널에서 따로 움직이며 공연 정보의 단절이 발생합니다.
+  console.log("Seeding database...");
+
+  // ── 카테고리 ──────────────────────────────────────────────────────────────
+  const musicCategory = await prisma.category.upsert({
+    where: { slug: "music_projects" },
+    update: {},
+    create: { name: "Music Projects", slug: "music_projects", objectFamily: "signal_orb", order: 1 },
+  });
+  const aiCategory = await prisma.category.upsert({
+    where: { slug: "ai_projects" },
+    update: {},
+    create: { name: "AI Projects", slug: "ai_projects", objectFamily: "data_crystal", order: 2 },
+  });
+  const designCategory = await prisma.category.upsert({
+    where: { slug: "design_projects" },
+    update: {},
+    create: { name: "Design Projects", slug: "design_projects", objectFamily: "layered_device", order: 3 },
+  });
+
+  // ── 태그 ──────────────────────────────────────────────────────────────────
+  const tagDefs = [
+    { name: "React", slug: "react" },
+    { name: "Next.js", slug: "nextjs" },
+    { name: "TypeScript", slug: "typescript" },
+    { name: "Python", slug: "python" },
+    { name: "FastAPI", slug: "fastapi" },
+    { name: "AI", slug: "ai" },
+    { name: "Three.js", slug: "threejs" },
+    { name: "Tauri", slug: "tauri" },
+    { name: "MediaPipe", slug: "mediapipe" },
+    { name: "Prisma", slug: "prisma" },
+    { name: "Rust", slug: "rust" },
+    { name: "WebSocket", slug: "websocket" },
+    { name: "Supabase", slug: "supabase" },
+    { name: "Tailwind CSS", slug: "tailwindcss" },
+    { name: "Vite", slug: "vite" },
+  ];
+  const tags = await Promise.all(
+    tagDefs.map((t) =>
+      prisma.tag.upsert({ where: { slug: t.slug }, update: {}, create: t })
+    )
+  );
+  const tagMap = Object.fromEntries(tags.map((t) => [t.slug, t]));
+
+  // ── 프로필 ────────────────────────────────────────────────────────────────
+  await prisma.profile.upsert({
+    where: { id: "default" },
+    update: {
+      name: "Taebin Kim",
+      roleTitle: "AI / LLM Engineer & Frontend Developer",
+      tagline: "Designing systems that transform unstructured input into structured user experiences.",
+      bio: `AI를 단순히 개발을 대신하는 도구가 아니라, 함께 문제를 해결하는 파트너로 활용합니다.
+
+작업을 하나의 흐름으로 처리하기보다 역할 단위로 나누고, 각 역할을 에이전트로 분리하여
+구조적으로 설계한 뒤 작업을 진행합니다.
+
+프로젝트마다 필요한 역할을 정의하고, 에이전트 단위로 세분화하여 각 영역을 독립적으로
+구현하고 연결합니다.
+
+이 방식은 개인이 수행할 수 있는 작업이라도 효율성과 시간, 비용을 줄이면서
+동시에 결과의 완성도를 높이기 위해 사용하고 있습니다.
+
+이 구조를 기반으로 다양한 시스템을 빠르게 설계하고 실제로 동작하는 결과까지 구현하는
+개발 방식을 유지하고 있습니다.`,
+      workingMethod: `문제를 기능 단위가 아닌 구조적으로 분해합니다.
+구현 전에 문서와 아키텍처를 정의합니다.
+데이터 구조와 사용자 경험을 함께 설계합니다.
+배포, 유지보수, 운영을 처음부터 고려합니다.`,
+      location: "Seoul, Korea",
+    },
+    create: {
+      id: "default",
+      name: "Taebin Kim",
+      roleTitle: "AI / LLM Engineer & Frontend Developer",
+      tagline: "Designing systems that transform unstructured input into structured user experiences.",
+      bio: `AI를 단순히 개발을 대신하는 도구가 아니라, 함께 문제를 해결하는 파트너로 활용합니다.
+
+작업을 하나의 흐름으로 처리하기보다 역할 단위로 나누고, 각 역할을 에이전트로 분리하여
+구조적으로 설계한 뒤 작업을 진행합니다.
+
+프로젝트마다 필요한 역할을 정의하고, 에이전트 단위로 세분화하여 각 영역을 독립적으로
+구현하고 연결합니다.
+
+이 방식은 개인이 수행할 수 있는 작업이라도 효율성과 시간, 비용을 줄이면서
+동시에 결과의 완성도를 높이기 위해 사용하고 있습니다.
+
+이 구조를 기반으로 다양한 시스템을 빠르게 설계하고 실제로 동작하는 결과까지 구현하는
+개발 방식을 유지하고 있습니다.`,
+      workingMethod: `문제를 기능 단위가 아닌 구조적으로 분해합니다.
+구현 전에 문서와 아키텍처를 정의합니다.
+데이터 구조와 사용자 경험을 함께 설계합니다.
+배포, 유지보수, 운영을 처음부터 고려합니다.`,
+      location: "Seoul, Korea",
+      socialLinks: {
+        create: [{ platform: "GitHub", url: "https://github.com/devbinlog", order: 1 }],
+      },
+    },
+  });
+
+  // ── 관리자 계정 ───────────────────────────────────────────────────────────
+  const passwordHash = await bcrypt.hash("Rlaxoqls38@", 10);
+  await prisma.adminUser.upsert({
+    where: { email: "devbinlog8@gmail.com" },
+    update: {},
+    create: {
+      email: "devbinlog8@gmail.com",
+      passwordHash,
+      role: "ADMIN",
+    },
+  });
+
+  // ── 1. BandStage ──────────────────────────────────────────────────────────
+  const bandstage = await prisma.project.upsert({
+    where: { slug: "bandstage" },
+    update: {
+      title: "BandStage",
+      summary: `분산된 공연, 아티스트, 예매 정보를 구조화해 하나의 흐름으로 연결한 라이브 음악 플랫폼.
+데이터 모델과 탐색 경험을 함께 설계해 공연을 찾는 과정을 시스템으로 정의했습니다.`,
+      description: `공연 정보가 SNS, 포스터, 예매 플랫폼에 분산되어 있어 사용자가 원하는 공연을 한 번에 탐색할 수 없는 문제가 있습니다.
+아티스트, 공연장, 팬이 각각 다른 채널에서 움직이며 공연 정보가 하나의 흐름으로 연결되지 않습니다.
 
 ---
 
-기존 SNS(Instagram, X)는 공연 정보를 구조화해서 저장하지 않습니다. 검색이 불가능하고, 지역·장르 필터가 없으며, 예매 흐름이 분리되어 있습니다. 티켓 플랫폼은 중소 공연에 부적합한 수수료 구조를 가집니다. 아티스트 직접 홍보 도구도 없습니다.`,
-            workingApproach: `공연 생태계를 "Region → Venue → Event → Reservation" 4계층 데이터 모델로 정의했습니다. 각 계층이 명확한 소유권과 상태를 가지며, 위에서 아래로만 의존합니다. 공연 등록 워크플로우(DRAFT → PENDING → APPROVED → PUBLISHED)를 상태 머신으로 설계해 권한별 전환 규칙을 코드로 명시했습니다.
+기존 공연 정보는 SNS, 포스터, 예매 플랫폼에 분산되어 있으며, 데이터가 구조화되지 않아 검색, 필터링, 예매까지 하나의 흐름으로 연결되지 않습니다.
+
+사용자는 원하는 공연을 탐색하기 위해 여러 채널을 반복적으로 확인해야 하고, 아티스트 역시 공연 등록과 관리, 홍보를 통합적으로 수행할 수 없는 구조입니다.`,
+      year: 2025,
+      role: "풀스택 개발",
+      contribution: `서버 컴포넌트 우선 아키텍처로 클라이언트 번들을 최소화했습니다. 동적 라우팅(/events/[slug])에서 정적 생성과 ISR을 조합해 성능과 데이터 신선도를 동시에 확보했습니다. NextAuth.js v4로 FAN/ARTIST/VENUE_MANAGER/ADMIN 4역할 인증 시스템을 구현하고, 미들웨어 레벨에서 역할별 라우트를 보호했습니다. 실제 서울 공연장 25개 데이터를 구조화해 Supabase PostgreSQL에 시드했습니다.`,
+      keyLearnings: `권한 검사를 UI가 아닌 서버와 데이터 레이어에서 처리하도록 설계하면서, 역할에 따른 접근 제어를 일관된 기준으로 통제할 수 있는 구조를 만들었습니다.
+
+상태 머신 도입 이후 잘못된 상태 전환이 차단되었고, 데이터 흐름이 명확해지면서 예외 상황과 디버깅 포인트가 크게 줄어들었습니다.
+
+데이터 구조를 먼저 정의하고 그 위에 기능을 쌓는 방식이, UI 설계와 사용자 탐색 흐름까지 자연스럽게 결정된다는 것을 확인했습니다.`,
+      workingApproach: `분산된 공연 정보를 하나의 흐름으로 연결하기 위해, 공연 생태계를 "Region → Venue → Event → Reservation" 4계층 데이터 모델로 구조화했습니다.
+
+사용자는 지역, 공연장, 공연 단위를 기준으로 탐색할 수 있고, 예매까지 하나의 흐름 안에서 이어지도록 설계했습니다.
+
+또한 아티스트가 공연을 직접 등록하고 관리할 수 있도록 공연 등록 워크플로우를 구성하고, 이를 상태 머신(DRAFT → PENDING → APPROVED → PUBLISHED)으로 정의해 권한별 전환을 코드 레벨에서 통제했습니다.
+
+사용자 역할(Fan, Artist, Venue Manager)에 따라 서로 다른 진입 경로를 가지지만, 탐색, 등록, 관리 기능이 모두 동일한 데이터 구조 위에서 동작하도록 설계해 시스템 전체 흐름을 일관되게 유지했습니다.
 
 ---
 
@@ -126,169 +164,40 @@ User (Fan)          User (Artist)        User (Venue Manager)
  ├── Ticket Type Selection
  ├── Quantity Management
  └── Booking Confirmation`,
-            contribution: `서버 컴포넌트 우선 아키텍처로 클라이언트 번들을 최소화했습니다. 동적 라우팅(/events/[slug])에서 정적 생성과 ISR을 조합해 성능과 데이터 신선도를 동시에 확보했습니다. NextAuth.js v4로 FAN/ARTIST/VENUE_MANAGER/ADMIN 4역할 인증 시스템을 구현하고, 미들웨어 레벨에서 역할별 라우트를 보호했습니다. 실제 서울 공연장 25개 데이터를 구조화해 Supabase PostgreSQL에 시드했습니다.`,
-            keyLearnings: `복잡한 다중 역할 시스템에서 권한 검사를 UI 레이어가 아닌 서버/DB 레이어에서 처리해야 보안이 유지된다는 것을 직접 경험했습니다. 공연 상태 머신을 도입한 후 "잘못된 상태의 데이터"가 사라졌고, 디버깅 시간이 크게 줄었습니다. 데이터 모델이 확실할수록 UI 설계가 자연스럽게 따라온다는 것을 확인했습니다.`,
-            techStack: ['Next.js 15', 'React 19', 'TypeScript', 'Tailwind CSS v4', 'Prisma', 'Supabase', 'NextAuth.js', 'Vercel'],
-            codeSnippets: [
-                {
-                    title: 'Event Status State Machine',
-                    language: 'typescript',
-                    code: `// Event lifecycle: DRAFT → PENDING → APPROVED → PUBLISHED
-// Each transition is guarded by role + current state.
-
-type EventStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'PUBLISHED' | 'CANCELLED'
-type UserRole = 'ARTIST' | 'VENUE_MANAGER' | 'ADMIN'
-
-interface Transition {
-  from: EventStatus
-  to: EventStatus
-  allowedRoles: UserRole[]
-}
-
-const TRANSITIONS: Transition[] = [
-  { from: 'DRAFT',    to: 'PENDING',   allowedRoles: ['ARTIST'] },
-  { from: 'PENDING',  to: 'APPROVED',  allowedRoles: ['ADMIN', 'VENUE_MANAGER'] },
-  { from: 'PENDING',  to: 'DRAFT',     allowedRoles: ['ADMIN'] },
-  { from: 'APPROVED', to: 'PUBLISHED', allowedRoles: ['ADMIN', 'VENUE_MANAGER'] },
-  { from: 'APPROVED', to: 'DRAFT',     allowedRoles: ['ADMIN'] },
-  { from: 'PUBLISHED',to: 'CANCELLED', allowedRoles: ['ADMIN', 'VENUE_MANAGER', 'ARTIST'] },
-]
-
-export function canTransition(
-  current: EventStatus,
-  next: EventStatus,
-  role: UserRole,
-): boolean {
-  return TRANSITIONS.some(
-    (t) => t.from === current && t.to === next && t.allowedRoles.includes(role),
-  )
-}
-
-// Usage in service layer:
-export async function updateEventStatus(
-  eventId: string,
-  nextStatus: EventStatus,
-  actorRole: UserRole,
-) {
-  const event = await prisma.event.findUniqueOrThrow({ where: { id: eventId } })
-
-  if (!canTransition(event.status, nextStatus, actorRole)) {
-    throw new ForbiddenException(
-      \`\${actorRole} cannot transition event from \${event.status} to \${nextStatus}\`,
-    )
-  }
-
-  return prisma.event.update({
-    where: { id: eventId },
-    data: { status: nextStatus },
-  })
-}`,
-                    explanation: '상태 전환 규칙을 TRANSITIONS 배열에 선언적으로 정의합니다. canTransition() 함수 하나로 모든 서비스 레이어에서 권한 검사를 재사용합니다. 규칙을 코드에 명시하면 새 역할 추가 시 배열에만 항목을 추가하면 됩니다.',
-                },
-                {
-                    title: 'Role-Based Route Guard (Next.js Middleware)',
-                    language: 'typescript',
-                    code: `// middleware.ts — runs on every request before rendering
-import { getToken } from 'next-auth/jwt'
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-
-// Route → required roles map
-const PROTECTED_ROUTES: Record<string, string[]> = {
-  '/admin':          ['ADMIN'],
-  '/venue/manage':   ['VENUE_MANAGER', 'ADMIN'],
-  '/event/register': ['ARTIST', 'ADMIN'],
-}
-
-export async function middleware(req: NextRequest) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-  const path = req.nextUrl.pathname
-
-  for (const [prefix, roles] of Object.entries(PROTECTED_ROUTES)) {
-    if (!path.startsWith(prefix)) continue
-
-    if (!token) {
-      return NextResponse.redirect(new URL('/login', req.url))
-    }
-
-    const userRole = token.role as string
-    if (!roles.includes(userRole)) {
-      return NextResponse.redirect(new URL('/unauthorized', req.url))
-    }
-  }
-
-  return NextResponse.next()
-}
-
-export const config = {
-  matcher: ['/admin/:path*', '/venue/:path*', '/event/:path*'],
-}`,
-                    explanation: '권한 검사를 UI 컴포넌트가 아닌 미들웨어 레이어에서 처리합니다. 페이지가 렌더링되기 전 서버에서 역할을 검증하므로 클라이언트 코드에 권한 로직이 노출되지 않습니다.',
-                },
-                {
-                    title: 'Prisma Event Query — Region + Genre Filter',
-                    language: 'typescript',
-                    code: `// app/events/page.tsx (Server Component)
-interface EventsPageProps {
-  searchParams: {
-    region?: string
-    genre?: string
-    dateFrom?: string
-    dateTo?: string
-    page?: string
-  }
-}
-
-export default async function EventsPage({ searchParams }: EventsPageProps) {
-  const page = Number(searchParams.page ?? 1)
-  const pageSize = 12
-
-  const where: Prisma.EventWhereInput = {
-    status: 'PUBLISHED',
-    // Region filter: venue.regionId matches
-    ...(searchParams.region && {
-      venue: { region: { slug: searchParams.region } },
-    }),
-    // Genre filter: artist tag matches
-    ...(searchParams.genre && {
-      artist: { tags: { some: { slug: searchParams.genre } } },
-    }),
-    // Date range filter
-    ...(searchParams.dateFrom && {
-      startAt: { gte: new Date(searchParams.dateFrom) },
-    }),
-    ...(searchParams.dateTo && {
-      endAt: { lte: new Date(searchParams.dateTo) },
-    }),
-  }
-
-  const [events, total] = await Promise.all([
-    prisma.event.findMany({
-      where,
-      include: { venue: true, artist: true, ticketTypes: true },
-      orderBy: { startAt: 'asc' },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-    }),
-    prisma.event.count({ where }),
-  ])
-
-  return <EventGrid events={events} total={total} page={page} />
-}`,
-                    explanation: 'Prisma의 중첩 where 조건으로 venue.region, artist.tags, 날짜 범위를 단일 쿼리로 필터링합니다. Server Component에서 직접 DB 쿼리를 실행해 클라이언트 번들에 쿼리 로직이 포함되지 않습니다.',
-                },
-            ],
-        },
-        create: {
-            title: 'BandStage',
-            slug: 'bandstage',
-            summary: '지역 기반 라이브 음악 플랫폼 — 밴드, 공연장, 공연, 예매를 하나로 연결합니다.',
-            description: `국내 공연 생태계는 정보가 분산되어 있습니다. 아티스트는 공연을 홍보할 통합 채널이 없고, 팬은 "서울 홍대 인근 인디 밴드 공연"을 한 번에 탐색할 방법이 없습니다. 공연장 관리자, 아티스트, 팬 세 주체가 각자의 채널에서 따로 움직이며 공연 정보의 단절이 발생합니다.
+      techStack: ["Next.js 15", "React 19", "TypeScript", "Tailwind CSS v4", "Prisma", "Supabase", "NextAuth.js", "Vercel"],
+      isFeatured: true,
+      featuredOrder: 1,
+      isPublished: true,
+      categoryId: musicCategory.id,
+    },
+    create: {
+      title: "BandStage",
+      slug: "bandstage",
+      summary: `분산된 공연, 아티스트, 예매 정보를 구조화해 하나의 흐름으로 연결한 라이브 음악 플랫폼.
+데이터 모델과 탐색 경험을 함께 설계해 공연을 찾는 과정을 시스템으로 정의했습니다.`,
+      description: `공연 정보가 SNS, 포스터, 예매 플랫폼에 분산되어 있어 사용자가 원하는 공연을 한 번에 탐색할 수 없는 문제가 있습니다.
+아티스트, 공연장, 팬이 각각 다른 채널에서 움직이며 공연 정보가 하나의 흐름으로 연결되지 않습니다.
 
 ---
 
-기존 SNS(Instagram, X)는 공연 정보를 구조화해서 저장하지 않습니다. 검색이 불가능하고, 지역·장르 필터가 없으며, 예매 흐름이 분리되어 있습니다. 티켓 플랫폼은 중소 공연에 부적합한 수수료 구조를 가집니다. 아티스트 직접 홍보 도구도 없습니다.`,
-            workingApproach: `공연 생태계를 "Region → Venue → Event → Reservation" 4계층 데이터 모델로 정의했습니다. 각 계층이 명확한 소유권과 상태를 가지며, 위에서 아래로만 의존합니다. 공연 등록 워크플로우(DRAFT → PENDING → APPROVED → PUBLISHED)를 상태 머신으로 설계해 권한별 전환 규칙을 코드로 명시했습니다.
+기존 공연 정보는 SNS, 포스터, 예매 플랫폼에 분산되어 있으며, 데이터가 구조화되지 않아 검색, 필터링, 예매까지 하나의 흐름으로 연결되지 않습니다.
+
+사용자는 원하는 공연을 탐색하기 위해 여러 채널을 반복적으로 확인해야 하고, 아티스트 역시 공연 등록과 관리, 홍보를 통합적으로 수행할 수 없는 구조입니다.`,
+      year: 2025,
+      role: "풀스택 개발",
+      contribution: `서버 컴포넌트 우선 아키텍처로 클라이언트 번들을 최소화했습니다. 동적 라우팅(/events/[slug])에서 정적 생성과 ISR을 조합해 성능과 데이터 신선도를 동시에 확보했습니다. NextAuth.js v4로 FAN/ARTIST/VENUE_MANAGER/ADMIN 4역할 인증 시스템을 구현하고, 미들웨어 레벨에서 역할별 라우트를 보호했습니다. 실제 서울 공연장 25개 데이터를 구조화해 Supabase PostgreSQL에 시드했습니다.`,
+      keyLearnings: `권한 검사를 UI가 아닌 서버와 데이터 레이어에서 처리하도록 설계하면서, 역할에 따른 접근 제어를 일관된 기준으로 통제할 수 있는 구조를 만들었습니다.
+
+상태 머신 도입 이후 잘못된 상태 전환이 차단되었고, 데이터 흐름이 명확해지면서 예외 상황과 디버깅 포인트가 크게 줄어들었습니다.
+
+데이터 구조를 먼저 정의하고 그 위에 기능을 쌓는 방식이, UI 설계와 사용자 탐색 흐름까지 자연스럽게 결정된다는 것을 확인했습니다.`,
+      workingApproach: `분산된 공연 정보를 하나의 흐름으로 연결하기 위해, 공연 생태계를 "Region → Venue → Event → Reservation" 4계층 데이터 모델로 구조화했습니다.
+
+사용자는 지역, 공연장, 공연 단위를 기준으로 탐색할 수 있고, 예매까지 하나의 흐름 안에서 이어지도록 설계했습니다.
+
+또한 아티스트가 공연을 직접 등록하고 관리할 수 있도록 공연 등록 워크플로우를 구성하고, 이를 상태 머신(DRAFT → PENDING → APPROVED → PUBLISHED)으로 정의해 권한별 전환을 코드 레벨에서 통제했습니다.
+
+사용자 역할(Fan, Artist, Venue Manager)에 따라 서로 다른 진입 경로를 가지지만, 탐색, 등록, 관리 기능이 모두 동일한 데이터 구조 위에서 동작하도록 설계해 시스템 전체 흐름을 일관되게 유지했습니다.
 
 ---
 
@@ -308,237 +217,552 @@ User (Fan)          User (Artist)        User (Venue Manager)
  ├── Ticket Type Selection
  ├── Quantity Management
  └── Booking Confirmation`,
-            contribution: `서버 컴포넌트 우선 아키텍처로 클라이언트 번들을 최소화했습니다. 동적 라우팅(/events/[slug])에서 정적 생성과 ISR을 조합해 성능과 데이터 신선도를 동시에 확보했습니다. NextAuth.js v4로 FAN/ARTIST/VENUE_MANAGER/ADMIN 4역할 인증 시스템을 구현하고, 미들웨어 레벨에서 역할별 라우트를 보호했습니다. 실제 서울 공연장 25개 데이터를 구조화해 Supabase PostgreSQL에 시드했습니다.`,
-            keyLearnings: `복잡한 다중 역할 시스템에서 권한 검사를 UI 레이어가 아닌 서버/DB 레이어에서 처리해야 보안이 유지된다는 것을 직접 경험했습니다. 공연 상태 머신을 도입한 후 "잘못된 상태의 데이터"가 사라졌고, 디버깅 시간이 크게 줄었습니다. 데이터 모델이 확실할수록 UI 설계가 자연스럽게 따라온다는 것을 확인했습니다.`,
-            techStack: ['Next.js 15', 'React 19', 'TypeScript', 'Tailwind CSS v4', 'Prisma', 'Supabase', 'NextAuth.js', 'Vercel'],
-            codeSnippets: [
-                {
-                    title: 'Event Status State Machine',
-                    language: 'typescript',
-                    code: `type EventStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'PUBLISHED' | 'CANCELLED'
-type UserRole = 'ARTIST' | 'VENUE_MANAGER' | 'ADMIN'
+      techStack: ["Next.js 15", "React 19", "TypeScript", "Tailwind CSS v4", "Prisma", "Supabase", "NextAuth.js", "Vercel"],
+      isFeatured: true,
+      featuredOrder: 1,
+      isPublished: true,
+      categoryId: musicCategory.id,
+    },
+  });
 
-const TRANSITIONS = [
-  { from: 'DRAFT',    to: 'PENDING',   allowedRoles: ['ARTIST'] },
-  { from: 'PENDING',  to: 'APPROVED',  allowedRoles: ['ADMIN', 'VENUE_MANAGER'] },
-  { from: 'APPROVED', to: 'PUBLISHED', allowedRoles: ['ADMIN', 'VENUE_MANAGER'] },
-  { from: 'PUBLISHED',to: 'CANCELLED', allowedRoles: ['ADMIN', 'VENUE_MANAGER', 'ARTIST'] },
-] as const
+  // 링크 upsert는 deleteMany + createMany 패턴 사용
+  await prisma.projectLink.deleteMany({ where: { projectId: bandstage.id } });
+  await prisma.projectLink.create({
+    data: { projectId: bandstage.id, type: "GITHUB", label: "GitHub", url: "https://github.com/devbinlog/BandStage", order: 1 },
+  });
 
-export function canTransition(
-  current: EventStatus, next: EventStatus, role: UserRole,
-): boolean {
-  return TRANSITIONS.some(
-    (t) => t.from === current && t.to === next && t.allowedRoles.includes(role),
-  )
-}
+  // ── 2. Page of Artist ─────────────────────────────────────────────────────
+  const pageOfArtist = await prisma.project.upsert({
+    where: { slug: "page-of-artist" },
+    update: {
+      title: "Page of Artist",
+      summary: `텍스트 중심 탐색의 한계를 해결하기 위해, 아티스트와 음악 데이터를 3D 인터페이스로 재구성한 뮤직 플랫폼.
+데이터 구조와 인터랙션을 결합해 사용자가 콘텐츠를 탐색하는 과정을 하나의 경험 흐름으로 설계했습니다.`,
+      description: `캡스톤 프로젝트로 진행된 6인의 팀 프로젝트로, 기존 음악 플랫폼의 탐색 경험을 개선하기 위해 시작했습니다.
 
-export async function updateEventStatus(
-  eventId: string, nextStatus: EventStatus, actorRole: UserRole,
-) {
-  const event = await prisma.event.findUniqueOrThrow({ where: { id: eventId } })
-  if (!canTransition(event.status, nextStatus, actorRole)) {
-    throw new ForbiddenException(
-      \`\${actorRole} cannot transition from \${event.status} to \${nextStatus}\`,
-    )
-  }
-  return prisma.event.update({ where: { id: eventId }, data: { status: nextStatus } })
-}`,
-                    explanation: '상태 전환 규칙을 TRANSITIONS 배열에 선언적으로 정의합니다. canTransition() 함수 하나로 모든 서비스 레이어에서 권한 검사를 재사용합니다.',
-                },
-                {
-                    title: 'Role-Based Route Guard (Next.js Middleware)',
-                    language: 'typescript',
-                    code: `import { getToken } from 'next-auth/jwt'
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+기존 음악 플랫폼의 아티스트 페이지는 앨범, 트랙, 프로필 정보를 2D 리스트 형태로 나열하는 구조가 대부분입니다.
+이 방식은 정보를 빠르게 확인하기에는 적합하지만, 사용자가 아티스트의 음악 세계관이나 앨범 간 분위기 차이를 시각적으로 탐색하기에는 한계가 있었습니다.
 
-const PROTECTED_ROUTES: Record<string, string[]> = {
-  '/admin':          ['ADMIN'],
-  '/venue/manage':   ['VENUE_MANAGER', 'ADMIN'],
-  '/event/register': ['ARTIST', 'ADMIN'],
-}
+특히 신인 아티스트나 개성 있는 음악 콘텐츠는 단순 목록 안에서 차별점이 드러나기 어렵고, 사용자는 콘텐츠를 "탐색"하기보다 이미 알고 있는 곡을 "재생"하는 흐름에 머물게 됩니다.
 
-export async function middleware(req: NextRequest) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-  const path = req.nextUrl.pathname
-
-  for (const [prefix, roles] of Object.entries(PROTECTED_ROUTES)) {
-    if (!path.startsWith(prefix)) continue
-    if (!token) return NextResponse.redirect(new URL('/login', req.url))
-    const userRole = token.role as string
-    if (!roles.includes(userRole)) {
-      return NextResponse.redirect(new URL('/unauthorized', req.url))
-    }
-  }
-  return NextResponse.next()
-}
-
-export const config = {
-  matcher: ['/admin/:path*', '/venue/:path*', '/event/:path*'],
-}`,
-                    explanation: '권한 검사를 UI 컴포넌트가 아닌 미들웨어 레이어에서 처리합니다. 페이지가 렌더링되기 전 서버에서 역할을 검증하므로 클라이언트 코드에 권한 로직이 노출되지 않습니다.',
-                },
-                {
-                    title: 'Prisma Event Query — Region + Genre Filter',
-                    language: 'typescript',
-                    code: `const where: Prisma.EventWhereInput = {
-  status: 'PUBLISHED',
-  ...(searchParams.region && {
-    venue: { region: { slug: searchParams.region } },
-  }),
-  ...(searchParams.genre && {
-    artist: { tags: { some: { slug: searchParams.genre } } },
-  }),
-  ...(searchParams.dateFrom && {
-    startAt: { gte: new Date(searchParams.dateFrom) },
-  }),
-  ...(searchParams.dateTo && {
-    endAt: { lte: new Date(searchParams.dateTo) },
-  }),
-}
-
-const [events, total] = await Promise.all([
-  prisma.event.findMany({
-    where,
-    include: { venue: true, artist: true, ticketTypes: true },
-    orderBy: { startAt: 'asc' },
-    skip: (page - 1) * pageSize,
-    take: pageSize,
-  }),
-  prisma.event.count({ where }),
-])`,
-                    explanation: 'Prisma의 중첩 where 조건으로 venue.region, artist.tags, 날짜 범위를 단일 쿼리로 필터링합니다. Server Component에서 직접 DB 쿼리를 실행해 클라이언트 번들에 쿼리 로직이 포함되지 않습니다.',
-                },
-            ],
-            categoryId: musicCategory.id,
-            year: 2026,
-            role: '풀스택 개발',
-            isFeatured: true,
-            featuredOrder: 1,
-            isPublished: true,
-            media: { create: [{ type: 'VIDEO_PLACEHOLDER', placeholderLabel: '데모 영상 준비 중입니다', order: 1, isPlaceholder: true }] },
-            links: { create: [{ type: 'GITHUB', label: 'GitHub', url: 'https://github.com/devbinlog/BandStage', order: 1 }] },
-        },
-    });
-    await prisma.projectTag.createMany({
-        data: [
-            { projectId: bandstage.id, tagId: nextjsTag.id },
-            { projectId: bandstage.id, tagId: typescriptTag.id },
-            { projectId: bandstage.id, tagId: prismaTag.id },
-        ],
-        skipDuplicates: true,
-    });
-    // ── 2. Page of Artist ─────────────────────────────────────────────────────
-    const pageofartist = await prisma.project.upsert({
-        where: { slug: 'page-of-artist' },
-        update: {
-            title: 'Page of Artist',
-            summary: '아티스트의 음악 세계를 3D 공간에서 탐험하는 인터랙티브 뮤직 갤러리.',
-            description: `음악 스트리밍 앱의 아티스트 페이지는 2D 리스트로 음악을 나열합니다. 아티스트의 세계관, 앨범 간 연결, 분위기를 시각적으로 느낄 수 있는 공간이 없습니다. Spotify, Apple Music 모두 "재생 버튼이 있는 목록" 수준에 머뭅니다.
+그래서 Page of Artist는 아티스트와 음악 데이터를 단순히 나열하는 것이 아니라, 사용자가 직접 움직이고 선택하며 탐색할 수 있는 3D 공간 기반 음악 경험으로 재구성하는 것을 목표로 했습니다.
 
 ---
 
-3D 웹 기반 음악 경험은 대부분 실험적 작품 수준에 그칩니다. 실제 음악 데이터(트랙, 앨범)와 연동되지 않고, 모바일에서 동작하지 않으며, 물리 기반 인터랙션이 없어 조작감이 어색합니다.`,
-            workingApproach: `React Three Fiber 위에 Spring 물리 엔진을 직접 구현했습니다. 12장 카드의 원형 배치(반지름 3.8)에서 각 카드의 위치, 회전, 스케일을 Spring 감쇠 함수로 계산합니다. React의 리렌더링 사이클 밖에서 물리 연산을 처리하기 위해 useFrame 루프 내 ref 기반 계산을 사용했습니다.
+기존 3D 웹 기반 음악 콘텐츠는 시각적으로는 인상적이지만, 실제 음악 데이터 구조와 연결되지 않는 경우가 많았습니다.
+즉, 3D 오브젝트는 장식적인 요소에 머물고, 아티스트 정보나 앨범, 트랙 데이터와 유기적으로 연결되지 않아 서비스 구조로 확장하기 어려웠습니다.
+
+또한 3D 인터페이스는 사용자가 조작할 때 어색한 움직임이 발생하기 쉽습니다.
+단순 위치 이동이나 회전만 적용하면 카드가 기계적으로 움직이고, 사용자가 "탐색하고 있다"는 감각보다 "효과를 보고 있다"는 느낌에 가까워집니다.
+
+모바일 환경과 성능도 중요한 한계였습니다.
+React 상태 변화만으로 3D 카드의 위치, 회전, 포커싱을 처리하면 불필요한 리렌더링이 발생할 수 있고, 카드 개수가 늘어날수록 인터랙션이 끊기거나 프레임 저하가 생길 가능성이 있었습니다.`,
+      year: 2025,
+      role: "프론트엔드 개발, 3D 인터랙션",
+      contribution: `카드 인터랙션은 마우스 위치 기반 3D 틸팅과 Spring 물리 연산을 결합해, 사용자의 입력에 따라 자연스럽게 반응하는 인터랙션 구조를 구현했습니다.
+
+렌더링 사이클과 분리된 ref 기반 물리 계산을 적용해, React 리렌더 없이도 60fps 환경에서 안정적인 애니메이션을 유지했습니다.
+
+외부 음악 데이터를 API 기반으로 연동하고, 응답 지연이나 실패 상황에서도 UI 흐름이 유지되도록 데이터 처리 구조를 설계했습니다.
+
+Firebase Firestore 실시간 구독을 통해 아티스트 데이터 변경이 즉시 반영되도록 구성해, 데이터와 UI 상태가 실시간으로 동기화되는 구조를 구현했습니다.
+
+장르 필터 선택 시 카드 재배치 애니메이션을 물리 기반으로 처리해, 데이터 변화가 자연스러운 시각적 흐름으로 이어지도록 설계했습니다.`,
+      keyLearnings: `캡스톤 프로젝트를 통해 인터랙션 중심 UI 설계와 팀 기반 개발 경험을 쌓을 수 있었고, 최종 A+ 학점과 함께 "기획과 기술적 도전성이 뛰어나며 협업 기반 문제 해결 능력이 우수하다"는 평가를 받았습니다.
+
+이후 리빌딩 과정에서 렌더링과 물리 연산을 분리한 구조를 적용해, 60fps 환경에서도 안정적인 인터랙션을 구현했습니다.
+
+외부 API의 불안정성을 고려해 정적 데이터 폴백 구조를 적용함으로써, 서비스 환경에서도 사용자 경험이 끊기지 않도록 개선했습니다.
+
+이 과정을 통해 인터랙션과 데이터 구조를 함께 설계하는 것이 사용자 경험의 완성도를 결정한다는 것을 확인했습니다.`,
+      workingApproach: `Page of Artist는 아티스트와 음악 데이터를 3D 카드 인터페이스로 재구성하고, 사용자의 조작이 곧 탐색 흐름이 되도록 설계했습니다.
+각 카드는 단순한 이미지 요소가 아니라 아티스트, 앨범, 트랙 정보를 담는 데이터 단위로 정의했습니다.
+
+3D 구현에는 React Three Fiber를 사용했습니다.
+React 기반 컴포넌트 구조 안에서 Three.js의 3D 객체를 다룰 수 있어, 카드 UI와 데이터 구조를 함께 관리하기에 적합했기 때문입니다.
+이를 통해 아티스트 카드, 앨범 정보, 트랙 리스트를 각각 독립적인 컴포넌트로 분리하면서도 하나의 3D 탐색 흐름 안에 배치할 수 있었습니다.
+
+카드의 이동과 포커싱은 단순 애니메이션이 아니라 Spring 기반 물리 연산으로 처리했습니다.
+사용자가 드래그하거나 스크롤할 때 카드가 즉시 끊겨 움직이는 것이 아니라, 감쇠와 관성을 가진 움직임으로 반응하도록 설계해 자연스러운 조작감을 만들고자 했습니다.
+
+또한 카드의 상태를 active, adjacent, background로 나누어 현재 선택된 카드와 주변 카드의 크기, 위치, 시각적 강조를 다르게 처리했습니다.
+이를 통해 사용자가 어떤 콘텐츠에 집중하고 있는지 명확하게 인식할 수 있도록 했습니다.
+
+성능 측면에서는 React의 일반적인 상태 업데이트에 모든 움직임을 맡기지 않고, useFrame과 ref 기반 계산을 활용해 렌더링 사이클과 물리 연산을 분리했습니다.
+이 구조를 통해 카드의 위치, 회전, 스케일 변화가 반복적으로 발생해도 불필요한 리렌더링을 줄이고 안정적인 인터랙션을 유지하도록 설계했습니다.
 
 ---
 
-User Input (drag / scroll / keyboard)
-          |
-          v
-    [Spring Physics Engine]
-    useFrame loop, ref-based (no re-render)
-    ├── position: lerp to target
-    ├── velocity: spring damping
-    └── rotation: inertia decay
-          |
-          v
-    [Card State Machine]
-    active (1.0x) / adjacent (0.82x) / background (0.65x)
-          |
-    ┌─────┴──────┐
-    v            v
-[Front Face]  [Flip → Back Face]
- Artist Card   Album Tracklist
- + Glow FX     + Spotify API Data
-          |
-          v
-    [Spotify Web API]
-    Client Credentials Token (10min cache)
-    └── Static fallback on API failure`,
-            contribution: `Spotify Web API를 Express 프록시 서버로 연동해 Client Credentials 토큰을 자동 갱신했습니다. 카드 호버 시 마우스 위치 기반 3D 틸팅(±6° CardParallax)을 구현했습니다. Firebase Firestore 실시간 구독으로 아티스트 등록 즉시 갤러리에 반영됩니다. 장르 필터 7개(Pop, Hip-Hop, Rock, R&B, Indie, Electronic, Latin) 선택 시 카드 재배치 애니메이션이 Spring 물리로 처리됩니다.`,
-            keyLearnings: `React 렌더링 사이클을 우회한 ref 기반 물리 루프 패턴을 확립했습니다. 이 패턴 덕분에 60fps 물리 연산 중 단 한 번의 리렌더도 발생하지 않습니다. 외부 API(Spotify)의 불안정성을 정적 데이터 폴백으로 처리해, API 장애가 사용자 경험을 깨지 않도록 했습니다.`,
-        },
-        create: {
-            title: 'Page of Artist',
-            slug: 'page-of-artist',
-            summary: '아티스트의 음악 세계를 3D 공간에서 탐험하는 인터랙티브 뮤직 갤러리.',
-            description: `음악 스트리밍 앱의 아티스트 페이지는 2D 리스트로 음악을 나열합니다. 아티스트의 세계관, 앨범 간 연결, 분위기를 시각적으로 느낄 수 있는 공간이 없습니다. Spotify, Apple Music 모두 "재생 버튼이 있는 목록" 수준에 머뭅니다.
+User Input (Mouse / Keyboard / Touch / Gyroscope)
+                      |
+                      v
+       DOM Event Handlers (CircularCarousel)
+                      |
+          springTarget ref <- drag / scroll
+                      |
+       useFrame Physics Loop (60fps, no re-render)
+    force = dx x TENSION - vel x FRICTION
+                      |
+   Card Group Positions (imperative update)
+                      |
+          Three.js Renderer -> Canvas
+
+  Spotify API -> Express Proxy (Token Cache)
+                      |
+          Artist Data + Track Info
+                      |
+  Firebase Firestore (realtime) -> Zustand Store
+                      |
+            Card Data -> 3D Scene`,
+      techStack: ["React 18", "TypeScript", "Three.js", "React Three Fiber", "Zustand", "Firebase", "Spotify API", "Vite"],
+      isFeatured: true,
+      featuredOrder: 2,
+      isPublished: true,
+      categoryId: musicCategory.id,
+    },
+    create: {
+      title: "Page of Artist",
+      slug: "page-of-artist",
+      summary: `텍스트 중심 탐색의 한계를 해결하기 위해, 아티스트와 음악 데이터를 3D 인터페이스로 재구성한 뮤직 플랫폼.
+데이터 구조와 인터랙션을 결합해 사용자가 콘텐츠를 탐색하는 과정을 하나의 경험 흐름으로 설계했습니다.`,
+      description: `캡스톤 프로젝트로 진행된 6인의 팀 프로젝트로, 기존 음악 플랫폼의 탐색 경험을 개선하기 위해 시작했습니다.
+
+기존 음악 플랫폼의 아티스트 페이지는 앨범, 트랙, 프로필 정보를 2D 리스트 형태로 나열하는 구조가 대부분입니다.
+이 방식은 정보를 빠르게 확인하기에는 적합하지만, 사용자가 아티스트의 음악 세계관이나 앨범 간 분위기 차이를 시각적으로 탐색하기에는 한계가 있었습니다.
+
+특히 신인 아티스트나 개성 있는 음악 콘텐츠는 단순 목록 안에서 차별점이 드러나기 어렵고, 사용자는 콘텐츠를 "탐색"하기보다 이미 알고 있는 곡을 "재생"하는 흐름에 머물게 됩니다.
+
+그래서 Page of Artist는 아티스트와 음악 데이터를 단순히 나열하는 것이 아니라, 사용자가 직접 움직이고 선택하며 탐색할 수 있는 3D 공간 기반 음악 경험으로 재구성하는 것을 목표로 했습니다.
 
 ---
 
-3D 웹 기반 음악 경험은 대부분 실험적 작품 수준에 그칩니다. 실제 음악 데이터(트랙, 앨범)와 연동되지 않고, 모바일에서 동작하지 않으며, 물리 기반 인터랙션이 없어 조작감이 어색합니다.`,
-            workingApproach: `React Three Fiber 위에 Spring 물리 엔진을 직접 구현했습니다. 12장 카드의 원형 배치(반지름 3.8)에서 각 카드의 위치, 회전, 스케일을 Spring 감쇠 함수로 계산합니다. React의 리렌더링 사이클 밖에서 물리 연산을 처리하기 위해 useFrame 루프 내 ref 기반 계산을 사용했습니다.
+기존 3D 웹 기반 음악 콘텐츠는 시각적으로는 인상적이지만, 실제 음악 데이터 구조와 연결되지 않는 경우가 많았습니다.
+즉, 3D 오브젝트는 장식적인 요소에 머물고, 아티스트 정보나 앨범, 트랙 데이터와 유기적으로 연결되지 않아 서비스 구조로 확장하기 어려웠습니다.
+
+또한 3D 인터페이스는 사용자가 조작할 때 어색한 움직임이 발생하기 쉽습니다.
+단순 위치 이동이나 회전만 적용하면 카드가 기계적으로 움직이고, 사용자가 "탐색하고 있다"는 감각보다 "효과를 보고 있다"는 느낌에 가까워집니다.
+
+모바일 환경과 성능도 중요한 한계였습니다.
+React 상태 변화만으로 3D 카드의 위치, 회전, 포커싱을 처리하면 불필요한 리렌더링이 발생할 수 있고, 카드 개수가 늘어날수록 인터랙션이 끊기거나 프레임 저하가 생길 가능성이 있었습니다.`,
+      year: 2025,
+      role: "프론트엔드 개발, 3D 인터랙션",
+      contribution: `카드 인터랙션은 마우스 위치 기반 3D 틸팅과 Spring 물리 연산을 결합해, 사용자의 입력에 따라 자연스럽게 반응하는 인터랙션 구조를 구현했습니다.
+
+렌더링 사이클과 분리된 ref 기반 물리 계산을 적용해, React 리렌더 없이도 60fps 환경에서 안정적인 애니메이션을 유지했습니다.
+
+외부 음악 데이터를 API 기반으로 연동하고, 응답 지연이나 실패 상황에서도 UI 흐름이 유지되도록 데이터 처리 구조를 설계했습니다.
+
+Firebase Firestore 실시간 구독을 통해 아티스트 데이터 변경이 즉시 반영되도록 구성해, 데이터와 UI 상태가 실시간으로 동기화되는 구조를 구현했습니다.
+
+장르 필터 선택 시 카드 재배치 애니메이션을 물리 기반으로 처리해, 데이터 변화가 자연스러운 시각적 흐름으로 이어지도록 설계했습니다.`,
+      keyLearnings: `캡스톤 프로젝트를 통해 인터랙션 중심 UI 설계와 팀 기반 개발 경험을 쌓을 수 있었고, 최종 A+ 학점과 함께 "기획과 기술적 도전성이 뛰어나며 협업 기반 문제 해결 능력이 우수하다"는 평가를 받았습니다.
+
+이후 리빌딩 과정에서 렌더링과 물리 연산을 분리한 구조를 적용해, 60fps 환경에서도 안정적인 인터랙션을 구현했습니다.
+
+외부 API의 불안정성을 고려해 정적 데이터 폴백 구조를 적용함으로써, 서비스 환경에서도 사용자 경험이 끊기지 않도록 개선했습니다.
+
+이 과정을 통해 인터랙션과 데이터 구조를 함께 설계하는 것이 사용자 경험의 완성도를 결정한다는 것을 확인했습니다.`,
+      workingApproach: `Page of Artist는 아티스트와 음악 데이터를 3D 카드 인터페이스로 재구성하고, 사용자의 조작이 곧 탐색 흐름이 되도록 설계했습니다.
+각 카드는 단순한 이미지 요소가 아니라 아티스트, 앨범, 트랙 정보를 담는 데이터 단위로 정의했습니다.
+
+3D 구현에는 React Three Fiber를 사용했습니다.
+React 기반 컴포넌트 구조 안에서 Three.js의 3D 객체를 다룰 수 있어, 카드 UI와 데이터 구조를 함께 관리하기에 적합했기 때문입니다.
+이를 통해 아티스트 카드, 앨범 정보, 트랙 리스트를 각각 독립적인 컴포넌트로 분리하면서도 하나의 3D 탐색 흐름 안에 배치할 수 있었습니다.
+
+카드의 이동과 포커싱은 단순 애니메이션이 아니라 Spring 기반 물리 연산으로 처리했습니다.
+사용자가 드래그하거나 스크롤할 때 카드가 즉시 끊겨 움직이는 것이 아니라, 감쇠와 관성을 가진 움직임으로 반응하도록 설계해 자연스러운 조작감을 만들고자 했습니다.
+
+또한 카드의 상태를 active, adjacent, background로 나누어 현재 선택된 카드와 주변 카드의 크기, 위치, 시각적 강조를 다르게 처리했습니다.
+이를 통해 사용자가 어떤 콘텐츠에 집중하고 있는지 명확하게 인식할 수 있도록 했습니다.
+
+성능 측면에서는 React의 일반적인 상태 업데이트에 모든 움직임을 맡기지 않고, useFrame과 ref 기반 계산을 활용해 렌더링 사이클과 물리 연산을 분리했습니다.
+이 구조를 통해 카드의 위치, 회전, 스케일 변화가 반복적으로 발생해도 불필요한 리렌더링을 줄이고 안정적인 인터랙션을 유지하도록 설계했습니다.
 
 ---
 
-User Input (drag / scroll / keyboard)
-          |
-          v
-    [Spring Physics Engine]
-    useFrame loop, ref-based (no re-render)
-    ├── position: lerp to target
-    ├── velocity: spring damping
-    └── rotation: inertia decay
-          |
-          v
-    [Card State Machine]
-    active (1.0x) / adjacent (0.82x) / background (0.65x)
-          |
-    ┌─────┴──────┐
-    v            v
-[Front Face]  [Flip → Back Face]
- Artist Card   Album Tracklist
- + Glow FX     + Spotify API Data
-          |
-          v
-    [Spotify Web API]
-    Client Credentials Token (10min cache)
-    └── Static fallback on API failure`,
-            contribution: `Spotify Web API를 Express 프록시 서버로 연동해 Client Credentials 토큰을 자동 갱신했습니다. 카드 호버 시 마우스 위치 기반 3D 틸팅(±6° CardParallax)을 구현했습니다. Firebase Firestore 실시간 구독으로 아티스트 등록 즉시 갤러리에 반영됩니다. 장르 필터 7개(Pop, Hip-Hop, Rock, R&B, Indie, Electronic, Latin) 선택 시 카드 재배치 애니메이션이 Spring 물리로 처리됩니다.`,
-            keyLearnings: `React 렌더링 사이클을 우회한 ref 기반 물리 루프 패턴을 확립했습니다. 이 패턴 덕분에 60fps 물리 연산 중 단 한 번의 리렌더도 발생하지 않습니다. 외부 API(Spotify)의 불안정성을 정적 데이터 폴백으로 처리해, API 장애가 사용자 경험을 깨지 않도록 했습니다.`,
-            techStack: ['React 18', 'TypeScript', 'Three.js', 'React Three Fiber', 'Zustand', 'Firebase', 'Spotify API', 'Vite'],
-            categoryId: musicCategory.id,
-            year: 2026,
-            role: '프론트엔드 개발, 3D 인터랙션',
-            isFeatured: true,
-            featuredOrder: 2,
-            isPublished: true,
-            media: { create: [{ type: 'VIDEO_PLACEHOLDER', placeholderLabel: '데모 영상 준비 중입니다', order: 1, isPlaceholder: true }] },
-            links: { create: [{ type: 'GITHUB', label: 'GitHub', url: 'https://github.com/devbinlog/Page_of_Artist', order: 1 }] },
-        },
-    });
-    await prisma.projectTag.createMany({
-        data: [
-            { projectId: pageofartist.id, tagId: reactTag.id },
-            { projectId: pageofartist.id, tagId: typescriptTag.id },
-            { projectId: pageofartist.id, tagId: threejsTag.id },
-        ],
-        skipDuplicates: true,
-    });
-    // ── 3. MUSE ───────────────────────────────────────────────────────────────
-    const muse = await prisma.project.upsert({
-        where: { slug: 'muse' },
-        update: {
-            title: 'MUSE',
-            summary: '웹캠 하나로 손동작을 음악으로 변환하는 실시간 제스처 사운드 엔진.',
-            description: `악기를 배우지 않고 음악을 만드는 자연스러운 방법이 없습니다. 터치스크린 앱들은 버튼을 탭하는 수준에 그치며, 실제 연주 감각을 주지 못합니다. 웹캠만 있으면 아무 도구 없이 연주할 수 있는 시스템이 필요합니다.
+User Input (Mouse / Keyboard / Touch / Gyroscope)
+                      |
+                      v
+       DOM Event Handlers (CircularCarousel)
+                      |
+          springTarget ref <- drag / scroll
+                      |
+       useFrame Physics Loop (60fps, no re-render)
+    force = dx x TENSION - vel x FRICTION
+                      |
+   Card Group Positions (imperative update)
+                      |
+          Three.js Renderer -> Canvas
+
+  Spotify API -> Express Proxy (Token Cache)
+                      |
+          Artist Data + Track Info
+                      |
+  Firebase Firestore (realtime) -> Zustand Store
+                      |
+            Card Data -> 3D Scene`,
+      techStack: ["React 18", "TypeScript", "Three.js", "React Three Fiber", "Zustand", "Firebase", "Spotify API", "Vite"],
+      isFeatured: true,
+      featuredOrder: 2,
+      isPublished: true,
+      categoryId: musicCategory.id,
+    },
+  });
+
+  await prisma.projectLink.deleteMany({ where: { projectId: pageOfArtist.id } });
+  await prisma.projectLink.create({
+    data: { projectId: pageOfArtist.id, type: "GITHUB", label: "GitHub", url: "https://github.com/devbinlog/Page_of_Artist", order: 1 },
+  });
+
+  // ── 3. MDE ────────────────────────────────────────────────────────────────
+  const mde = await prisma.project.upsert({
+    where: { slug: "mde" },
+    update: {
+      title: "MDE",
+      summary: `자연어로 입력한 음악 아이디어를 LLM으로 분석하고, 감정·장르·사운드·비주얼 방향을 구조화하는 음악 디렉션 엔진.
+추상적인 음악 감각을 MusicProfile로 변환해 실제 제작 가능한 방향으로 연결합니다.`,
+      description: `음악 아이디어는 대부분 "비 오는 밤에 혼자 듣는 감성적인 기타 음악"처럼 감정적이고 추상적인 언어로 시작됩니다.
+하지만 작곡, 사운드 디자인, 앨범 커버, 공연 비주얼로 이어지기 위해서는 감정과 분위기를 장르, 템포, 악기, 사운드 톤, 시각 무드 같은 구체적인 요소로 변환해야 합니다.
+
+기존 도구는 음악 추천이나 이미지 생성에 집중되어 있어, 사용자의 막연한 음악 아이디어를 제작 가능한 구조로 정리해주는 과정이 부족합니다.
 
 ---
 
-기존 제스처 기반 음악 도구들은 레이턴시가 높고(100ms+), 제스처 인식 정확도가 낮으며, 악기 다양성이 없습니다. 웹 기반은 특히 오디오 처리 레이턴시 문제가 심각합니다. 또한 실제 연주처럼 루프 녹음 및 반복 재생 기능이 없어 음악적 완결성이 부족합니다.`,
-            workingApproach: `MediaPipe Tasks Vision으로 손가락 21개 키포인트를 30FPS 실시간 추적하고, 좌표를 오디오 파라미터로 매핑하는 규칙 기반 시스템을 설계했습니다. Web Audio API의 AudioWorklet으로 메인 스레드 블로킹 없이 오디오를 처리해 레이턴시를 30ms 이하로 달성했습니다.
+일반적인 AI 도구는 사용자의 문장을 자연어로 답변하는 데 그치기 쉽습니다.
+예를 들어 "몽환적이고 살짝 슬픈 우주 느낌의 음악"이라는 입력에 대해 단순 설명은 가능하지만, 이를 실제 제작에 필요한 데이터 구조로 변환하지는 못합니다.
+
+또한 음악 방향, 사운드 구성, 비주얼 무드가 각각 분리되어 있어 하나의 아이디어가 앨범 커버, 공연 무드, 콘텐츠 기획까지 이어지기 어렵습니다.`,
+      year: 2025,
+      role: "AI 백엔드 개발, 풀스택",
+      contribution: `LLM을 단순 텍스트 생성기가 아니라 음악 아이디어를 구조화하는 엔진으로 사용했습니다.
+사용자의 추상적인 입력을 MusicProfile JSON으로 강제 변환하고, 이 구조를 기반으로 음악 방향, 사운드 구성, 비주얼 무드, 콘텐츠 활용 방향을 생성하도록 설계했습니다.
+
+또한 API 키가 없는 환경에서도 서비스 흐름을 확인할 수 있도록 Mock Mode를 분리했습니다.
+GitHub Pages에서는 정적 데모로 동작하고, 실제 LLM 실행은 Vercel API Route 또는 서버 환경에서 처리할 수 있도록 구조를 나누었습니다.`,
+      keyLearnings: `MDE를 통해 사용자의 추상적인 음악 아이디어를 감정, 장르, 템포감, 악기 구성, 사운드 톤, 비주얼 무드로 분해하는 구조를 설계했습니다.
+
+또한 MusicProfile이라는 중간 표현을 두면 음악 방향, 사운드 구성, 앨범 커버 목업, 콘텐츠 기획을 하나의 데이터 구조에서 확장할 수 있습니다.
+이미지 생성은 핵심 기능이 아니라 visual_association을 기반으로 콘셉트를 빠르게 확인하기 위한 보조 목업 단계로 분리했습니다.`,
+      workingApproach: `MDE는 사용자의 자연어 입력을 LLM으로 분석해 MusicProfile이라는 구조화된 JSON으로 변환합니다.
+MusicProfile은 감정, 에너지, 템포감, 장르, 악기 구성, 사운드 방향, 분위기, 비주얼 연상, 청취 맥락, 콘텐츠 목표를 포함합니다.
+
+이를 기반으로 사용자는 다음 결과를 얻을 수 있습니다.
+
+음악 방향 설명
+사운드 구성 제안
+앨범 커버 또는 콘텐츠 비주얼 무드
+실제 제작에 활용 가능한 구조화 데이터
+
+---
+
+User Input
+ └── Text: "비 오는 밤에 혼자 듣는 감성적인 기타 음악 느낌"
+          |
+          v
+ [LLM Structuring Layer]
+ Input → MusicProfile (JSON)
+
+ {
+   emotion: ["melancholic", "lonely", "nostalgic"],
+   energy: "low",
+   tempo_feel: "slow",
+   genre: ["indie rock", "ambient"],
+   instrumentation: ["clean guitar", "reverb pad", "soft kick"],
+   sound_direction: ["heavy reverb", "wide ambient texture"],
+   atmosphere: ["rainy night", "empty street"],
+   visual_association: ["blue neon", "wet road reflection"],
+   listener_context: "alone at night",
+   content_goal: "album cover direction"
+ }
+          |
+          v
+ [Direction Generator]
+ ├── Music Direction
+ ├── Sound Arrangement
+ ├── Visual Mood
+ └── Content Usage
+          |
+          v
+ [Optional Visual Mockup]
+ visual_association → album cover mood prompt
+          |
+          v
+ Result UI`,
+      techStack: ["Python", "FastAPI", "Next.js", "TypeScript", "SQLAlchemy", "Stable Diffusion", "ComfyUI", "PostgreSQL"],
+      isFeatured: true,
+      featuredOrder: 3,
+      isPublished: true,
+      categoryId: designCategory.id,
+      secondaryCategoryId: aiCategory.id,
+    },
+    create: {
+      title: "MDE",
+      slug: "mde",
+      summary: `자연어로 입력한 음악 아이디어를 LLM으로 분석하고, 감정·장르·사운드·비주얼 방향을 구조화하는 음악 디렉션 엔진.
+추상적인 음악 감각을 MusicProfile로 변환해 실제 제작 가능한 방향으로 연결합니다.`,
+      description: `음악 아이디어는 대부분 "비 오는 밤에 혼자 듣는 감성적인 기타 음악"처럼 감정적이고 추상적인 언어로 시작됩니다.
+하지만 작곡, 사운드 디자인, 앨범 커버, 공연 비주얼로 이어지기 위해서는 감정과 분위기를 장르, 템포, 악기, 사운드 톤, 시각 무드 같은 구체적인 요소로 변환해야 합니다.
+
+기존 도구는 음악 추천이나 이미지 생성에 집중되어 있어, 사용자의 막연한 음악 아이디어를 제작 가능한 구조로 정리해주는 과정이 부족합니다.
+
+---
+
+일반적인 AI 도구는 사용자의 문장을 자연어로 답변하는 데 그치기 쉽습니다.
+예를 들어 "몽환적이고 살짝 슬픈 우주 느낌의 음악"이라는 입력에 대해 단순 설명은 가능하지만, 이를 실제 제작에 필요한 데이터 구조로 변환하지는 못합니다.
+
+또한 음악 방향, 사운드 구성, 비주얼 무드가 각각 분리되어 있어 하나의 아이디어가 앨범 커버, 공연 무드, 콘텐츠 기획까지 이어지기 어렵습니다.`,
+      year: 2025,
+      role: "AI 백엔드 개발, 풀스택",
+      contribution: `LLM을 단순 텍스트 생성기가 아니라 음악 아이디어를 구조화하는 엔진으로 사용했습니다.
+사용자의 추상적인 입력을 MusicProfile JSON으로 강제 변환하고, 이 구조를 기반으로 음악 방향, 사운드 구성, 비주얼 무드, 콘텐츠 활용 방향을 생성하도록 설계했습니다.
+
+또한 API 키가 없는 환경에서도 서비스 흐름을 확인할 수 있도록 Mock Mode를 분리했습니다.
+GitHub Pages에서는 정적 데모로 동작하고, 실제 LLM 실행은 Vercel API Route 또는 서버 환경에서 처리할 수 있도록 구조를 나누었습니다.`,
+      keyLearnings: `MDE를 통해 사용자의 추상적인 음악 아이디어를 감정, 장르, 템포감, 악기 구성, 사운드 톤, 비주얼 무드로 분해하는 구조를 설계했습니다.
+
+또한 MusicProfile이라는 중간 표현을 두면 음악 방향, 사운드 구성, 앨범 커버 목업, 콘텐츠 기획을 하나의 데이터 구조에서 확장할 수 있습니다.
+이미지 생성은 핵심 기능이 아니라 visual_association을 기반으로 콘셉트를 빠르게 확인하기 위한 보조 목업 단계로 분리했습니다.`,
+      workingApproach: `MDE는 사용자의 자연어 입력을 LLM으로 분석해 MusicProfile이라는 구조화된 JSON으로 변환합니다.
+MusicProfile은 감정, 에너지, 템포감, 장르, 악기 구성, 사운드 방향, 분위기, 비주얼 연상, 청취 맥락, 콘텐츠 목표를 포함합니다.
+
+이를 기반으로 사용자는 다음 결과를 얻을 수 있습니다.
+
+음악 방향 설명
+사운드 구성 제안
+앨범 커버 또는 콘텐츠 비주얼 무드
+실제 제작에 활용 가능한 구조화 데이터
+
+---
+
+User Input
+ └── Text: "비 오는 밤에 혼자 듣는 감성적인 기타 음악 느낌"
+          |
+          v
+ [LLM Structuring Layer]
+ Input → MusicProfile (JSON)
+
+ {
+   emotion: ["melancholic", "lonely", "nostalgic"],
+   energy: "low",
+   tempo_feel: "slow",
+   genre: ["indie rock", "ambient"],
+   instrumentation: ["clean guitar", "reverb pad", "soft kick"],
+   sound_direction: ["heavy reverb", "wide ambient texture"],
+   atmosphere: ["rainy night", "empty street"],
+   visual_association: ["blue neon", "wet road reflection"],
+   listener_context: "alone at night",
+   content_goal: "album cover direction"
+ }
+          |
+          v
+ [Direction Generator]
+ ├── Music Direction
+ ├── Sound Arrangement
+ ├── Visual Mood
+ └── Content Usage
+          |
+          v
+ [Optional Visual Mockup]
+ visual_association → album cover mood prompt
+          |
+          v
+ Result UI`,
+      techStack: ["Python", "FastAPI", "Next.js", "TypeScript", "SQLAlchemy", "Stable Diffusion", "ComfyUI", "PostgreSQL"],
+      isFeatured: true,
+      featuredOrder: 3,
+      isPublished: true,
+      categoryId: designCategory.id,
+      secondaryCategoryId: aiCategory.id,
+    },
+  });
+
+  await prisma.projectLink.deleteMany({ where: { projectId: mde.id } });
+  await prisma.projectLink.create({
+    data: { projectId: mde.id, type: "GITHUB", label: "GitHub", url: "https://github.com/devbinlog/FMD", order: 1 },
+  });
+
+  // ── 4. Emotion-Aware AI Voice Engine ──────────────────────────────────────
+  const emotionAI = await prisma.project.upsert({
+    where: { slug: "emotion-aware-ai-voice-engine" },
+    update: {
+      title: "Emotion-Aware AI Voice Engine",
+      summary: "STT, 감정 분석, LLM, TTS를 하나의 저지연 파이프라인으로 연결해 사용자의 감정 상태에 맞는 톤으로 응답하는 AI 음성 인터랙션 시스템.",
+      description: `기존 음성 AI 시스템은 사용자의 감정 상태를 고려하지 않고, 항상 동일한 톤으로 응답합니다.
+
+사용자가 화가 나거나 슬픈 상황에서도 AI는 중립적인 응답을 유지하며,
+이로 인해 대화 경험이 단절되고 AI가 기계적으로 느껴지는 문제가 발생합니다.
+
+특히 음성 기반 인터페이스에서는 감정이 중요한 요소임에도 불구하고,
+대부분의 시스템이 텍스트 기반 처리에만 집중하고 있다는 한계를 가지고 있습니다.
+
+---
+
+기존 TTS 시스템은 텍스트만을 기반으로 동작하며,
+음성 신호에서 감정을 추출하거나 반영하는 구조를 가지고 있지 않습니다.
+
+또한 STT, 감정 분석, LLM, TTS를 개별적으로 연결할 경우
+각 단계의 처리 지연이 누적되어 전체 응답 시간이 7~12초까지 증가하는 문제가 발생합니다.
+
+이로 인해 실시간 대화 경험을 제공하기 어려운 구조적 한계를 가지고 있습니다.`,
+      year: 2026,
+      role: "AI 백엔드 개발",
+      contribution: `오디오 신호와 텍스트를 결합한 감정 분석 모듈을 구현해,
+멀티모달 기반으로 감정을 추출할 수 있도록 구성했습니다.
+
+FastAPI WebSocket 서버를 사용해 음성 입력과 응답을 실시간으로 처리하고,
+STT부터 TTS까지 이어지는 흐름을 하나의 연결된 세션으로 관리했습니다.
+
+faster-whisper 기반 STT를 적용해 실시간 음성 인식을 처리하고,
+감정 분석 결과를 LLM과 TTS에 전달해 응답 내용과 음성 톤을 함께 제어했습니다.`,
+      keyLearnings: `감정 정보를 파이프라인 전반에 전달하는 구조를 설계하면서,
+단순 텍스트 기반 응답보다 훨씬 자연스러운 음성 대화 경험을 구현할 수 있었습니다.
+
+멀티모달 감정 분석을 통해 동일한 입력이라도 상황에 따라 다른 응답을 생성할 수 있게 되었고,
+사용자와의 상호작용 품질을 개선할 수 있었습니다.
+
+또한 STT, 감정 분석, LLM, TTS를 하나의 흐름으로 통합하면서
+실시간 처리에서 지연을 줄이기 위한 파이프라인 설계의 중요성을 경험했습니다.`,
+      workingApproach: `음성과 텍스트를 동시에 활용해 감정을 추출하고, 이를 응답 생성까지 연결하는 파이프라인을 설계했습니다.
+
+오디오 신호에서는 피치, 에너지, 속도와 같은 특징을 추출해 감정 상태를 추정하고,
+텍스트에서는 키워드 기반 감정 분석을 통해 보조 정보를 생성했습니다.
+
+두 결과를 가중치 기반으로 통합해 최종 감정을 결정하고,
+이를 LLM과 TTS에 전달해 응답의 내용과 음성 톤이 일관되도록 구성했습니다.
+
+또한 전체 파이프라인을 하나의 흐름으로 연결해,
+각 단계의 처리 지연이 누적되지 않도록 구조를 설계했습니다.
+
+---
+
+음성 입력 → STT → 감정 분석(오디오+텍스트 멀티모달) → 감정 통합
+                                                         ↓
+                              TTS(감정 톤 제어) ← LLM(감정 컨텍스트 반영)`,
+      techStack: ["Python", "FastAPI", "WebSocket", "faster-whisper", "Ollama", "Claude API", "Next.js 14", "Tailwind CSS"],
+      isFeatured: true,
+      featuredOrder: 4,
+      isPublished: true,
+      categoryId: aiCategory.id,
+    },
+    create: {
+      title: "Emotion-Aware AI Voice Engine",
+      slug: "emotion-aware-ai-voice-engine",
+      summary: "STT, 감정 분석, LLM, TTS를 하나의 저지연 파이프라인으로 연결해 사용자의 감정 상태에 맞는 톤으로 응답하는 AI 음성 인터랙션 시스템.",
+      description: `기존 음성 AI 시스템은 사용자의 감정 상태를 고려하지 않고, 항상 동일한 톤으로 응답합니다.
+
+사용자가 화가 나거나 슬픈 상황에서도 AI는 중립적인 응답을 유지하며,
+이로 인해 대화 경험이 단절되고 AI가 기계적으로 느껴지는 문제가 발생합니다.
+
+특히 음성 기반 인터페이스에서는 감정이 중요한 요소임에도 불구하고,
+대부분의 시스템이 텍스트 기반 처리에만 집중하고 있다는 한계를 가지고 있습니다.
+
+---
+
+기존 TTS 시스템은 텍스트만을 기반으로 동작하며,
+음성 신호에서 감정을 추출하거나 반영하는 구조를 가지고 있지 않습니다.
+
+또한 STT, 감정 분석, LLM, TTS를 개별적으로 연결할 경우
+각 단계의 처리 지연이 누적되어 전체 응답 시간이 7~12초까지 증가하는 문제가 발생합니다.
+
+이로 인해 실시간 대화 경험을 제공하기 어려운 구조적 한계를 가지고 있습니다.`,
+      year: 2026,
+      role: "AI 백엔드 개발",
+      contribution: `오디오 신호와 텍스트를 결합한 감정 분석 모듈을 구현해,
+멀티모달 기반으로 감정을 추출할 수 있도록 구성했습니다.
+
+FastAPI WebSocket 서버를 사용해 음성 입력과 응답을 실시간으로 처리하고,
+STT부터 TTS까지 이어지는 흐름을 하나의 연결된 세션으로 관리했습니다.
+
+faster-whisper 기반 STT를 적용해 실시간 음성 인식을 처리하고,
+감정 분석 결과를 LLM과 TTS에 전달해 응답 내용과 음성 톤을 함께 제어했습니다.`,
+      keyLearnings: `감정 정보를 파이프라인 전반에 전달하는 구조를 설계하면서,
+단순 텍스트 기반 응답보다 훨씬 자연스러운 음성 대화 경험을 구현할 수 있었습니다.
+
+멀티모달 감정 분석을 통해 동일한 입력이라도 상황에 따라 다른 응답을 생성할 수 있게 되었고,
+사용자와의 상호작용 품질을 개선할 수 있었습니다.
+
+또한 STT, 감정 분석, LLM, TTS를 하나의 흐름으로 통합하면서
+실시간 처리에서 지연을 줄이기 위한 파이프라인 설계의 중요성을 경험했습니다.`,
+      workingApproach: `음성과 텍스트를 동시에 활용해 감정을 추출하고, 이를 응답 생성까지 연결하는 파이프라인을 설계했습니다.
+
+오디오 신호에서는 피치, 에너지, 속도와 같은 특징을 추출해 감정 상태를 추정하고,
+텍스트에서는 키워드 기반 감정 분석을 통해 보조 정보를 생성했습니다.
+
+두 결과를 가중치 기반으로 통합해 최종 감정을 결정하고,
+이를 LLM과 TTS에 전달해 응답의 내용과 음성 톤이 일관되도록 구성했습니다.
+
+또한 전체 파이프라인을 하나의 흐름으로 연결해,
+각 단계의 처리 지연이 누적되지 않도록 구조를 설계했습니다.
+
+---
+
+음성 입력 → STT → 감정 분석(오디오+텍스트 멀티모달) → 감정 통합
+                                                         ↓
+                              TTS(감정 톤 제어) ← LLM(감정 컨텍스트 반영)`,
+      techStack: ["Python", "FastAPI", "WebSocket", "faster-whisper", "Ollama", "Claude API", "Next.js 14", "Tailwind CSS"],
+      isFeatured: true,
+      featuredOrder: 4,
+      isPublished: true,
+      categoryId: aiCategory.id,
+    },
+  });
+
+  await prisma.projectLink.deleteMany({ where: { projectId: emotionAI.id } });
+  await prisma.projectLink.create({
+    data: { projectId: emotionAI.id, type: "GITHUB", label: "GitHub", url: "https://github.com/devbinlog/Emotion-Aware-AI-Voice-Engine", order: 1 },
+  });
+
+  // ── 5. MUSE ───────────────────────────────────────────────────────────────
+  const muse = await prisma.project.upsert({
+    where: { slug: "muse" },
+    update: {
+      title: "MUSE",
+      summary: `손동작을 입력으로 받아 사운드를 제어하는 실시간 인터랙션 시스템.
+입력, 인식, 매핑, 출력 구조를 설계해 사용자의 움직임을 음악으로 연결되는 흐름으로 구현했습니다.`,
+      description: `기존 음악 생성 방식은 악기를 다루는 기술을 전제로 하거나,
+터치 기반 인터페이스에 의존해 실제 연주 감각을 전달하기 어렵습니다.
+
+특히 음악을 처음 접하는 사용자에게는 진입 장벽이 높고,
+직관적인 입력만으로 음악을 만들 수 있는 방식이 부족한 문제가 있습니다.
+
+MUSE는 별도의 장비 없이 웹캠만으로 사용자의 움직임을 음악으로 연결할 수 있는
+직관적인 인터랙션 시스템을 만드는 것을 목표로 했습니다.
+
+---
+
+기존 제스처 기반 음악 시스템은 입력 인식과 오디오 출력이 분리되어 있어
+지연(latency)이 발생하고, 실제 연주처럼 자연스럽게 연결되지 않는 문제가 있습니다.
+
+또한 제스처 인식의 정확도가 낮아 입력 안정성이 떨어지고,
+단순 트리거 기반 구조로 인해 음악 표현의 다양성이 제한되는 한계가 있습니다.
+
+웹 환경에서는 특히 오디오 처리가 메인 스레드에 의존할 경우
+입력 처리와 충돌하면서 지연이 증가하는 구조적 문제가 발생합니다.`,
+      year: 2026,
+      role: "풀스택 개발",
+      contribution: `Tauri(Rust)로 웹 앱을 데스크탑 앱으로 패키징해 시스템 MIDI 접근을 가능하게 했습니다. AudioWorklet으로 드럼 합성과 루프스테이션 녹음을 메인 스레드 밖에서 처리합니다. 5손가락 0.8초 유지 제스처로 신시사이저/드럼/이펙터 패널을 전환하는 제스처 FSM을 구현했습니다. 외부 샘플 파일 없이 Web Audio API만으로 킥, 스네어, 하이햇 6종 드럼 합성을 구현했습니다.`,
+      keyLearnings: `입력과 오디오 처리를 분리한 구조를 적용해,
+30ms 이하의 레이턴시로 실시간 연주가 가능한 환경을 구현했습니다.
+
+제스처 인식에서 발생하는 노이즈를 줄이기 위해
+홀드 시간과 평균화 기반 필터를 적용해 입력 안정성을 개선했습니다.
+
+이 과정을 통해 인터랙션 시스템에서는 단순한 인식 정확도보다
+입력 안정성과 반응 일관성이 사용자 경험에 더 큰 영향을 준다는 것을 확인했습니다.
+
+또한 하나의 입력을 여러 출력으로 매핑하는 구조를 통해
+단순 제스처를 음악적 표현으로 확장할 수 있는 가능성을 확인했습니다.`,
+      workingApproach: `MUSE는 사용자의 손동작을 입력으로 받아 사운드를 생성하는 구조를
+입력 → 인식 → 매핑 → 출력 단계로 분리해 설계했습니다.
+
+MediaPipe 기반 손 추적을 통해 손의 위치와 손가락 상태를 실시간으로 추출하고,
+이를 제스처 데이터로 변환해 오디오 파라미터에 매핑했습니다.
+
+화면을 상단(멜로디)과 하단(드럼) 영역으로 분리해,
+하나의 입력 장치로도 서로 다른 음악 요소를 동시에 제어할 수 있도록 구성했습니다.
+
+오디오 처리는 Web Audio API의 AudioWorklet을 사용해 메인 스레드와 분리함으로써,
+입력 처리와 독립적으로 동작하는 저지연 사운드 시스템을 구현했습니다.
 
 ---
 
@@ -556,8 +780,8 @@ WebCam Feed (30fps)
     |
     v
 [Sound Zone Mapper]
- Screen Split: Upper / Lower half
- ├── Upper: Synthesizer (pentatonic scale)
+ Screen Split: Upper zone (35%) / Lower zone (65%)
+ ├── Upper zone: Synthesizer (pentatonic scale)
  │    └── finger_count → note pitch
  └── Lower: Drum Kit (6 pads)
       └── zone_position → pad trigger
@@ -571,161 +795,61 @@ WebCam Feed (30fps)
     |
     v
 [MIDI/OSC Output] → External DAW`,
-            contribution: `Tauri(Rust)로 웹 앱을 데스크탑 앱으로 패키징해 시스템 MIDI 접근을 가능하게 했습니다. AudioWorklet으로 드럼 합성과 루프스테이션 녹음을 메인 스레드 밖에서 처리합니다. 5손가락 0.8초 유지 제스처로 신시사이저/드럼/이펙터 패널을 전환하는 제스처 FSM을 구현했습니다. 외부 샘플 파일 없이 Web Audio API만으로 킥, 스네어, 하이햇 6종 드럼 합성을 구현했습니다.`,
-            keyLearnings: `Web Audio API의 레이턴시 병목은 메인 스레드 점유에서 옵니다. AudioWorklet 분리로 30ms 이하 레이턴시를 달성했습니다. 30FPS 제스처 인식에서 손 떨림 필터링이 없으면 오탐이 폭증합니다. 0.8초 홀드 임계값과 평균화 필터를 통해 실제 연주 가능한 정확도를 확보했습니다.`,
-            codeSnippets: [
-                {
-                    title: 'Gesture Classifier — Finger Count + Zone Detection',
-                    language: 'typescript',
-                    code: `// Converts 21 MediaPipe hand landmarks into a GestureEvent
-// Landmark indices: 0=wrist, 4=thumb tip, 8=index tip, ...
+      techStack: ["React 18", "TypeScript", "Tauri", "Rust", "MediaPipe", "Web Audio API", "Zustand", "Vite"],
+      isFeatured: true,
+      featuredOrder: 5,
+      isPublished: true,
+      categoryId: musicCategory.id,
+    },
+    create: {
+      title: "MUSE",
+      slug: "muse",
+      summary: `손동작을 입력으로 받아 사운드를 제어하는 실시간 인터랙션 시스템.
+입력, 인식, 매핑, 출력 구조를 설계해 사용자의 움직임을 음악으로 연결되는 흐름으로 구현했습니다.`,
+      description: `기존 음악 생성 방식은 악기를 다루는 기술을 전제로 하거나,
+터치 기반 인터페이스에 의존해 실제 연주 감각을 전달하기 어렵습니다.
 
-interface Landmark { x: number; y: number; z: number }
-interface GestureEvent {
-  fingerCount: number
-  zone: 'upper' | 'lower'
-  handX: number   // 0.0 (left) to 1.0 (right)
-  handY: number   // 0.0 (top) to 1.0 (bottom)
-  holdDuration: number  // seconds
-}
+특히 음악을 처음 접하는 사용자에게는 진입 장벽이 높고,
+직관적인 입력만으로 음악을 만들 수 있는 방식이 부족한 문제가 있습니다.
 
-const FINGER_TIPS = [4, 8, 12, 16, 20]   // thumb, index, middle, ring, pinky
-const FINGER_PIPS = [3, 6, 10, 14, 18]   // second knuckle (PIP joint)
-
-function classifyGesture(
-  landmarks: Landmark[],
-  prevGesture: GestureEvent | null,
-  deltaTime: number,
-): GestureEvent {
-  // Count extended fingers: tip.y < pip.y means finger is up
-  const fingerCount = FINGER_TIPS.reduce((count, tip, i) => {
-    const pip = FINGER_PIPS[i]
-    // Thumb uses x-axis instead of y-axis
-    const isExtended = i === 0
-      ? Math.abs(landmarks[tip].x - landmarks[pip].x) > 0.04
-      : landmarks[tip].y < landmarks[pip].y - 0.02
-    return count + (isExtended ? 1 : 0)
-  }, 0)
-
-  const wrist = landmarks[0]
-  const zone: 'upper' | 'lower' = wrist.y < 0.5 ? 'upper' : 'lower'
-
-  // Accumulate hold duration if gesture is stable
-  const isStable = prevGesture?.fingerCount === fingerCount && prevGesture.zone === zone
-  const holdDuration = isStable ? (prevGesture?.holdDuration ?? 0) + deltaTime : 0
-
-  return { fingerCount, zone, handX: wrist.x, handY: wrist.y, holdDuration }
-}`,
-                    explanation: 'FINGER_TIPS[i].y < FINGER_PIPS[i].y 조건으로 손가락 펴짐을 판정합니다. 엄지는 y축이 아닌 x축 거리를 사용합니다. holdDuration을 누적해 0.8초 이상 유지 시 패널 전환 FSM을 트리거합니다.',
-                },
-                {
-                    title: 'Sound Zone Mapper — Finger Count to MIDI Note',
-                    language: 'typescript',
-                    code: `// Maps gesture params to audio synthesis parameters
-// Upper half = synthesizer (pentatonic scale)
-// Lower half = drum kit (6 zone pads)
-
-const PENTATONIC_C4 = [60, 62, 64, 67, 69, 72]  // C D E G A C (MIDI)
-
-interface AudioParams {
-  type: 'synth' | 'drum'
-  frequency?: number    // Hz — for synth
-  drumPad?: number      // 0–5 — for drum
-  velocity: number      // 0.0–1.0
-}
-
-export function mapGestureToAudio(gesture: GestureEvent): AudioParams | null {
-  if (gesture.fingerCount === 0) return null  // fist = silence
-
-  if (gesture.zone === 'upper') {
-    // Finger count 1–5 → pentatonic note index
-    const noteIndex = Math.min(gesture.fingerCount - 1, PENTATONIC_C4.length - 1)
-    const midiNote = PENTATONIC_C4[noteIndex]
-    const frequency = 440 * Math.pow(2, (midiNote - 69) / 12)
-
-    // Hand X position → velocity (left=soft, right=loud)
-    const velocity = 0.3 + gesture.handX * 0.7
-
-    return { type: 'synth', frequency, velocity }
-  } else {
-    // Lower zone: split into 3×2 grid → 6 drum pads
-    const col = Math.floor(gesture.handX * 3)   // 0, 1, 2
-    const row = gesture.handY > 0.75 ? 1 : 0    // top/bottom row
-    const drumPad = row * 3 + col               // 0–5
-
-    return { type: 'drum', drumPad, velocity: 0.8 }
-  }
-}`,
-                    explanation: '손 위치(zone)와 손가락 수(fingerCount)를 오디오 파라미터로 변환합니다. 상단 영역은 pentatonic scale MIDI 노트로, 하단 영역은 3×2 그리드 드럼 패드로 매핑합니다. MIDI 노트 → 주파수 변환은 표준 공식 440 × 2^((note-69)/12)를 사용합니다.',
-                },
-                {
-                    title: 'AudioWorklet — Off-Thread Drum Synthesis',
-                    language: 'javascript',
-                    code: `// drum-processor.js  (runs in AudioWorkletGlobalScope)
-// No DOM access, no main thread blocking.
-
-class DrumProcessor extends AudioWorkletProcessor {
-  static get parameterDescriptors() {
-    return [{ name: 'trigger', defaultValue: 0, automationRate: 'k-rate' }]
-  }
-
-  constructor() {
-    super()
-    this.phase = 0
-    this.envelope = 0
-    this.drumType = 0   // 0=kick, 1=snare, 2=hihat, ...
-    this.port.onmessage = (e) => {
-      if (e.data.type === 'trigger') {
-        this.envelope = 1.0       // reset envelope on trigger
-        this.phase = 0
-        this.drumType = e.data.pad
-      }
-    }
-  }
-
-  process(inputs, outputs) {
-    const output = outputs[0][0]
-    const sampleRate = globalThis.sampleRate
-
-    for (let i = 0; i < output.length; i++) {
-      let sample = 0
-
-      if (this.drumType === 0) {
-        // Kick: sine with exponential pitch drop
-        const freq = 80 * Math.exp(-this.phase * 15)
-        sample = Math.sin(2 * Math.PI * freq * this.phase / sampleRate)
-      } else if (this.drumType === 1) {
-        // Snare: noise burst + tone
-        sample = (Math.random() * 2 - 1) * 0.5
-          + Math.sin(2 * Math.PI * 200 * this.phase / sampleRate) * 0.5
-      } else {
-        // Hi-hat: bandpassed noise
-        sample = (Math.random() * 2 - 1)
-      }
-
-      output[i] = sample * this.envelope
-      this.envelope *= 0.9994          // exponential decay
-      this.phase++
-    }
-    return true   // keep processor alive
-  }
-}
-
-registerProcessor('drum-processor', DrumProcessor)`,
-                    explanation: 'AudioWorkletProcessor는 메인 스레드와 분리된 오디오 스레드에서 실행됩니다. port.onmessage로 트리거 이벤트를 받고, process() 루프에서 샘플을 합성합니다. 외부 샘플 파일 없이 수식으로 킥(사인+피치 감쇠), 스네어(노이즈+톤), 하이햇(노이즈)을 합성합니다.',
-                },
-            ],
-        },
-        create: {
-            title: 'MUSE',
-            slug: 'muse',
-            summary: '웹캠 하나로 손동작을 음악으로 변환하는 실시간 제스처 사운드 엔진.',
-            description: `악기를 배우지 않고 음악을 만드는 자연스러운 방법이 없습니다. 터치스크린 앱들은 버튼을 탭하는 수준에 그치며, 실제 연주 감각을 주지 못합니다. 웹캠만 있으면 아무 도구 없이 연주할 수 있는 시스템이 필요합니다.
+MUSE는 별도의 장비 없이 웹캠만으로 사용자의 움직임을 음악으로 연결할 수 있는
+직관적인 인터랙션 시스템을 만드는 것을 목표로 했습니다.
 
 ---
 
-기존 제스처 기반 음악 도구들은 레이턴시가 높고(100ms+), 제스처 인식 정확도가 낮으며, 악기 다양성이 없습니다. 웹 기반은 특히 오디오 처리 레이턴시 문제가 심각합니다. 또한 실제 연주처럼 루프 녹음 및 반복 재생 기능이 없어 음악적 완결성이 부족합니다.`,
-            workingApproach: `MediaPipe Tasks Vision으로 손가락 21개 키포인트를 30FPS 실시간 추적하고, 좌표를 오디오 파라미터로 매핑하는 규칙 기반 시스템을 설계했습니다. Web Audio API의 AudioWorklet으로 메인 스레드 블로킹 없이 오디오를 처리해 레이턴시를 30ms 이하로 달성했습니다.
+기존 제스처 기반 음악 시스템은 입력 인식과 오디오 출력이 분리되어 있어
+지연(latency)이 발생하고, 실제 연주처럼 자연스럽게 연결되지 않는 문제가 있습니다.
+
+또한 제스처 인식의 정확도가 낮아 입력 안정성이 떨어지고,
+단순 트리거 기반 구조로 인해 음악 표현의 다양성이 제한되는 한계가 있습니다.
+
+웹 환경에서는 특히 오디오 처리가 메인 스레드에 의존할 경우
+입력 처리와 충돌하면서 지연이 증가하는 구조적 문제가 발생합니다.`,
+      year: 2026,
+      role: "풀스택 개발",
+      contribution: `Tauri(Rust)로 웹 앱을 데스크탑 앱으로 패키징해 시스템 MIDI 접근을 가능하게 했습니다. AudioWorklet으로 드럼 합성과 루프스테이션 녹음을 메인 스레드 밖에서 처리합니다. 5손가락 0.8초 유지 제스처로 신시사이저/드럼/이펙터 패널을 전환하는 제스처 FSM을 구현했습니다. 외부 샘플 파일 없이 Web Audio API만으로 킥, 스네어, 하이햇 6종 드럼 합성을 구현했습니다.`,
+      keyLearnings: `입력과 오디오 처리를 분리한 구조를 적용해,
+30ms 이하의 레이턴시로 실시간 연주가 가능한 환경을 구현했습니다.
+
+제스처 인식에서 발생하는 노이즈를 줄이기 위해
+홀드 시간과 평균화 기반 필터를 적용해 입력 안정성을 개선했습니다.
+
+이 과정을 통해 인터랙션 시스템에서는 단순한 인식 정확도보다
+입력 안정성과 반응 일관성이 사용자 경험에 더 큰 영향을 준다는 것을 확인했습니다.
+
+또한 하나의 입력을 여러 출력으로 매핑하는 구조를 통해
+단순 제스처를 음악적 표현으로 확장할 수 있는 가능성을 확인했습니다.`,
+      workingApproach: `MUSE는 사용자의 손동작을 입력으로 받아 사운드를 생성하는 구조를
+입력 → 인식 → 매핑 → 출력 단계로 분리해 설계했습니다.
+
+MediaPipe 기반 손 추적을 통해 손의 위치와 손가락 상태를 실시간으로 추출하고,
+이를 제스처 데이터로 변환해 오디오 파라미터에 매핑했습니다.
+
+화면을 상단(멜로디)과 하단(드럼) 영역으로 분리해,
+하나의 입력 장치로도 서로 다른 음악 요소를 동시에 제어할 수 있도록 구성했습니다.
+
+오디오 처리는 Web Audio API의 AudioWorklet을 사용해 메인 스레드와 분리함으로써,
+입력 처리와 독립적으로 동작하는 저지연 사운드 시스템을 구현했습니다.
 
 ---
 
@@ -743,8 +867,8 @@ WebCam Feed (30fps)
     |
     v
 [Sound Zone Mapper]
- Screen Split: Upper / Lower half
- ├── Upper: Synthesizer (pentatonic scale)
+ Screen Split: Upper zone (35%) / Lower zone (65%)
+ ├── Upper zone: Synthesizer (pentatonic scale)
  │    └── finger_count → note pitch
  └── Lower: Drum Kit (6 pads)
       └── zone_position → pad trigger
@@ -758,701 +882,212 @@ WebCam Feed (30fps)
     |
     v
 [MIDI/OSC Output] → External DAW`,
-            contribution: `Tauri(Rust)로 웹 앱을 데스크탑 앱으로 패키징해 시스템 MIDI 접근을 가능하게 했습니다. AudioWorklet으로 드럼 합성과 루프스테이션 녹음을 메인 스레드 밖에서 처리합니다. 5손가락 0.8초 유지 제스처로 신시사이저/드럼/이펙터 패널을 전환하는 제스처 FSM을 구현했습니다. 외부 샘플 파일 없이 Web Audio API만으로 킥, 스네어, 하이햇 6종 드럼 합성을 구현했습니다.`,
-            keyLearnings: `Web Audio API의 레이턴시 병목은 메인 스레드 점유에서 옵니다. AudioWorklet 분리로 30ms 이하 레이턴시를 달성했습니다. 30FPS 제스처 인식에서 손 떨림 필터링이 없으면 오탐이 폭증합니다. 0.8초 홀드 임계값과 평균화 필터를 통해 실제 연주 가능한 정확도를 확보했습니다.`,
-            techStack: ['React 18', 'TypeScript', 'Tauri', 'Rust', 'MediaPipe', 'Web Audio API', 'Zustand', 'Vite'],
-            codeSnippets: [
-                {
-                    title: 'Gesture Classifier — Finger Count + Zone Detection',
-                    language: 'typescript',
-                    code: `interface Landmark { x: number; y: number; z: number }
-interface GestureEvent {
-  fingerCount: number
-  zone: 'upper' | 'lower'
-  handX: number
-  handY: number
-  holdDuration: number
-}
+      techStack: ["React 18", "TypeScript", "Tauri", "Rust", "MediaPipe", "Web Audio API", "Zustand", "Vite"],
+      isFeatured: true,
+      featuredOrder: 5,
+      isPublished: true,
+      categoryId: musicCategory.id,
+    },
+  });
 
-const FINGER_TIPS = [4, 8, 12, 16, 20]
-const FINGER_PIPS = [3, 6, 10, 14, 18]
+  await prisma.projectLink.deleteMany({ where: { projectId: muse.id } });
+  await prisma.projectLink.create({
+    data: { projectId: muse.id, type: "GITHUB", label: "GitHub", url: "https://github.com/devbinlog/MUSE-Motion-based-User-Sound-Engine-", order: 1 },
+  });
 
-function classifyGesture(
-  landmarks: Landmark[],
-  prevGesture: GestureEvent | null,
-  deltaTime: number,
-): GestureEvent {
-  const fingerCount = FINGER_TIPS.reduce((count, tip, i) => {
-    const pip = FINGER_PIPS[i]
-    const isExtended = i === 0
-      ? Math.abs(landmarks[tip].x - landmarks[pip].x) > 0.04
-      : landmarks[tip].y < landmarks[pip].y - 0.02
-    return count + (isExtended ? 1 : 0)
-  }, 0)
+  // ── 6. DesignFlow AI Builder ───────────────────────────────────────────────
+  const designflow = await prisma.project.upsert({
+    where: { slug: "designflow-ai-builder" },
+    update: {
+      title: "DesignFlow AI Builder",
+      summary: `Figma 디자인 구조를 분석해 컴포넌트를 식별하고, React + Tailwind 코드로 자동 변환하는 AI 기반 코드 생성 시스템.
+디자인 토큰 추출부터 LLM 기반 구조 해석, 코드 생성까지 하나의 파이프라인으로 연결했습니다.`,
+      description: `Figma로 완성된 디자인을 코드로 옮기는 과정에서, 개발자는 어떤 요소가 컴포넌트인지를 직접 판단해야 합니다.
 
-  const wrist = landmarks[0]
-  const zone: 'upper' | 'lower' = wrist.y < 0.5 ? 'upper' : 'lower'
-  const isStable = prevGesture?.fingerCount === fingerCount && prevGesture.zone === zone
-  const holdDuration = isStable ? (prevGesture?.holdDuration ?? 0) + deltaTime : 0
+동일한 디자인이라도 개발자마다 컴포넌트 경계를 다르게 해석하고,
+색상·폰트·간격 같은 디자인 토큰을 코드 변수로 변환하는 작업도 매번 수동으로 이루어집니다.
 
-  return { fingerCount, zone, handX: wrist.x, handY: wrist.y, holdDuration }
-}`,
-                    explanation: 'FINGER_TIPS[i].y < FINGER_PIPS[i].y 조건으로 손가락 펴짐을 판정합니다. 엄지는 y축이 아닌 x축 거리를 사용합니다. holdDuration을 누적해 0.8초 이상 유지 시 패널 전환 FSM을 트리거합니다.',
-                },
-                {
-                    title: 'Sound Zone Mapper — Finger Count to MIDI Note',
-                    language: 'typescript',
-                    code: `const PENTATONIC_C4 = [60, 62, 64, 67, 69, 72]
-
-interface AudioParams {
-  type: 'synth' | 'drum'
-  frequency?: number
-  drumPad?: number
-  velocity: number
-}
-
-export function mapGestureToAudio(gesture: GestureEvent): AudioParams | null {
-  if (gesture.fingerCount === 0) return null
-
-  if (gesture.zone === 'upper') {
-    const noteIndex = Math.min(gesture.fingerCount - 1, PENTATONIC_C4.length - 1)
-    const midiNote = PENTATONIC_C4[noteIndex]
-    const frequency = 440 * Math.pow(2, (midiNote - 69) / 12)
-    const velocity = 0.3 + gesture.handX * 0.7
-    return { type: 'synth', frequency, velocity }
-  } else {
-    const col = Math.floor(gesture.handX * 3)
-    const row = gesture.handY > 0.75 ? 1 : 0
-    const drumPad = row * 3 + col
-    return { type: 'drum', drumPad, velocity: 0.8 }
-  }
-}`,
-                    explanation: '손 위치(zone)와 손가락 수를 오디오 파라미터로 변환합니다. 상단은 pentatonic scale MIDI 노트로, 하단은 3×2 그리드 드럼 패드로 매핑합니다.',
-                },
-                {
-                    title: 'AudioWorklet — Off-Thread Drum Synthesis',
-                    language: 'javascript',
-                    code: `class DrumProcessor extends AudioWorkletProcessor {
-  constructor() {
-    super()
-    this.phase = 0
-    this.envelope = 0
-    this.drumType = 0
-    this.port.onmessage = (e) => {
-      if (e.data.type === 'trigger') {
-        this.envelope = 1.0
-        this.phase = 0
-        this.drumType = e.data.pad
-      }
-    }
-  }
-
-  process(inputs, outputs) {
-    const output = outputs[0][0]
-    for (let i = 0; i < output.length; i++) {
-      let sample = 0
-      if (this.drumType === 0) {
-        const freq = 80 * Math.exp(-this.phase * 15)
-        sample = Math.sin(2 * Math.PI * freq * this.phase / sampleRate)
-      } else if (this.drumType === 1) {
-        sample = (Math.random() * 2 - 1) * 0.5
-          + Math.sin(2 * Math.PI * 200 * this.phase / sampleRate) * 0.5
-      } else {
-        sample = (Math.random() * 2 - 1)
-      }
-      output[i] = sample * this.envelope
-      this.envelope *= 0.9994
-      this.phase++
-    }
-    return true
-  }
-}
-
-registerProcessor('drum-processor', DrumProcessor)`,
-                    explanation: 'AudioWorkletProcessor는 메인 스레드와 분리된 오디오 스레드에서 실행됩니다. 외부 샘플 파일 없이 수식으로 킥(사인+피치 감쇠), 스네어(노이즈+톤), 하이햇(노이즈)을 합성합니다.',
-                },
-            ],
-            categoryId: musicCategory.id,
-            year: 2026,
-            role: '풀스택 개발',
-            isFeatured: true,
-            featuredOrder: 3,
-            isPublished: true,
-            media: { create: [{ type: 'VIDEO_PLACEHOLDER', placeholderLabel: '데모 영상 준비 중입니다', order: 1, isPlaceholder: true }] },
-            links: { create: [{ type: 'GITHUB', label: 'GitHub', url: 'https://github.com/devbinlog/MUSE-Motion-based-User-Sound-Engine-', order: 1 }] },
-        },
-    });
-    await prisma.projectTag.createMany({
-        data: [
-            { projectId: muse.id, tagId: reactTag.id },
-            { projectId: muse.id, tagId: typescriptTag.id },
-            { projectId: muse.id, tagId: mediapipeTag.id },
-            { projectId: muse.id, tagId: tauriTag.id },
-        ],
-        skipDuplicates: true,
-    });
-    // ── 4. Emotion-Aware AI Voice Engine ──────────────────────────────────────
-    const emotionVoice = await prisma.project.upsert({
-        where: { slug: 'emotion-aware-ai-voice-engine' },
-        update: {
-            description: `AI 음성 대화 시스템들은 감정을 무시합니다. 사용자가 화가 나거나 슬픈 상태일 때도 AI는 동일한 중립 톤으로 응답합니다. 이 단절이 음성 AI를 차갑고 기계적으로 느끼게 만들며, 지속 사용을 어렵게 합니다.
+Figma는 CSS 수치를 제공하지만 실제 React 컴포넌트 구조는 제공하지 않아,
+디자인-개발 사이의 간격을 메우는 과정에 반복적인 수작업이 발생합니다.
 
 ---
 
-기존 TTS 시스템은 텍스트만 처리하고 음성 신호의 감정 피처(피치, 속도, 에너지)를 분석하지 않습니다. 실시간 처리를 위해서는 STT, 감정 분석, LLM, TTS가 모두 저레이턴시 파이프라인으로 연결되어야 하지만, 각 컴포넌트를 독립적으로 연결하면 7-12초 응답 시간이 발생합니다.`,
-            workingApproach: `음성 신호에서 피치(librosa), 에너지(RMS), 속도(speech rate)를 추출해 6가지 감정 벡터로 매핑했습니다. 텍스트 감정 분석(키워드 기반)과 오디오 감정 분석을 가중 합산해 최종 감정을 결정합니다.
+기존 디자인-to-코드 도구들은 마크업 수준의 CSS 변환에 그치며,
+컴포넌트 단위의 구조나 재사용 가능한 설계를 자동으로 추론하지 못합니다.
 
----
+또한 색상, 타이포그래피, 간격이 각각 분리된 형태로 존재해
+하나의 디자인 시스템으로 통합하고 Tailwind 클래스로 매핑하는 과정이 체계화되어 있지 않습니다.
 
-Microphone Input
-    |
-    v
-[faster-whisper STT]
- ├── Korean / English auto-detect
- └── Streaming transcription
-    |
-    v
-[Emotion Fusion Engine]
- ├── Audio Features: pitch, energy, speed
- ├── Text Features: keyword sentiment
- └── Weighted merge: audio(60%) + text(40%)
-    |
-    v
-[Emotion → Response Mapping]
- neutral / happy / sad / angry / excited / calm
-    |
-    v
-[Ollama LLM / Claude API fallback]
- System prompt: "Respond with {emotion} tone"
-    |
-    v
-[TTS with Emotion Params]
- ├── pitch_shift: emotion.pitch_factor
- ├── speed: emotion.speed_factor
- └── Character routing: 유나(KO) / 사만다(EN)`,
-        },
-        create: {
-            title: 'Emotion-Aware AI Voice Engine',
-            slug: 'emotion-aware-ai-voice-engine',
-            summary: '목소리의 감정을 실시간으로 인식하고, 감정에 맞는 톤으로 응답하는 AI 음성 대화 엔진.',
-            description: `AI 음성 대화 시스템들은 감정을 무시합니다. 사용자가 화가 나거나 슬픈 상태일 때도 AI는 동일한 중립 톤으로 응답합니다. 이 단절이 음성 AI를 차갑고 기계적으로 느끼게 만들며, 지속 사용을 어렵게 합니다.
+Figma 노드 트리 분석, 토큰 추출, 컴포넌트 식별, 코드 생성이 각각 분리되어 있어
+이를 하나의 자동화된 흐름으로 연결하는 시스템이 부족합니다.`,
+      year: 2026,
+      role: "AI 백엔드 개발, 풀스택",
+      contribution: `Figma 노드 트리를 재귀 순회해 레이아웃 의도와 반복 패턴을 추론하는 구조 분석 로직을 구현했습니다.
 
----
+색상·타이포그래피·간격·반경 값을 사용 빈도 기준으로 정규화하고,
+px 값을 Tailwind 유틸리티 클래스로 변환하는 토큰 매핑 로직을 외부 라이브러리 없이 직접 구현했습니다.
 
-기존 TTS 시스템은 텍스트만 처리하고 음성 신호의 감정 피처(피치, 속도, 에너지)를 분석하지 않습니다. 실시간 처리를 위해서는 STT, 감정 분석, LLM, TTS가 모두 저레이턴시 파이프라인으로 연결되어야 하지만, 각 컴포넌트를 독립적으로 연결하면 7-12초 응답 시간이 발생합니다.`,
-            workingApproach: `음성 신호에서 피치(librosa), 에너지(RMS), 속도(speech rate)를 추출해 6가지 감정 벡터로 매핑했습니다. 텍스트 감정 분석(키워드 기반)과 오디오 감정 분석을 가중 합산해 최종 감정을 결정합니다.
+LLM을 3단계(구조 분석 → 컴포넌트 명명 → 코드 생성)로 분리해 호출하고,
+각 단계는 전체 Figma JSON이 아닌 해당 단계에 필요한 데이터만 전달받도록 설계했습니다.
 
----
+분석 실행을 백그라운드 태스크로 처리하고 클라이언트에서 폴링하는 구조를 적용해
+응답 대기 중에도 UI가 블로킹되지 않도록 구성했습니다.`,
+      keyLearnings: `Figma 노드 구조를 컴포넌트 단위로 해석하는 과정에서,
+LLM을 단순 코드 생성기가 아니라 디자인 의도를 추론하는 해석 엔진으로 활용할 수 있음을 확인했습니다.
 
-Microphone Input
-    |
-    v
-[faster-whisper STT]
- ├── Korean / English auto-detect
- └── Streaming transcription
-    |
-    v
-[Emotion Fusion Engine]
- ├── Audio Features: pitch, energy, speed
- ├── Text Features: keyword sentiment
- └── Weighted merge: audio(60%) + text(40%)
-    |
-    v
-[Emotion → Response Mapping]
- neutral / happy / sad / angry / excited / calm
-    |
-    v
-[Ollama LLM / Claude API fallback]
- System prompt: "Respond with {emotion} tone"
-    |
-    v
-[TTS with Emotion Params]
- ├── pitch_shift: emotion.pitch_factor
- ├── speed: emotion.speed_factor
- └── Character routing: 유나(KO) / 사만다(EN)`,
-            contribution: `faster-whisper로 한국어/영어 자동 감지 STT를 구현했습니다. numpy/scipy로 외부 ML 라이브러리 없이 오디오 감정 피처를 추출했습니다. FastAPI WebSocket으로 실시간 양방향 스트리밍을 구축했습니다. 로컬 Ollama와 Claude API를 폴백 체인으로 구성해 비용과 응답 속도를 균형 있게 관리했습니다.`,
-            keyLearnings: `오디오 + 텍스트 감정 신호를 단순 평균이 아닌 가중 합산으로 처리하면 정확도가 유의미하게 향상됩니다. 로컬 LLM(Ollama)은 응답 속도가 느리지만 API 비용이 없어 개발 단계에서 적합합니다. WebSocket 파이프라인에서 각 단계를 비동기로 분리하면 전체 레이턴시를 절반 이하로 줄일 수 있습니다.`,
-            techStack: ['Python', 'FastAPI', 'WebSocket', 'faster-whisper', 'Ollama', 'Claude API', 'Next.js 14', 'Tailwind CSS'],
-            categoryId: aiCategory.id,
-            year: 2026,
-            role: 'AI 백엔드 개발',
-            isFeatured: false,
-            isPublished: true,
-            media: { create: [{ type: 'VIDEO_PLACEHOLDER', placeholderLabel: '데모 영상 준비 중입니다', order: 1, isPlaceholder: true }] },
-            links: { create: [{ type: 'GITHUB', label: 'GitHub', url: 'https://github.com/devbinlog/Emotion-Aware-AI-Voice-Engine', order: 1 }] },
-        },
-    });
-    await prisma.projectTag.createMany({
-        data: [
-            { projectId: emotionVoice.id, tagId: pythonTag.id },
-            { projectId: emotionVoice.id, tagId: fastapiTag.id },
-            { projectId: emotionVoice.id, tagId: aiTag.id },
-        ],
-        skipDuplicates: true,
-    });
-    // ── 5. FMD ────────────────────────────────────────────────────────────────
-    const fmd = await prisma.project.upsert({
-        where: { slug: 'fmd' },
-        update: {
-            title: 'FMD',
-            summary: '자연어 텍스트 또는 손스케치로 원하는 디자인 에셋을 찾아주는 AI 검색 엔진.',
-            description: `디자이너가 레퍼런스를 찾을 때 "미니멀한 타이포 포스터 느낌"처럼 자연어로 원하는 것을 표현하지만, 기존 검색 도구(Pinterest, Behance)는 이 언어를 이해하지 못합니다. 키워드 매칭 기반 검색은 의미를 이해하지 못하고 인기도 순 정렬에 의존합니다.
+각 LLM 호출 단계에 전체 JSON이 아닌 필요한 데이터만 전달하는 방식이
+응답 품질과 파싱 안정성을 함께 높이는 데 효과적이었습니다.
 
----
+또한 Auto Layout, Component Sets, Variants 같은 고급 Figma 기능은
+단순 노드 트리 분석으로 완전히 처리하기 어렵다는 한계를 확인했고,
+이를 처리하기 위해서는 Figma 플러그인 API 수준의 접근이 필요하다는 점을 파악했습니다.`,
+      workingApproach: `DesignFlow는 Figma JSON을 입력으로 받아 React + Tailwind 코드를 출력하는 과정을
+파싱 → 정규화 → 토큰 추출 → AI 해석 → 코드 생성의 4단계 파이프라인으로 설계했습니다.
 
-멀티모달 입력(텍스트 + 스케치)을 동시에 처리하는 검색 시스템이 없고, 단일 플랫폼에 종속된 기존 도구는 다양한 스타일의 레퍼런스를 커버하지 못합니다. TF-IDF 단독 검색은 의미 유사도를 측정하지 못하고, 임베딩 단독 검색은 색상/레이아웃 같은 시각 특성을 놓칩니다.`,
-            workingApproach: `사용자 입력을 LLM으로 DesignProfile(구조화된 JSON)로 변환하고, 이를 검색과 생성의 공통 인터페이스로 활용합니다. 단일 소스 의존을 피하기 위해 3개 검색 소스를 병렬 조회하고, 5가지 신호를 가중 합산해 최종 랭킹을 생성합니다.
+Figma 노드 트리를 재귀 순회해 레이아웃 의도와 반복 패턴을 추론하고,
+색상·타이포그래피·간격·반경 값을 사용 빈도 기준으로 정규화해 Tailwind 유틸리티 클래스로 매핑했습니다.
 
----
-
-User Input
- ├── Text: "minimal typo poster warm tone"
- └── Sketch: HTML5 Canvas (base64 PNG)
-          |
-          v
-    [LLM Structuring Layer]
-    Input → DesignProfile (JSON)
-    {
-      style: "minimal",
-      color: "warm monochrome",
-      layout: "centered typography",
-      tone: "editorial",
-      type: "poster"
-    }
-          |
-     ┌────┴────┐
-     v         v
-[Search]   [Generation]
- ├── Naver    ├── ComfyUI
- ├── Google   ├── Stable Diffusion
- └── Openverse└── HuggingFace (fallback)
- style_variants: minimal / modern / vintage / bold
-          |
-          v
-    [Multi-Signal Ranker]
-    score = (
-      embedding_sim  × 0.55 +
-      color_profile  × 0.20 +
-      keyword_match  × 0.20 +
-      metadata_score × 0.05
-    )
-          |
-          v
-    Ranked Results → Frontend`,
-            contribution: `LLM을 텍스트 생성기가 아닌 구조화 엔진으로 사용한 DesignProfile 추상화 레이어를 설계했습니다. TF-IDF 임베딩을 외부 ML 라이브러리 없이 Python stdlib만으로 구현해 배포 의존성을 최소화했습니다. ComfyUI → Stable Diffusion → HuggingFace → Pollinations 7단계 폴백 체인으로 이미지 생성 가용성을 확보했습니다. 한국어 100개 이상의 번역 맵을 내장해 한글 입력을 영어 디자인 용어로 정규화합니다.`,
-            keyLearnings: `LLM 출력을 JSON 스키마로 강제 파싱하면 다운스트림 검색/생성 파이프라인의 입력이 일관되어 전체 시스템의 신뢰성이 높아집니다. 멀티 소스 검색 + 폴백 체인 패턴은 단일 API 장애가 사용자 경험을 깨지 않도록 보호합니다. 검색과 생성을 DesignProfile이라는 중간 표현으로 분리하면 두 파이프라인을 독립적으로 발전시킬 수 있습니다.`,
-            codeSnippets: [
-                {
-                    title: 'LLM-based DesignProfile Generation',
-                    language: 'python',
-                    code: `async def generate_design_profile(user_input: str) -> DesignProfile:
-    """
-    Converts freeform user text into a structured DesignProfile JSON.
-    The LLM acts as a structuring engine, not a text generator.
-    """
-    prompt = f"""
-You are a design analysis assistant.
-Extract structured design attributes from the user's description.
-Return ONLY valid JSON. No explanation.
-
-User input: "{user_input}"
-
-Required fields:
-- style: one of [minimal, bold, editorial, playful, corporate]
-- color: color palette description (e.g. "warm monochrome", "neon on dark")
-- layout: layout pattern (e.g. "centered typography", "grid", "asymmetric")
-- tone: emotional tone (e.g. "clean", "energetic", "serious")
-- type: asset type (e.g. "poster", "logo", "web", "illustration")
-- keywords: list of 3-5 English search keywords
-"""
-    response = await claude_client.messages.create(
-        model="claude-3-haiku-20240307",
-        max_tokens=256,
-        messages=[{"role": "user", "content": prompt}],
-    )
-
-    raw = response.content[0].text.strip()
-    # Strip markdown code fences if present
-    if raw.startswith("\`\`\`"):
-        raw = raw.split("\`\`\`")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
-
-    data = json.loads(raw)
-    return DesignProfile(**data)`,
-                    explanation: 'LLM에게 텍스트 생성이 아닌 JSON 스키마 채우기를 요청합니다. 출력을 json.loads()로 강제 파싱해 다운스트림 파이프라인의 입력 타입을 보장합니다. claude-3-haiku를 선택한 이유는 구조화 태스크에서 속도 대비 정확도가 가장 높기 때문입니다.',
-                },
-                {
-                    title: 'Multi-Signal Ranker — Weighted Scoring',
-                    language: 'python',
-                    code: `class MultiSignalRanker:
-    """
-    Ranks search results using a weighted combination of 4 signals.
-    Each signal targets a different dimension of design relevance.
-    """
-    WEIGHTS = {
-        "embedding_sim": 0.55,   # semantic similarity (most important)
-        "color_profile": 0.20,   # visual color match
-        "keyword_match": 0.20,   # TF-IDF keyword overlap
-        "metadata_score": 0.05,  # recency + source quality
-    }
-
-    def rank(
-        self,
-        results: list[SearchResult],
-        profile: DesignProfile,
-        query_embedding: np.ndarray,
-    ) -> list[RankedResult]:
-        scored = []
-        for result in results:
-            emb_score = cosine_similarity(
-                query_embedding, result.embedding
-            )
-            color_score = self._color_distance(
-                profile.color, result.dominant_colors
-            )
-            kw_score = self._tfidf_overlap(
-                profile.keywords, result.tags
-            )
-            meta_score = self._metadata_score(result)
-
-            final = sum(
-                score * self.WEIGHTS[key]
-                for key, score in {
-                    "embedding_sim": emb_score,
-                    "color_profile": color_score,
-                    "keyword_match": kw_score,
-                    "metadata_score": meta_score,
-                }.items()
-            )
-            scored.append(RankedResult(result=result, score=final))
-
-        return sorted(scored, key=lambda x: x.score, reverse=True)
-
-    def _tfidf_overlap(
-        self, query_terms: list[str], doc_terms: list[str]
-    ) -> float:
-        query_set = set(t.lower() for t in query_terms)
-        doc_set = set(t.lower() for t in doc_terms)
-        if not query_set or not doc_set:
-            return 0.0
-        intersection = query_set & doc_set
-        # TF-IDF weight: terms shared / geometric mean of term counts
-        return len(intersection) / (
-            len(query_set) ** 0.5 * len(doc_set) ** 0.5
-        )`,
-                    explanation: '4가지 신호(임베딩 유사도, 색상 프로파일, TF-IDF 키워드, 메타데이터)를 가중 합산합니다. embedding_sim(0.55)이 가장 큰 비중을 차지하는 이유는 의미 유사도가 검색 품질을 가장 잘 설명하기 때문입니다. TF-IDF를 외부 라이브러리 없이 구현해 scikit-learn 의존성을 제거했습니다.',
-                },
-                {
-                    title: 'FastAPI Search Endpoint',
-                    language: 'python',
-                    code: `@router.post("/search", response_model=SearchResponse)
-async def search_designs(
-    request: SearchRequest,
-    background_tasks: BackgroundTasks,
-    db: AsyncSession = Depends(get_db),
-) -> SearchResponse:
-    """
-    Multimodal design search: accepts text and/or sketch (base64 PNG).
-    Parallel search across 3 sources, ranked by MultiSignalRanker.
-    """
-    # 1. Translate Korean input to English design terms
-    normalized_query = translate_design_terms(request.query)
-
-    # 2. LLM structuring: freeform text → DesignProfile JSON
-    profile = await generate_design_profile(normalized_query)
-
-    # 3. Embed the query once, reuse across all sources
-    query_embedding = embedder.encode(
-        " ".join(profile.keywords + [profile.style, profile.tone])
-    )
-
-    # 4. Fan out to 3 search sources in parallel
-    naver_results, google_results, openverse_results = await asyncio.gather(
-        search_naver(profile),
-        search_google(profile),
-        search_openverse(profile),
-        return_exceptions=True,
-    )
-
-    # 5. Flatten, deduplicate, rank
-    all_results = [
-        r for batch in [naver_results, google_results, openverse_results]
-        if isinstance(batch, list)
-        for r in batch
-    ]
-    ranked = ranker.rank(all_results, profile, query_embedding)
-
-    # 6. Log search for analytics (non-blocking)
-    background_tasks.add_task(log_search, request.query, profile, len(ranked))
-
-    return SearchResponse(
-        profile=profile,
-        results=ranked[:request.limit],
-        total=len(ranked),
-    )`,
-                    explanation: 'asyncio.gather()로 3개 소스를 병렬 요청해 순차 조회 대비 응답 시간을 60% 단축했습니다. return_exceptions=True로 일부 소스 장애 시에도 나머지 결과를 반환합니다. background_tasks로 로깅을 메인 응답 경로에서 분리해 레이턴시에 영향을 주지 않습니다.',
-                },
-            ],
-        },
-        create: {
-            title: 'FMD',
-            slug: 'fmd',
-            summary: '자연어 텍스트 또는 손스케치로 원하는 디자인 에셋을 찾아주는 AI 검색 엔진.',
-            description: `디자이너가 레퍼런스를 찾을 때 "미니멀한 타이포 포스터 느낌"처럼 자연어로 원하는 것을 표현하지만, 기존 검색 도구(Pinterest, Behance)는 이 언어를 이해하지 못합니다. 키워드 매칭 기반 검색은 의미를 이해하지 못하고 인기도 순 정렬에 의존합니다.
-
----
-
-멀티모달 입력(텍스트 + 스케치)을 동시에 처리하는 검색 시스템이 없고, 단일 플랫폼에 종속된 기존 도구는 다양한 스타일의 레퍼런스를 커버하지 못합니다. TF-IDF 단독 검색은 의미 유사도를 측정하지 못하고, 임베딩 단독 검색은 색상/레이아웃 같은 시각 특성을 놓칩니다.`,
-            workingApproach: `사용자 입력을 LLM으로 DesignProfile(구조화된 JSON)로 변환하고, 이를 검색과 생성의 공통 인터페이스로 활용합니다. 단일 소스 의존을 피하기 위해 3개 검색 소스를 병렬 조회하고, 5가지 신호를 가중 합산해 최종 랭킹을 생성합니다.
-
----
-
-User Input
- ├── Text: "minimal typo poster warm tone"
- └── Sketch: HTML5 Canvas (base64 PNG)
-          |
-          v
-    [LLM Structuring Layer]
-    Input → DesignProfile (JSON)
-    {
-      style: "minimal",
-      color: "warm monochrome",
-      layout: "centered typography",
-      tone: "editorial",
-      type: "poster"
-    }
-          |
-     ┌────┴────┐
-     v         v
-[Search]   [Generation]
- ├── Naver    ├── ComfyUI
- ├── Google   ├── Stable Diffusion
- └── Openverse└── HuggingFace (fallback)
- style_variants: minimal / modern / vintage / bold
-          |
-          v
-    [Multi-Signal Ranker]
-    score = (
-      embedding_sim  × 0.55 +
-      color_profile  × 0.20 +
-      keyword_match  × 0.20 +
-      metadata_score × 0.05
-    )
-          |
-          v
-    Ranked Results → Frontend`,
-            contribution: `LLM을 텍스트 생성기가 아닌 구조화 엔진으로 사용한 DesignProfile 추상화 레이어를 설계했습니다. TF-IDF 임베딩을 외부 ML 라이브러리 없이 Python stdlib만으로 구현해 배포 의존성을 최소화했습니다. ComfyUI → Stable Diffusion → HuggingFace → Pollinations 7단계 폴백 체인으로 이미지 생성 가용성을 확보했습니다. 한국어 100개 이상의 번역 맵을 내장해 한글 입력을 영어 디자인 용어로 정규화합니다.`,
-            keyLearnings: `LLM 출력을 JSON 스키마로 강제 파싱하면 다운스트림 검색/생성 파이프라인의 입력이 일관되어 전체 시스템의 신뢰성이 높아집니다. 멀티 소스 검색 + 폴백 체인 패턴은 단일 API 장애가 사용자 경험을 깨지 않도록 보호합니다. 검색과 생성을 DesignProfile이라는 중간 표현으로 분리하면 두 파이프라인을 독립적으로 발전시킬 수 있습니다.`,
-            techStack: ['Python', 'FastAPI', 'Next.js', 'TypeScript', 'SQLAlchemy', 'Stable Diffusion', 'ComfyUI', 'PostgreSQL'],
-            codeSnippets: [
-                {
-                    title: 'LLM-based DesignProfile Generation',
-                    language: 'python',
-                    code: `async def generate_design_profile(user_input: str) -> DesignProfile:
-    prompt = f"""
-You are a design analysis assistant.
-Extract structured design attributes from the user description.
-Return ONLY valid JSON. No explanation.
-
-User input: "{user_input}"
-
-Required fields:
-- style: one of [minimal, bold, editorial, playful, corporate]
-- color: color palette description
-- layout: layout pattern
-- tone: emotional tone
-- type: asset type
-- keywords: list of 3-5 English search keywords
-"""
-    response = await claude_client.messages.create(
-        model="claude-3-haiku-20240307",
-        max_tokens=256,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    raw = response.content[0].text.strip()
-    if raw.startswith("\`\`\`"):
-        raw = raw.split("\`\`\`")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
-    data = json.loads(raw)
-    return DesignProfile(**data)`,
-                    explanation: 'LLM에게 JSON 스키마 채우기를 요청합니다. json.loads()로 출력을 강제 파싱해 다운스트림 파이프라인의 입력 타입을 보장합니다.',
-                },
-                {
-                    title: 'Multi-Signal Ranker — Weighted Scoring',
-                    language: 'python',
-                    code: `class MultiSignalRanker:
-    WEIGHTS = {
-        "embedding_sim": 0.55,
-        "color_profile": 0.20,
-        "keyword_match": 0.20,
-        "metadata_score": 0.05,
-    }
-
-    def rank(
-        self,
-        results: list[SearchResult],
-        profile: DesignProfile,
-        query_embedding: np.ndarray,
-    ) -> list[RankedResult]:
-        scored = []
-        for result in results:
-            final = sum(
-                score * self.WEIGHTS[key]
-                for key, score in {
-                    "embedding_sim": cosine_similarity(query_embedding, result.embedding),
-                    "color_profile": self._color_distance(profile.color, result.dominant_colors),
-                    "keyword_match": self._tfidf_overlap(profile.keywords, result.tags),
-                    "metadata_score": self._metadata_score(result),
-                }.items()
-            )
-            scored.append(RankedResult(result=result, score=final))
-        return sorted(scored, key=lambda x: x.score, reverse=True)
-
-    def _tfidf_overlap(self, query_terms: list[str], doc_terms: list[str]) -> float:
-        q, d = set(t.lower() for t in query_terms), set(t.lower() for t in doc_terms)
-        if not q or not d: return 0.0
-        return len(q & d) / (len(q) ** 0.5 * len(d) ** 0.5)`,
-                    explanation: '4가지 신호를 가중 합산합니다. embedding_sim(0.55)이 가장 큰 비중을 차지합니다. TF-IDF를 외부 라이브러리 없이 구현해 scikit-learn 의존성을 제거했습니다.',
-                },
-                {
-                    title: 'FastAPI Parallel Search Endpoint',
-                    language: 'python',
-                    code: `@router.post("/search", response_model=SearchResponse)
-async def search_designs(
-    request: SearchRequest,
-    background_tasks: BackgroundTasks,
-) -> SearchResponse:
-    normalized = translate_design_terms(request.query)
-    profile = await generate_design_profile(normalized)
-    query_embedding = embedder.encode(
-        " ".join(profile.keywords + [profile.style, profile.tone])
-    )
-
-    # Fan out to 3 sources in parallel
-    naver_r, google_r, openverse_r = await asyncio.gather(
-        search_naver(profile),
-        search_google(profile),
-        search_openverse(profile),
-        return_exceptions=True,
-    )
-
-    all_results = [
-        r for batch in [naver_r, google_r, openverse_r]
-        if isinstance(batch, list)
-        for r in batch
-    ]
-    ranked = ranker.rank(all_results, profile, query_embedding)
-    background_tasks.add_task(log_search, request.query, profile, len(ranked))
-    return SearchResponse(profile=profile, results=ranked[:request.limit])`,
-                    explanation: 'asyncio.gather()로 3개 소스를 병렬 요청합니다. return_exceptions=True로 일부 소스 장애 시에도 나머지 결과를 반환합니다.',
-                },
-            ],
-            categoryId: designCategory.id,
-            secondaryCategoryId: aiCategory.id,
-            year: 2026,
-            role: 'AI 백엔드 개발, 풀스택',
-            isFeatured: false,
-            isPublished: true,
-            media: { create: [{ type: 'VIDEO_PLACEHOLDER', placeholderLabel: '데모 영상 준비 중입니다', order: 1, isPlaceholder: true }] },
-            links: { create: [{ type: 'GITHUB', label: 'GitHub', url: 'https://github.com/devbinlog/FMD', order: 1 }] },
-        },
-    });
-    await prisma.projectTag.createMany({
-        data: [
-            { projectId: fmd.id, tagId: pythonTag.id },
-            { projectId: fmd.id, tagId: fastapiTag.id },
-            { projectId: fmd.id, tagId: aiTag.id },
-            { projectId: fmd.id, tagId: nextjsTag.id },
-        ],
-        skipDuplicates: true,
-    });
-    // ── 6. DesignFlow AI Builder ──────────────────────────────────────────────
-    const designflow = await prisma.project.upsert({
-        where: { slug: 'designflow-ai-builder' },
-        update: {
-            description: `Figma 디자인을 코드로 변환하는 과정에서 개발자는 수작업으로 색상, 간격, 폰트를 일일이 입력합니다. 디자이너의 의도(컴포넌트 구조, 시각 계층)가 코드로 전달되는 과정에서 많은 정보가 손실됩니다.
-
----
-
-기존 Figma-to-code 도구들은 픽셀 단위 CSS를 생성하고 컴포넌트 의미를 이해하지 못합니다. 색상 토큰 추출, Tailwind 클래스 매핑, 컴포넌트 경계 판정 세 가지 문제를 동시에 해결하는 도구가 없습니다.`,
-        },
-        create: {
-            title: 'DesignFlow AI Builder',
-            slug: 'designflow-ai-builder',
-            summary: 'Figma 디자인을 분석해 React + Tailwind CSS 코드 초안을 자동 생성하는 AI 협업 도구.',
-            description: `Figma 디자인을 코드로 변환하는 과정에서 개발자는 수작업으로 색상, 간격, 폰트를 일일이 입력합니다. 디자이너의 의도(컴포넌트 구조, 시각 계층)가 코드로 전달되는 과정에서 많은 정보가 손실됩니다.
-
----
-
-기존 Figma-to-code 도구들은 픽셀 단위 CSS를 생성하고 컴포넌트 의미를 이해하지 못합니다. 색상 토큰 추출, Tailwind 클래스 매핑, 컴포넌트 경계 판정 세 가지 문제를 동시에 해결하는 도구가 없습니다.`,
-            workingApproach: `Figma JSON 노드 트리를 재귀적으로 순회해 디자인 토큰(색상, 타이포그래피, 간격)을 추출하고 Tailwind 클래스로 매핑합니다. LLM으로 노드 군집을 의미 있는 컴포넌트 단위로 판정합니다.
+LLM(Ollama 또는 Claude)을 3단계로 분리해 호출하도록 설계해,
+각 단계에 필요한 최소한의 데이터만 전달함으로써 응답 품질과 처리 효율을 함께 확보했습니다.
 
 ---
 
 Figma JSON Input
-    |
-    v
-[Node Tree Parser]
- Recursive traversal
- ├── Color extraction → Tailwind mapping
- ├── Typography → font-size, font-weight
- └── Spacing → gap, padding, margin
-    |
-    v
-[AI Component Classifier]
- Ollama (local) / Claude API (fallback)
- Input: node subgraph
- Output: component_type, component_name
-    |
-    v
-[Code Generator]
- React functional component
- Tailwind utility classes
-    |
-    v
-[Result Viewer]
- ├── Token Gallery
- ├── Component Tree
- └── Code Preview`,
-            contribution: `Ollama(로컬 LLM)와 Claude API를 폴백 체인으로 구성해 비용 없이 개발하고 품질을 보장했습니다. 사용자 수정 사항을 DB에 저장해 모델 개선 데이터로 활용하는 피드백 루프를 구현했습니다. 설정 객체 기반 UI로 코드 변경 없이 필터/카테고리를 추가할 수 있는 구조를 설계했습니다.`,
-            keyLearnings: `Figma 노드를 컴포넌트 경계로 분할하는 규칙을 LLM에 위임하면 사람이 정의한 휴리스틱보다 더 유연하게 작동합니다. 로컬 LLM은 응답이 느리지만 API 비용 없이 무제한 실험이 가능해 초기 개발에 적합합니다.`,
-            techStack: ['Next.js 15', 'TypeScript', 'Tailwind CSS v4', 'Python', 'FastAPI', 'Ollama', 'Claude API', 'PostgreSQL'],
-            categoryId: designCategory.id,
-            secondaryCategoryId: aiCategory.id,
-            year: 2026,
-            role: 'AI 백엔드 개발, 풀스택',
-            isFeatured: false,
-            isPublished: true,
-            media: { create: [{ type: 'VIDEO_PLACEHOLDER', placeholderLabel: '데모 영상 준비 중입니다', order: 1, isPlaceholder: true }] },
-            links: { create: [{ type: 'GITHUB', label: 'GitHub', url: 'https://github.com/devbinlog/DesignFlow_AI_Builder', order: 1 }] },
-        },
-    });
-    await prisma.projectTag.createMany({
-        data: [
-            { projectId: designflow.id, tagId: pythonTag.id },
-            { projectId: designflow.id, tagId: fastapiTag.id },
-            { projectId: designflow.id, tagId: nextjsTag.id },
-            { projectId: designflow.id, tagId: aiTag.id },
-        ],
-        skipDuplicates: true,
-    });
-    // 관리자 계정
-    const adminPasswordHash = await bcrypt.hash('admin1234!', 12);
-    await prisma.adminUser.upsert({
-        where: { email: 'admin@taebinkim.com' },
-        update: {},
-        create: {
-            email: 'admin@taebinkim.com',
-            passwordHash: adminPasswordHash,
-            role: 'ADMIN',
-            isActive: true,
-        },
-    });
-    console.log('Seed complete.');
+      |
+      v
+[figma_parser.py] → 노드 트리 파싱
+      |
+      v
+[normalizer.py] → 노드 계층 정규화
+      |
+      v
+[token_extractor.py] → 디자인 토큰 추출
+ ├── colors     → Tailwind bg-[#hex]
+ ├── typography → text-sm font-bold
+ ├── spacing    → p-4 gap-6
+ └── radius     → rounded-lg
+      |
+      v
+[Claude / Ollama — 3단계 AI 파이프라인]
+ ├── analyze_structure() → componentCandidates + layoutPattern
+ ├── name_components()   → suggestedName + filePath
+ └── generate_code()     → React + Tailwind TSX
+      |
+      v
+Output Files
+ ├── components/HeroSection.tsx
+ ├── components/Header.tsx
+ └── app/page.tsx`,
+      techStack: ["Next.js 15", "TypeScript", "Tailwind CSS v4", "Python", "FastAPI", "Ollama", "Claude API", "PostgreSQL"],
+      isFeatured: true,
+      featuredOrder: 6,
+      isPublished: true,
+      categoryId: designCategory.id,
+      secondaryCategoryId: aiCategory.id,
+    },
+    create: {
+      title: "DesignFlow AI Builder",
+      slug: "designflow-ai-builder",
+      summary: `Figma 디자인 구조를 분석해 컴포넌트를 식별하고, React + Tailwind 코드로 자동 변환하는 AI 기반 코드 생성 시스템.
+디자인 토큰 추출부터 LLM 기반 구조 해석, 코드 생성까지 하나의 파이프라인으로 연결했습니다.`,
+      description: `Figma로 완성된 디자인을 코드로 옮기는 과정에서, 개발자는 어떤 요소가 컴포넌트인지를 직접 판단해야 합니다.
+
+동일한 디자인이라도 개발자마다 컴포넌트 경계를 다르게 해석하고,
+색상·폰트·간격 같은 디자인 토큰을 코드 변수로 변환하는 작업도 매번 수동으로 이루어집니다.
+
+Figma는 CSS 수치를 제공하지만 실제 React 컴포넌트 구조는 제공하지 않아,
+디자인-개발 사이의 간격을 메우는 과정에 반복적인 수작업이 발생합니다.
+
+---
+
+기존 디자인-to-코드 도구들은 마크업 수준의 CSS 변환에 그치며,
+컴포넌트 단위의 구조나 재사용 가능한 설계를 자동으로 추론하지 못합니다.
+
+또한 색상, 타이포그래피, 간격이 각각 분리된 형태로 존재해
+하나의 디자인 시스템으로 통합하고 Tailwind 클래스로 매핑하는 과정이 체계화되어 있지 않습니다.
+
+Figma 노드 트리 분석, 토큰 추출, 컴포넌트 식별, 코드 생성이 각각 분리되어 있어
+이를 하나의 자동화된 흐름으로 연결하는 시스템이 부족합니다.`,
+      year: 2026,
+      role: "AI 백엔드 개발, 풀스택",
+      contribution: `Figma 노드 트리를 재귀 순회해 레이아웃 의도와 반복 패턴을 추론하는 구조 분석 로직을 구현했습니다.
+
+색상·타이포그래피·간격·반경 값을 사용 빈도 기준으로 정규화하고,
+px 값을 Tailwind 유틸리티 클래스로 변환하는 토큰 매핑 로직을 외부 라이브러리 없이 직접 구현했습니다.
+
+LLM을 3단계(구조 분석 → 컴포넌트 명명 → 코드 생성)로 분리해 호출하고,
+각 단계는 전체 Figma JSON이 아닌 해당 단계에 필요한 데이터만 전달받도록 설계했습니다.
+
+분석 실행을 백그라운드 태스크로 처리하고 클라이언트에서 폴링하는 구조를 적용해
+응답 대기 중에도 UI가 블로킹되지 않도록 구성했습니다.`,
+      keyLearnings: `Figma 노드 구조를 컴포넌트 단위로 해석하는 과정에서,
+LLM을 단순 코드 생성기가 아니라 디자인 의도를 추론하는 해석 엔진으로 활용할 수 있음을 확인했습니다.
+
+각 LLM 호출 단계에 전체 JSON이 아닌 필요한 데이터만 전달하는 방식이
+응답 품질과 파싱 안정성을 함께 높이는 데 효과적이었습니다.
+
+또한 Auto Layout, Component Sets, Variants 같은 고급 Figma 기능은
+단순 노드 트리 분석으로 완전히 처리하기 어렵다는 한계를 확인했고,
+이를 처리하기 위해서는 Figma 플러그인 API 수준의 접근이 필요하다는 점을 파악했습니다.`,
+      workingApproach: `DesignFlow는 Figma JSON을 입력으로 받아 React + Tailwind 코드를 출력하는 과정을
+파싱 → 정규화 → 토큰 추출 → AI 해석 → 코드 생성의 4단계 파이프라인으로 설계했습니다.
+
+Figma 노드 트리를 재귀 순회해 레이아웃 의도와 반복 패턴을 추론하고,
+색상·타이포그래피·간격·반경 값을 사용 빈도 기준으로 정규화해 Tailwind 유틸리티 클래스로 매핑했습니다.
+
+LLM(Ollama 또는 Claude)을 3단계로 분리해 호출하도록 설계해,
+각 단계에 필요한 최소한의 데이터만 전달함으로써 응답 품질과 처리 효율을 함께 확보했습니다.
+
+---
+
+Figma JSON Input
+      |
+      v
+[figma_parser.py] → 노드 트리 파싱
+      |
+      v
+[normalizer.py] → 노드 계층 정규화
+      |
+      v
+[token_extractor.py] → 디자인 토큰 추출
+ ├── colors     → Tailwind bg-[#hex]
+ ├── typography → text-sm font-bold
+ ├── spacing    → p-4 gap-6
+ └── radius     → rounded-lg
+      |
+      v
+[Claude / Ollama — 3단계 AI 파이프라인]
+ ├── analyze_structure() → componentCandidates + layoutPattern
+ ├── name_components()   → suggestedName + filePath
+ └── generate_code()     → React + Tailwind TSX
+      |
+      v
+Output Files
+ ├── components/HeroSection.tsx
+ ├── components/Header.tsx
+ └── app/page.tsx`,
+      techStack: ["Next.js 15", "TypeScript", "Tailwind CSS v4", "Python", "FastAPI", "Ollama", "Claude API", "PostgreSQL"],
+      isFeatured: true,
+      featuredOrder: 6,
+      isPublished: true,
+      categoryId: designCategory.id,
+      secondaryCategoryId: aiCategory.id,
+    },
+  });
+
+  await prisma.projectLink.deleteMany({ where: { projectId: designflow.id } });
+  await prisma.projectLink.create({
+    data: { projectId: designflow.id, type: "GITHUB", label: "GitHub", url: "https://github.com/devbinlog/DesignFlow_AI_Builder", order: 1 },
+  });
+
+  console.log("Seeding complete.");
 }
+
 main()
-    .catch(console.error)
-    .finally(() => prisma.$disconnect());
-//# sourceMappingURL=seed.js.map
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
