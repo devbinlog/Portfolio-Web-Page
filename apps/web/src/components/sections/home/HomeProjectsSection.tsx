@@ -180,7 +180,7 @@ export function HomeProjectsSection({ projects }: Props) {
           {/* 캐러셀 트랙 */}
           {projects.length > 0 ? (
             <>
-              <div className="relative flex items-center justify-center" style={{ height: 420 }}>
+              <div className="relative flex items-center justify-center overflow-hidden" style={{ height: 420 }}>
                 {projects.map((project, idx) => {
                   const style = getCardStyle(idx)
                   return (

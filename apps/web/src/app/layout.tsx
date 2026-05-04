@@ -20,11 +20,13 @@ export const metadata: Metadata = {
     siteName: 'binlog Portfolio',
     title: 'binlog — AI / LLM Engineer & Frontend Developer',
     description: 'Designing systems that transform unstructured input into structured user experiences.',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'binlog Portfolio' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'binlog — AI / LLM Engineer & Frontend Developer',
     description: 'Designing systems that transform unstructured input into structured user experiences.',
+    images: ['/og-image.png'],
   },
   robots: {
     index: true,

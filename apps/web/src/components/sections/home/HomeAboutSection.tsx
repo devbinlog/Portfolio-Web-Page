@@ -71,7 +71,7 @@ export function HomeAboutSection({ profile }: Props) {
         <div className="grid md:grid-cols-[1fr_300px] gap-0 md:gap-0 items-start">
 
           {/* 바이오 */}
-          <div className="pr-16">
+          <div className="pr-0 md:pr-16">
             <p className="text-xs font-mono text-text-disabled uppercase tracking-widest mb-5">
               Bio
             </p>
@@ -114,7 +114,7 @@ export function HomeAboutSection({ profile }: Props) {
           </div>
 
           {/* 스킬 — 장르 태그 */}
-          <div className="border-l border-border-default pl-10">
+          <div className="mt-8 pt-8 border-t border-border-default md:mt-0 md:pt-0 md:border-t-0 md:border-l md:pl-10">
             <p className="text-xs font-mono text-text-disabled uppercase tracking-widest mb-4">
               Specialties
             </p>

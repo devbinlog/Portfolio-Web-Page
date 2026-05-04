@@ -31,13 +31,29 @@ export default async function HomePage() {
 
       <GuitarPickCursor />
 
-      {/* ── 히어로 섹션 (3D 월드 + 마우스 트래킹) ── */}
-      <div className="relative w-full h-dvh overflow-hidden">
+      {/* ── 히어로 섹션 (데스크탑: 3D 월드) ── */}
+      <div className="hidden md:block relative w-full h-dvh overflow-hidden">
         <HeroSection profile={profile} />
         <WorldCanvas projects={featuredProjects} />
         <MouseAudioVisualizer />
         <WorldFallback projects={featuredProjects} />
       </div>
+
+      {/* ── 히어로 섹션 (모바일) ── */}
+      <section
+        className="md:hidden pt-20 pb-10 px-6 min-h-[55dvh] flex flex-col justify-center border-b border-border-default"
+        aria-label="히어로 섹션"
+      >
+        <div className="max-w-xl space-y-3">
+          <h1 className="text-[2.75rem] font-extrabold text-text-primary leading-none tracking-tight">
+            Taebin Kim
+          </h1>
+          <p className="text-lg font-normal text-text-secondary">{profile.roleTitle}</p>
+          <p className="text-base font-semibold text-text-primary leading-snug pt-1">
+            {profile.tagline}
+          </p>
+        </div>
+      </section>
 
       {/* ── 스크롤 섹션들 ── */}
       <HomeAboutSection profile={profile} />
