@@ -2,11 +2,15 @@ import type { ProjectSummary, ProjectDetail, PaginatedResponse } from '@portfoli
 import { apiFetch } from './client'
 
 export async function getFeaturedProjects(): Promise<ProjectSummary[]> {
-  const res = await apiFetch<PaginatedResponse<ProjectSummary>>(
-    '/projects?featured=true',
-    { cache: 'no-store' },
-  )
-  return res.data
+  try {
+    const res = await apiFetch<PaginatedResponse<ProjectSummary>>(
+      '/projects?featured=true',
+      { cache: 'no-store' },
+    )
+    return res.data
+  } catch {
+    return []
+  }
 }
 
 export async function getAllProjects(): Promise<ProjectSummary[]> {
