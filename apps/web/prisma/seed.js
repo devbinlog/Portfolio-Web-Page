@@ -41,11 +41,11 @@ async function main() {
     { name: "Tailwind CSS", slug: "tailwindcss" },
     { name: "Vite", slug: "vite" },
   ];
-  const tags = await Promise.all(
-    tagDefs.map((t) =>
-      prisma.tag.upsert({ where: { slug: t.slug }, update: {}, create: t })
-    )
-  );
+  const tags = [];
+  for (const t of tagDefs) {
+    const tag = await prisma.tag.upsert({ where: { slug: t.slug }, update: {}, create: t });
+    tags.push(tag);
+  }
   const tagMap = Object.fromEntries(tags.map((t) => [t.slug, t]));
 
   // ── 프로필 ────────────────────────────────────────────────────────────────
