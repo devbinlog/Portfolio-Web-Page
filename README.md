@@ -1,8 +1,8 @@
 # Portfolio — Taebin Kim
 
-> AI · 풀스택 · 인터랙티브 포트폴리오 플랫폼
+> AI / 풀스택 / 인터랙티브 포트폴리오 플랫폼
 
-**Live →** [taebinkim.vercel.app](https://taebinkim.vercel.app) _(배포 후 업데이트)_
+**Live →** https://binlog-devbinlog.vercel.app/ 
 
 ---
 
