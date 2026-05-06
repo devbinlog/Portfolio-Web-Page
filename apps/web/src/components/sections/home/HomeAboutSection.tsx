@@ -76,16 +76,7 @@ export function HomeAboutSection({ profile }: Props) {
               Bio
             </p>
             <div className="text-base text-text-secondary leading-relaxed space-y-4 max-w-[680px]">
-              {profile.bio.split('\n\n').map((paragraph, i) => (
-                <p key={i}>
-                  {paragraph.split('\n').map((line, j, arr) => (
-                    <span key={j}>
-                      {line}
-                      {j < arr.length - 1 && <br />}
-                    </span>
-                  ))}
-                </p>
-              ))}
+              <p>창의적인 아이디어를 구조화하고,<br />AI와 인터랙션을 기반으로 실제 동작하는 시스템과 사용자 경험을 구현합니다.</p>
             </div>
 
             {/* 액션 버튼 */}
