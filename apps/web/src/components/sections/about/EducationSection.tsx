@@ -56,7 +56,7 @@ export function EducationSection() {
             <p className="text-sm text-text-disabled mt-0.5">전주대학교</p>
             <p className="text-sm text-text-secondary mt-2">Lyricst</p>
             <p className="text-xs text-text-disabled mt-0.5">팀장 / 기획 / 프론트엔드</p>
-            <p className="text-xs text-text-disabled mt-1.5 max-w-md">음악을 듣는 경험에서 확장하여 가사 감정/스토리에 몰입하는 스트리밍 UX를 제안한 웹 프로토타입</p>
+            <p className="text-xs text-text-disabled mt-1.5 whitespace-nowrap">음악을 듣는 경험에서 확장하여 가사 감정/스토리에 몰입하는 스트리밍 UX를 제안한 웹 프로토타입</p>
           </div>
         </div>
       </div>
