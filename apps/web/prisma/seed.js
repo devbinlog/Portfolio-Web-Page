@@ -667,9 +667,11 @@ const onPointerUp = () => {
     where: { slug: "mde" },
     update: {
       title: "MDE",
-      summary: `자연어로 입력한 음악 아이디어를 LLM으로 분석하고, 감정 장르 사운드 비주얼 방향을 구조화하는 음악 디렉션 엔진.
-추상적인 음악 감각을 MusicProfile로 변환해 실제 제작 가능한 방향으로 연결합니다.`,
+      summary: `자연어 또는 이미지로 입력한 음악 아이디어를 Gemini 2.0 Flash로 분석하고, 감정 장르 사운드 비주얼 방향을 구조화하는 음악 디렉션 엔진.
+추상적인 음악 감각을 9개 필드의 MusicProfile로 변환해 실제 제작 가능한 방향으로 연결합니다.`,
       description: `음악 아이디어는 대부분 "비 오는 밤에 혼자 듣는 감성적인 기타 음악"처럼 감정적이고 추상적인 언어로 시작됩니다.
+또는 특정 분위기의 사진, 영상 스틸 같은 이미지에서 시작되기도 합니다.
+
 하지만 작곡, 사운드 디자인, 앨범 커버, 공연 비주얼로 이어지기 위해서는 감정과 분위기를 장르, 템포, 악기, 사운드 톤, 시각 무드 같은 구체적인 요소로 변환해야 합니다.
 
 기존 도구는 음악 추천이나 이미지 생성에 집중되어 있어, 사용자의 막연한 음악 아이디어를 제작 가능한 구조로 정리해주는 과정이 부족합니다.
@@ -679,37 +681,44 @@ const onPointerUp = () => {
 일반적인 AI 도구는 사용자의 문장을 자연어로 답변하는 데 그치기 쉽습니다.
 예를 들어 "몽환적이고 살짝 슬픈 우주 느낌의 음악"이라는 입력에 대해 단순 설명은 가능하지만, 이를 실제 제작에 필요한 데이터 구조로 변환하지는 못합니다.
 
+이미지 입력의 경우 분위기를 인식하더라도, 그 분위기를 음악 제작 방향으로 연결하는 구조가 없습니다.
+
 또한 음악 방향, 사운드 구성, 비주얼 무드가 각각 분리되어 있어 하나의 아이디어가 앨범 커버, 공연 무드, 콘텐츠 기획까지 이어지기 어렵습니다.`,
       year: 2025,
       role: "AI 백엔드 개발, 풀스택",
       contribution: `LLM을 단순 텍스트 생성기가 아니라 음악 아이디어를 구조화하는 엔진으로 사용했습니다.
-사용자의 추상적인 입력을 MusicProfile JSON으로 강제 변환하고, 이 구조를 기반으로 음악 방향, 사운드 구성, 비주얼 무드, 콘텐츠 활용 방향을 생성하도록 설계했습니다.
+텍스트와 이미지 두 가지 입력 경로를 Gemini 2.0 Flash 멀티모달로 통합하고, 두 경로 모두 동일한 MusicProfile JSON 구조로 수렴하도록 설계했습니다.
 
-또한 API 키가 없는 환경에서도 서비스 흐름을 확인할 수 있도록 Mock Mode를 분리했습니다.
-GitHub Pages에서는 정적 데모로 동작하고, 실제 LLM 실행은 Vercel API Route 또는 서버 환경에서 처리할 수 있도록 구조를 나누었습니다.`,
-      keyLearnings: `MDE를 통해 사용자의 추상적인 음악 아이디어를 감정, 장르, 템포감, 악기 구성, 사운드 톤, 비주얼 무드로 분해하는 구조를 설계했습니다.
+이미지 입력은 Gemini Vision으로 분위기를 한국어 설명으로 변환한 뒤 LLM 분석에 전달하고, 텍스트 입력은 직접 구조화 레이어로 전달합니다.
+
+또한 분석 히스토리 세션 저장, 공개 공유 링크 생성, JWT 기반 인증을 구현해 사용자가 여러 분석 결과를 관리할 수 있도록 했습니다.`,
+      keyLearnings: `MDE를 통해 텍스트와 이미지 두 가지 입력을 동일한 MusicProfile 구조로 수렴시키는 멀티모달 파이프라인을 설계했습니다.
+
+Gemini Vision을 이미지 → 텍스트 변환 중간 단계로 활용하면, 이후 LLM 분석 레이어를 그대로 재사용할 수 있습니다. 두 입력 경로가 하나의 구조로 수렴하는 설계가 확장성에 유리하다는 점을 경험했습니다.
 
 또한 MusicProfile이라는 중간 표현을 두면 음악 방향, 사운드 구성, 앨범 커버 목업, 콘텐츠 기획을 하나의 데이터 구조에서 확장할 수 있습니다.
 
-이미지 생성은 핵심 기능이 아니라 visual_association을 기반으로 콘셉트를 빠르게 확인하기 위한 보조 목업 단계로 분리했습니다.`,
-      workingApproach: `MDE는 사용자의 자연어 입력을 LLM으로 분석해 MusicProfile이라는 구조화된 JSON으로 변환합니다.
-MusicProfile은 감정, 에너지, 템포감, 장르, 악기 구성, 사운드 방향, 분위기, 비주얼 연상, 청취 맥락, 콘텐츠 목표를 포함합니다.
+세션 저장과 공유 링크를 구현하면서, 분석 결과를 아카이브하는 것이 사용자에게 실질적인 가치를 준다는 점을 확인했습니다.`,
+      workingApproach: `MDE는 텍스트 또는 이미지로 입력한 음악 아이디어를 Gemini 2.0 Flash로 분석해 9개 필드의 MusicProfile JSON으로 변환합니다.
+MusicProfile은 감정, 에너지, 템포감, 장르, 악기 구성, 사운드 방향, 분위기, 비주얼 연상, 청취 맥락을 포함합니다.
 
 이를 기반으로 사용자는 다음 결과를 얻을 수 있습니다.
 
 음악 방향 설명
 사운드 구성 제안
-앨범 커버 또는 콘텐츠 비주얼 무드
-실제 제작에 활용 가능한 구조화 데이터
+비주얼 / 앨범 아트 방향
+콘텐츠 활용 전략
 
 ---
 
 User Input
- └── Text: "비 오는 밤에 혼자 듣는 감성적인 기타 음악 느낌"
+ ├── Text: "비 오는 밤에 혼자 듣는 감성적인 기타 음악 느낌"
+ └── Image: [분위기 이미지 업로드]
           |
           v
- [LLM Structuring Layer]
- Input → MusicProfile (JSON)
+ [Gemini Vision / LLM Structuring Layer]
+ ├── describe_image() → 이미지 → 한국어 분위기 설명 → LLM 입력
+ └── call_gemini()   → 자연어 → MusicProfile (JSON)
 
  {
    emotion: ["melancholic", "lonely", "nostalgic"],
@@ -720,8 +729,7 @@ User Input
    sound_direction: ["heavy reverb", "wide ambient texture"],
    atmosphere: ["rainy night", "empty street"],
    visual_association: ["blue neon", "wet road reflection"],
-   listener_context: "alone at night",
-   content_goal: "album cover direction"
+   listener_context: "alone at night"
  }
           |
           v
@@ -732,50 +740,89 @@ User Input
  └── Content Usage
           |
           v
- [Optional Visual Mockup]
- visual_association → album cover mood prompt
-          |
-          v
- Result UI`,
-      techStack: ["Python", "FastAPI", "Next.js", "TypeScript", "SQLAlchemy", "Stable Diffusion", "ComfyUI", "PostgreSQL"],
+ Result UI (+ 세션 저장 / 공유 링크)`,
+      techStack: ["Python", "FastAPI", "Next.js 15", "TypeScript", "Tailwind CSS v4", "Gemini 2.0 Flash", "SQLAlchemy", "PostgreSQL", "JWT"],
       codeSnippets: [
         {
-          title: "call_gemini — LLM Structuring Layer",
+          title: "gemini_service.py — Gemini API + Vision 통합 레이어",
           language: "python",
           code: `async def call_gemini(
     system_prompt: str,
     user_message: str,
     temperature: float = 0.3,
     max_tokens: int = 1024,
+    api_key: Optional[str] = None,
+    model: Optional[str] = None,
 ) -> str:
-    """자연어 입력을 MusicProfile JSON으로 변환하는 Gemini API 호출 레이어."""
-    url = GEMINI_API_BASE + "/" + settings.llm_model + ":generateContent?key=" + settings.llm_api_key
+    """Call Gemini API and return raw text response."""
+    key = api_key or settings.llm_api_key
+    mdl = model or settings.llm_model
+
+    url = f"{GEMINI_API_BASE}/{mdl}:generateContent?key={key}"
     payload = {
         "system_instruction": {"parts": [{"text": system_prompt}]},
         "contents": [{"role": "user", "parts": [{"text": user_message}]}],
-        "generationConfig": {"temperature": temperature, "maxOutputTokens": max_tokens},
+        "generationConfig": {
+            "temperature": temperature,
+            "maxOutputTokens": max_tokens,
+        },
     }
+
     async with httpx.AsyncClient(timeout=60.0) as client:
         resp = await client.post(url, json=payload)
+
     if resp.status_code == 429:
         raise GeminiRateLimitError("Gemini API rate limit exceeded")
     if resp.status_code != 200:
-        raise GeminiServiceError("Gemini API error: " + str(resp.status_code))
+        raise GeminiServiceError(f"Gemini API error {resp.status_code}: {resp.text[:300]}")
+
     data = resp.json()
-    text = data["candidates"][0]["content"]["parts"][0]["text"]
+    try:
+        text = data["candidates"][0]["content"]["parts"][0]["text"]
+    except (KeyError, IndexError) as e:
+        raise GeminiServiceError(f"Unexpected Gemini response structure: {e}") from e
+
     return text.strip()
 
-def extract_json(text: str) -> dict:
-    """LLM 응답에서 JSON을 추출합니다."""
+
+async def describe_image(
+    mime_type: str,
+    base64_data: str,
+    api_key: str | None = None,
+    model: str | None = None,
+) -> str:
+    """Gemini Vision으로 이미지를 음악 분석용 텍스트 설명으로 변환."""
+    key = api_key or settings.llm_api_key
+    mdl = model or settings.llm_model
+
+    url = f"{GEMINI_API_BASE}/{mdl}:generateContent?key={key}"
+    payload = {
+        "contents": [{
+            "role": "user",
+            "parts": [
+                {"inlineData": {"mimeType": mime_type, "data": base64_data}},
+                {"text": IMAGE_DESCRIPTION_PROMPT},
+            ],
+        }],
+        "generationConfig": {"temperature": 0.3, "maxOutputTokens": 200},
+    }
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        resp = await client.post(url, json=payload)
+
+    if resp.status_code == 429:
+        raise GeminiRateLimitError("Gemini API rate limit exceeded")
+    if resp.status_code != 200:
+        raise GeminiServiceError(f"Gemini Vision API error {resp.status_code}: {resp.text[:300]}")
+
+    data = resp.json()
     try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        pass
-    start = text.find("{")
-    if start >= 0:
-        return json.loads(text[start:])
-    raise ValueError("Could not extract JSON from LLM response")`,
-          explanation: "사용자의 추상적인 음악 아이디어를 Gemini에 전달해 MusicProfile JSON으로 구조화합니다. 시스템 프롬프트로 출력 형식을 강제하고, LLM 응답에서 마크다운 코드 블록을 제거해 안정적으로 JSON을 파싱합니다.",
+        text = data["candidates"][0]["content"]["parts"][0]["text"]
+    except (KeyError, IndexError) as e:
+        raise GeminiServiceError(f"Unexpected Gemini response structure: {e}") from e
+
+    return text.strip()`,
+          explanation: "텍스트와 이미지를 모두 처리하는 Gemini 2.0 Flash 멀티모달 통합 레이어입니다. call_gemini는 자연어 입력을 MusicProfile JSON으로 구조화하고, describe_image는 Gemini Vision으로 이미지를 분석해 음악 방향성 분석에 활용할 한국어 설명으로 변환합니다. 마크다운 코드 블록 제거 및 다중 JSON 추출 방식으로 안정적인 파싱을 보장합니다.",
         },
       ],
             thumbnailUrl: "/images/projects/mde-hero.png",
@@ -789,9 +836,11 @@ def extract_json(text: str) -> dict:
     create: {
       title: "MDE",
       slug: "mde",
-      summary: `자연어로 입력한 음악 아이디어를 LLM으로 분석하고, 감정 장르 사운드 비주얼 방향을 구조화하는 음악 디렉션 엔진.
-추상적인 음악 감각을 MusicProfile로 변환해 실제 제작 가능한 방향으로 연결합니다.`,
+      summary: `자연어 또는 이미지로 입력한 음악 아이디어를 Gemini 2.0 Flash로 분석하고, 감정 장르 사운드 비주얼 방향을 구조화하는 음악 디렉션 엔진.
+추상적인 음악 감각을 9개 필드의 MusicProfile로 변환해 실제 제작 가능한 방향으로 연결합니다.`,
       description: `음악 아이디어는 대부분 "비 오는 밤에 혼자 듣는 감성적인 기타 음악"처럼 감정적이고 추상적인 언어로 시작됩니다.
+또는 특정 분위기의 사진, 영상 스틸 같은 이미지에서 시작되기도 합니다.
+
 하지만 작곡, 사운드 디자인, 앨범 커버, 공연 비주얼로 이어지기 위해서는 감정과 분위기를 장르, 템포, 악기, 사운드 톤, 시각 무드 같은 구체적인 요소로 변환해야 합니다.
 
 기존 도구는 음악 추천이나 이미지 생성에 집중되어 있어, 사용자의 막연한 음악 아이디어를 제작 가능한 구조로 정리해주는 과정이 부족합니다.
@@ -801,37 +850,44 @@ def extract_json(text: str) -> dict:
 일반적인 AI 도구는 사용자의 문장을 자연어로 답변하는 데 그치기 쉽습니다.
 예를 들어 "몽환적이고 살짝 슬픈 우주 느낌의 음악"이라는 입력에 대해 단순 설명은 가능하지만, 이를 실제 제작에 필요한 데이터 구조로 변환하지는 못합니다.
 
+이미지 입력의 경우 분위기를 인식하더라도, 그 분위기를 음악 제작 방향으로 연결하는 구조가 없습니다.
+
 또한 음악 방향, 사운드 구성, 비주얼 무드가 각각 분리되어 있어 하나의 아이디어가 앨범 커버, 공연 무드, 콘텐츠 기획까지 이어지기 어렵습니다.`,
       year: 2025,
       role: "AI 백엔드 개발, 풀스택",
       contribution: `LLM을 단순 텍스트 생성기가 아니라 음악 아이디어를 구조화하는 엔진으로 사용했습니다.
-사용자의 추상적인 입력을 MusicProfile JSON으로 강제 변환하고, 이 구조를 기반으로 음악 방향, 사운드 구성, 비주얼 무드, 콘텐츠 활용 방향을 생성하도록 설계했습니다.
+텍스트와 이미지 두 가지 입력 경로를 Gemini 2.0 Flash 멀티모달로 통합하고, 두 경로 모두 동일한 MusicProfile JSON 구조로 수렴하도록 설계했습니다.
 
-또한 API 키가 없는 환경에서도 서비스 흐름을 확인할 수 있도록 Mock Mode를 분리했습니다.
-GitHub Pages에서는 정적 데모로 동작하고, 실제 LLM 실행은 Vercel API Route 또는 서버 환경에서 처리할 수 있도록 구조를 나누었습니다.`,
-      keyLearnings: `MDE를 통해 사용자의 추상적인 음악 아이디어를 감정, 장르, 템포감, 악기 구성, 사운드 톤, 비주얼 무드로 분해하는 구조를 설계했습니다.
+이미지 입력은 Gemini Vision으로 분위기를 한국어 설명으로 변환한 뒤 LLM 분석에 전달하고, 텍스트 입력은 직접 구조화 레이어로 전달합니다.
+
+또한 분석 히스토리 세션 저장, 공개 공유 링크 생성, JWT 기반 인증을 구현해 사용자가 여러 분석 결과를 관리할 수 있도록 했습니다.`,
+      keyLearnings: `MDE를 통해 텍스트와 이미지 두 가지 입력을 동일한 MusicProfile 구조로 수렴시키는 멀티모달 파이프라인을 설계했습니다.
+
+Gemini Vision을 이미지 → 텍스트 변환 중간 단계로 활용하면, 이후 LLM 분석 레이어를 그대로 재사용할 수 있습니다. 두 입력 경로가 하나의 구조로 수렴하는 설계가 확장성에 유리하다는 점을 경험했습니다.
 
 또한 MusicProfile이라는 중간 표현을 두면 음악 방향, 사운드 구성, 앨범 커버 목업, 콘텐츠 기획을 하나의 데이터 구조에서 확장할 수 있습니다.
 
-이미지 생성은 핵심 기능이 아니라 visual_association을 기반으로 콘셉트를 빠르게 확인하기 위한 보조 목업 단계로 분리했습니다.`,
-      workingApproach: `MDE는 사용자의 자연어 입력을 LLM으로 분석해 MusicProfile이라는 구조화된 JSON으로 변환합니다.
-MusicProfile은 감정, 에너지, 템포감, 장르, 악기 구성, 사운드 방향, 분위기, 비주얼 연상, 청취 맥락, 콘텐츠 목표를 포함합니다.
+세션 저장과 공유 링크를 구현하면서, 분석 결과를 아카이브하는 것이 사용자에게 실질적인 가치를 준다는 점을 확인했습니다.`,
+      workingApproach: `MDE는 텍스트 또는 이미지로 입력한 음악 아이디어를 Gemini 2.0 Flash로 분석해 9개 필드의 MusicProfile JSON으로 변환합니다.
+MusicProfile은 감정, 에너지, 템포감, 장르, 악기 구성, 사운드 방향, 분위기, 비주얼 연상, 청취 맥락을 포함합니다.
 
 이를 기반으로 사용자는 다음 결과를 얻을 수 있습니다.
 
 음악 방향 설명
 사운드 구성 제안
-앨범 커버 또는 콘텐츠 비주얼 무드
-실제 제작에 활용 가능한 구조화 데이터
+비주얼 / 앨범 아트 방향
+콘텐츠 활용 전략
 
 ---
 
 User Input
- └── Text: "비 오는 밤에 혼자 듣는 감성적인 기타 음악 느낌"
+ ├── Text: "비 오는 밤에 혼자 듣는 감성적인 기타 음악 느낌"
+ └── Image: [분위기 이미지 업로드]
           |
           v
- [LLM Structuring Layer]
- Input → MusicProfile (JSON)
+ [Gemini Vision / LLM Structuring Layer]
+ ├── describe_image() → 이미지 → 한국어 분위기 설명 → LLM 입력
+ └── call_gemini()   → 자연어 → MusicProfile (JSON)
 
  {
    emotion: ["melancholic", "lonely", "nostalgic"],
@@ -842,8 +898,7 @@ User Input
    sound_direction: ["heavy reverb", "wide ambient texture"],
    atmosphere: ["rainy night", "empty street"],
    visual_association: ["blue neon", "wet road reflection"],
-   listener_context: "alone at night",
-   content_goal: "album cover direction"
+   listener_context: "alone at night"
  }
           |
           v
@@ -854,50 +909,89 @@ User Input
  └── Content Usage
           |
           v
- [Optional Visual Mockup]
- visual_association → album cover mood prompt
-          |
-          v
- Result UI`,
-      techStack: ["Python", "FastAPI", "Next.js", "TypeScript", "SQLAlchemy", "Stable Diffusion", "ComfyUI", "PostgreSQL"],
+ Result UI (+ 세션 저장 / 공유 링크)`,
+      techStack: ["Python", "FastAPI", "Next.js 15", "TypeScript", "Tailwind CSS v4", "Gemini 2.0 Flash", "SQLAlchemy", "PostgreSQL", "JWT"],
       codeSnippets: [
         {
-          title: "call_gemini — LLM Structuring Layer",
+          title: "gemini_service.py — Gemini API + Vision 통합 레이어",
           language: "python",
           code: `async def call_gemini(
     system_prompt: str,
     user_message: str,
     temperature: float = 0.3,
     max_tokens: int = 1024,
+    api_key: Optional[str] = None,
+    model: Optional[str] = None,
 ) -> str:
-    """자연어 입력을 MusicProfile JSON으로 변환하는 Gemini API 호출 레이어."""
-    url = GEMINI_API_BASE + "/" + settings.llm_model + ":generateContent?key=" + settings.llm_api_key
+    """Call Gemini API and return raw text response."""
+    key = api_key or settings.llm_api_key
+    mdl = model or settings.llm_model
+
+    url = f"{GEMINI_API_BASE}/{mdl}:generateContent?key={key}"
     payload = {
         "system_instruction": {"parts": [{"text": system_prompt}]},
         "contents": [{"role": "user", "parts": [{"text": user_message}]}],
-        "generationConfig": {"temperature": temperature, "maxOutputTokens": max_tokens},
+        "generationConfig": {
+            "temperature": temperature,
+            "maxOutputTokens": max_tokens,
+        },
     }
+
     async with httpx.AsyncClient(timeout=60.0) as client:
         resp = await client.post(url, json=payload)
+
     if resp.status_code == 429:
         raise GeminiRateLimitError("Gemini API rate limit exceeded")
     if resp.status_code != 200:
-        raise GeminiServiceError("Gemini API error: " + str(resp.status_code))
+        raise GeminiServiceError(f"Gemini API error {resp.status_code}: {resp.text[:300]}")
+
     data = resp.json()
-    text = data["candidates"][0]["content"]["parts"][0]["text"]
+    try:
+        text = data["candidates"][0]["content"]["parts"][0]["text"]
+    except (KeyError, IndexError) as e:
+        raise GeminiServiceError(f"Unexpected Gemini response structure: {e}") from e
+
     return text.strip()
 
-def extract_json(text: str) -> dict:
-    """LLM 응답에서 JSON을 추출합니다."""
+
+async def describe_image(
+    mime_type: str,
+    base64_data: str,
+    api_key: str | None = None,
+    model: str | None = None,
+) -> str:
+    """Gemini Vision으로 이미지를 음악 분석용 텍스트 설명으로 변환."""
+    key = api_key or settings.llm_api_key
+    mdl = model or settings.llm_model
+
+    url = f"{GEMINI_API_BASE}/{mdl}:generateContent?key={key}"
+    payload = {
+        "contents": [{
+            "role": "user",
+            "parts": [
+                {"inlineData": {"mimeType": mime_type, "data": base64_data}},
+                {"text": IMAGE_DESCRIPTION_PROMPT},
+            ],
+        }],
+        "generationConfig": {"temperature": 0.3, "maxOutputTokens": 200},
+    }
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        resp = await client.post(url, json=payload)
+
+    if resp.status_code == 429:
+        raise GeminiRateLimitError("Gemini API rate limit exceeded")
+    if resp.status_code != 200:
+        raise GeminiServiceError(f"Gemini Vision API error {resp.status_code}: {resp.text[:300]}")
+
+    data = resp.json()
     try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        pass
-    start = text.find("{")
-    if start >= 0:
-        return json.loads(text[start:])
-    raise ValueError("Could not extract JSON from LLM response")`,
-          explanation: "사용자의 추상적인 음악 아이디어를 Gemini에 전달해 MusicProfile JSON으로 구조화합니다. 시스템 프롬프트로 출력 형식을 강제하고, LLM 응답에서 마크다운 코드 블록을 제거해 안정적으로 JSON을 파싱합니다.",
+        text = data["candidates"][0]["content"]["parts"][0]["text"]
+    except (KeyError, IndexError) as e:
+        raise GeminiServiceError(f"Unexpected Gemini response structure: {e}") from e
+
+    return text.strip()`,
+          explanation: "텍스트와 이미지를 모두 처리하는 Gemini 2.0 Flash 멀티모달 통합 레이어입니다. call_gemini는 자연어 입력을 MusicProfile JSON으로 구조화하고, describe_image는 Gemini Vision으로 이미지를 분석해 음악 방향성 분석에 활용할 한국어 설명으로 변환합니다. 마크다운 코드 블록 제거 및 다중 JSON 추출 방식으로 안정적인 파싱을 보장합니다.",
         },
       ],
             thumbnailUrl: "/images/projects/mde-hero.png",
@@ -912,7 +1006,7 @@ def extract_json(text: str) -> dict:
 
   await prisma.projectLink.deleteMany({ where: { projectId: mde.id } });
   await prisma.projectLink.create({
-    data: { projectId: mde.id, type: "GITHUB", label: "GitHub", url: "https://github.com/devbinlog/FMD", order: 1 },
+    data: { projectId: mde.id, type: "GITHUB", label: "GitHub", url: "https://github.com/devbinlog/MDE", order: 1 },
   });
 
   // ── 4. Emotion-Aware AI Voice Engine ──────────────────────────────────────
