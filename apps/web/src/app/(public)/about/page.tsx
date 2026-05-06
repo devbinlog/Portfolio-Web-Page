@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { MainNav } from '@/components/layout/MainNav'
 import { IdentitySection } from '@/components/sections/about/IdentitySection'
+import { EducationSection } from '@/components/sections/about/EducationSection'
 import { WorkingMethodSection } from '@/components/sections/about/WorkingMethodSection'
 import { SkillsSection } from '@/components/sections/about/SkillsSection'
 import { getProfile } from '@/lib/api/profile'
@@ -19,6 +20,7 @@ export default async function AboutPage() {
       <MainNav profile={profile} />
       <div className="max-w-container-narrow mx-auto px-6 pt-32 pb-24 space-y-14">
         <IdentitySection profile={profile} />
+        <EducationSection />
         <SkillsSection />
         <WorkingMethodSection workingMethod={profile.workingMethod} />
       </div>
