@@ -54,20 +54,9 @@ async function main() {
     update: {
       name: "binlog",
       roleTitle: "AI / LLM Engineer & Frontend Developer",
-      tagline: "Designing systems that transform unstructured input into structured user experiences.",
-      bio: `AI를 단순히 개발을 대신하는 도구가 아니라, 함께 문제를 해결하는 파트너로 활용합니다.
-
-작업을 하나의 흐름으로 처리하기보다 역할 단위로 나누고, 각 역할을 에이전트로 분리하여
-구조적으로 설계한 뒤 작업을 진행합니다.
-
-프로젝트마다 필요한 역할을 정의하고, 에이전트 단위로 세분화하여 각 영역을 독립적으로
-구현하고 연결합니다.
-
-이 방식은 개인이 수행할 수 있는 작업이라도 효율성과 시간, 비용을 줄이면서
-동시에 결과의 완성도를 높이기 위해 사용하고 있습니다.
-
-이 구조를 기반으로 다양한 시스템을 빠르게 설계하고 실제로 동작하는 결과까지 구현하는
-개발 방식을 유지하고 있습니다.`,
+      tagline: "Developing imagination.",
+      bio: `창의적인 아이디어를 구조화하고,
+AI와 인터랙션을 기반으로 실제 동작하는 시스템과 사용자 경험을 구현합니다.`,
       workingMethod: `문제를 기능 단위가 아닌 구조적으로 분해합니다.
 구현 전에 문서와 아키텍처를 정의합니다.
 데이터 구조와 사용자 경험을 함께 설계합니다.
@@ -78,20 +67,9 @@ async function main() {
       id: "default",
       name: "binlog",
       roleTitle: "AI / LLM Engineer & Frontend Developer",
-      tagline: "Designing systems that transform unstructured input into structured user experiences.",
-      bio: `AI를 단순히 개발을 대신하는 도구가 아니라, 함께 문제를 해결하는 파트너로 활용합니다.
-
-작업을 하나의 흐름으로 처리하기보다 역할 단위로 나누고, 각 역할을 에이전트로 분리하여
-구조적으로 설계한 뒤 작업을 진행합니다.
-
-프로젝트마다 필요한 역할을 정의하고, 에이전트 단위로 세분화하여 각 영역을 독립적으로
-구현하고 연결합니다.
-
-이 방식은 개인이 수행할 수 있는 작업이라도 효율성과 시간, 비용을 줄이면서
-동시에 결과의 완성도를 높이기 위해 사용하고 있습니다.
-
-이 구조를 기반으로 다양한 시스템을 빠르게 설계하고 실제로 동작하는 결과까지 구현하는
-개발 방식을 유지하고 있습니다.`,
+      tagline: "Developing imagination.",
+      bio: `창의적인 아이디어를 구조화하고,
+AI와 인터랙션을 기반으로 실제 동작하는 시스템과 사용자 경험을 구현합니다.`,
       workingMethod: `문제를 기능 단위가 아닌 구조적으로 분해합니다.
 구현 전에 문서와 아키텍처를 정의합니다.
 데이터 구조와 사용자 경험을 함께 설계합니다.
@@ -165,6 +143,80 @@ User (Fan)          User (Artist)        User (Venue Manager)
  ├── Quantity Management
  └── Booking Confirmation`,
       techStack: ["Next.js 15", "React 19", "TypeScript", "Tailwind CSS v4", "Prisma", "Supabase", "NextAuth.js", "Vercel"],
+      codeSnippets: [
+        {
+          title: "createEvent — RBAC + Zod",
+          language: "typescript",
+          code: `export async function createEvent(input: EventInput) {
+  const session = await auth()
+  if (!session?.user) return { success: false, error: "로그인이 필요합니다." }
+  if (session.user.role !== "ARTIST" && session.user.role !== "ADMIN")
+    return { success: false, error: "공연 등록 권한이 없습니다." }
+
+  const parsed = eventSchema.safeParse(input)
+  if (!parsed.success) return { success: false, error: parsed.error.errors[0].message }
+
+  const slug = await generateUniqueSlug(parsed.data.title, async (s) => {
+    const exists = await db.event.findUnique({ where: { slug: s } })
+    return !!exists
+  })
+
+  const event = await db.event.create({
+    data: {
+      ...parsed.data,
+      slug,
+      status: "PENDING",
+      ownerId: session.user.id,
+    },
+    include: { ticketTypes: true },
+  })
+
+  revalidatePath("/events")
+  return { success: true, slug: event.slug, eventId: event.id }
+}`,
+          explanation: "Next.js Server Action: Zod 검증과 역할 기반 접근 제어(ARTIST/ADMIN)를 서버 레이어에서 처리하고, 중복 없는 slug를 생성한 뒤 Prisma로 공연 데이터를 생성합니다.",
+        },
+        {
+          title: "createReservation — DB Transaction",
+          language: "typescript",
+          code: `export async function createReservation(ticketTypeId: string, quantity: number) {
+  const session = await auth()
+  if (!session?.user) return { success: false, error: "로그인이 필요합니다." }
+
+  const ticketType = await db.ticketType.findUnique({
+    where: { id: ticketTypeId },
+    include: { event: { select: { id: true, slug: true, status: true } } },
+  })
+
+  if (ticketType?.event.status !== "PUBLISHED")
+    return { success: false, error: "예매가 불가능한 공연입니다." }
+  if (ticketType.remaining < quantity)
+    return { success: false, error: "잔여 수량이 부족합니다." }
+
+  const ticket = await db.$transaction(async (tx) => {
+    const created = await tx.ticket.create({
+      data: {
+        ticketTypeId,
+        eventId: ticketType.eventId,
+        userId: session.user!.id,
+        quantity,
+        totalAmount: Number(ticketType.price) * quantity,
+        status: "PENDING",
+      },
+    })
+    await tx.ticketType.update({
+      where: { id: ticketTypeId },
+      data: { remaining: { decrement: quantity } },
+    })
+    return created
+  })
+
+  revalidatePath("/events/" + ticketType.event.slug)
+  return { success: true, ticketId: ticket.id }
+}`,
+          explanation: "Prisma $transaction으로 티켓 생성과 잔여 수량 감소를 원자적으로 처리합니다. 상태 검증, 재고 확인, 사용자 구매 한도를 순서대로 통과해야 예매가 완료됩니다.",
+        },
+      ],
             thumbnailUrl: "/images/projects/bandstage-hero.png",
       heroImageUrl: "/images/projects/bandstage-hero.png",
       isFeatured: true,
@@ -220,6 +272,80 @@ User (Fan)          User (Artist)        User (Venue Manager)
  ├── Quantity Management
  └── Booking Confirmation`,
       techStack: ["Next.js 15", "React 19", "TypeScript", "Tailwind CSS v4", "Prisma", "Supabase", "NextAuth.js", "Vercel"],
+      codeSnippets: [
+        {
+          title: "createEvent — RBAC + Zod",
+          language: "typescript",
+          code: `export async function createEvent(input: EventInput) {
+  const session = await auth()
+  if (!session?.user) return { success: false, error: "로그인이 필요합니다." }
+  if (session.user.role !== "ARTIST" && session.user.role !== "ADMIN")
+    return { success: false, error: "공연 등록 권한이 없습니다." }
+
+  const parsed = eventSchema.safeParse(input)
+  if (!parsed.success) return { success: false, error: parsed.error.errors[0].message }
+
+  const slug = await generateUniqueSlug(parsed.data.title, async (s) => {
+    const exists = await db.event.findUnique({ where: { slug: s } })
+    return !!exists
+  })
+
+  const event = await db.event.create({
+    data: {
+      ...parsed.data,
+      slug,
+      status: "PENDING",
+      ownerId: session.user.id,
+    },
+    include: { ticketTypes: true },
+  })
+
+  revalidatePath("/events")
+  return { success: true, slug: event.slug, eventId: event.id }
+}`,
+          explanation: "Next.js Server Action: Zod 검증과 역할 기반 접근 제어(ARTIST/ADMIN)를 서버 레이어에서 처리하고, 중복 없는 slug를 생성한 뒤 Prisma로 공연 데이터를 생성합니다.",
+        },
+        {
+          title: "createReservation — DB Transaction",
+          language: "typescript",
+          code: `export async function createReservation(ticketTypeId: string, quantity: number) {
+  const session = await auth()
+  if (!session?.user) return { success: false, error: "로그인이 필요합니다." }
+
+  const ticketType = await db.ticketType.findUnique({
+    where: { id: ticketTypeId },
+    include: { event: { select: { id: true, slug: true, status: true } } },
+  })
+
+  if (ticketType?.event.status !== "PUBLISHED")
+    return { success: false, error: "예매가 불가능한 공연입니다." }
+  if (ticketType.remaining < quantity)
+    return { success: false, error: "잔여 수량이 부족합니다." }
+
+  const ticket = await db.$transaction(async (tx) => {
+    const created = await tx.ticket.create({
+      data: {
+        ticketTypeId,
+        eventId: ticketType.eventId,
+        userId: session.user!.id,
+        quantity,
+        totalAmount: Number(ticketType.price) * quantity,
+        status: "PENDING",
+      },
+    })
+    await tx.ticketType.update({
+      where: { id: ticketTypeId },
+      data: { remaining: { decrement: quantity } },
+    })
+    return created
+  })
+
+  revalidatePath("/events/" + ticketType.event.slug)
+  return { success: true, ticketId: ticket.id }
+}`,
+          explanation: "Prisma $transaction으로 티켓 생성과 잔여 수량 감소를 원자적으로 처리합니다. 상태 검증, 재고 확인, 사용자 구매 한도를 순서대로 통과해야 예매가 완료됩니다.",
+        },
+      ],
             thumbnailUrl: "/images/projects/bandstage-hero.png",
       heroImageUrl: "/images/projects/bandstage-hero.png",
       isFeatured: true,
@@ -319,6 +445,52 @@ User Input (Mouse / Keyboard / Touch / Gyroscope)
                       |
             Card Data -> 3D Scene`,
       techStack: ["React 18", "TypeScript", "Three.js", "React Three Fiber", "Zustand", "Firebase", "Spotify API", "Vite"],
+      codeSnippets: [
+        {
+          title: "CircularCarousel — Spring Physics Loop",
+          language: "typescript",
+          code: `const SPRING_TENSION = 170
+const SPRING_FRICTION = 26
+const RADIUS = 3.8
+
+const springPos = useRef(0)
+const springVel = useRef(0)
+const springTarget = useRef(0)
+
+useFrame((_, dt) => {
+  if (N === 0) return
+  const safe = Math.min(dt, 0.033)
+
+  // Damped spring: force = tension * displacement - friction * velocity
+  const dx = springTarget.current - springPos.current
+  const force = dx * SPRING_TENSION - springVel.current * SPRING_FRICTION
+  springVel.current += force * safe
+  springPos.current += springVel.current * safe
+
+  // Imperatively update each card's 3D position (no React re-render)
+  for (let i = 0; i < N; i++) {
+    const group = cardGroupRefs.current[i]
+    if (!group) continue
+    const angle = i * angleStep + springPos.current
+    group.position.set(RADIUS * Math.sin(angle), 0, RADIUS * Math.cos(angle))
+    group.rotation.y = -angle
+  }
+
+  const computed = wrap(Math.round(-springPos.current / angleStep), N)
+  if (computed !== activeIndex) setActiveIndex(computed)
+})
+
+const onPointerUp = () => {
+  if (isDragging.current) {
+    // Snap to nearest card after drag release
+    const nearest = -Math.round(springPos.current / angleStep) * angleStep
+    springTarget.current = nearest
+  }
+  isDragging.current = false
+}`,
+          explanation: "useFrame 안에서 감쇠 스프링(tension=170, friction=26)을 직접 계산하고, ref로 각 Three.js 카드 그룹을 명령형으로 업데이트합니다. React 리렌더 없이 60fps 인터랙션을 유지하는 핵심 구조입니다.",
+        },
+      ],
             thumbnailUrl: "/images/projects/page-of-artist-hero.png",
       heroImageUrl: "/images/projects/page-of-artist-hero.png",
       isFeatured: true,
@@ -408,6 +580,52 @@ User Input (Mouse / Keyboard / Touch / Gyroscope)
                       |
             Card Data -> 3D Scene`,
       techStack: ["React 18", "TypeScript", "Three.js", "React Three Fiber", "Zustand", "Firebase", "Spotify API", "Vite"],
+      codeSnippets: [
+        {
+          title: "CircularCarousel — Spring Physics Loop",
+          language: "typescript",
+          code: `const SPRING_TENSION = 170
+const SPRING_FRICTION = 26
+const RADIUS = 3.8
+
+const springPos = useRef(0)
+const springVel = useRef(0)
+const springTarget = useRef(0)
+
+useFrame((_, dt) => {
+  if (N === 0) return
+  const safe = Math.min(dt, 0.033)
+
+  // Damped spring: force = tension * displacement - friction * velocity
+  const dx = springTarget.current - springPos.current
+  const force = dx * SPRING_TENSION - springVel.current * SPRING_FRICTION
+  springVel.current += force * safe
+  springPos.current += springVel.current * safe
+
+  // Imperatively update each card's 3D position (no React re-render)
+  for (let i = 0; i < N; i++) {
+    const group = cardGroupRefs.current[i]
+    if (!group) continue
+    const angle = i * angleStep + springPos.current
+    group.position.set(RADIUS * Math.sin(angle), 0, RADIUS * Math.cos(angle))
+    group.rotation.y = -angle
+  }
+
+  const computed = wrap(Math.round(-springPos.current / angleStep), N)
+  if (computed !== activeIndex) setActiveIndex(computed)
+})
+
+const onPointerUp = () => {
+  if (isDragging.current) {
+    // Snap to nearest card after drag release
+    const nearest = -Math.round(springPos.current / angleStep) * angleStep
+    springTarget.current = nearest
+  }
+  isDragging.current = false
+}`,
+          explanation: "useFrame 안에서 감쇠 스프링(tension=170, friction=26)을 직접 계산하고, ref로 각 Three.js 카드 그룹을 명령형으로 업데이트합니다. React 리렌더 없이 60fps 인터랙션을 유지하는 핵심 구조입니다.",
+        },
+      ],
             thumbnailUrl: "/images/projects/page-of-artist-hero.png",
       heroImageUrl: "/images/projects/page-of-artist-hero.png",
       isFeatured: true,
@@ -427,7 +645,7 @@ User Input (Mouse / Keyboard / Touch / Gyroscope)
     where: { slug: "mde" },
     update: {
       title: "MDE",
-      summary: `자연어로 입력한 음악 아이디어를 LLM으로 분석하고, 감정·장르·사운드·비주얼 방향을 구조화하는 음악 디렉션 엔진.
+      summary: `자연어로 입력한 음악 아이디어를 LLM으로 분석하고, 감정 장르 사운드 비주얼 방향을 구조화하는 음악 디렉션 엔진.
 추상적인 음악 감각을 MusicProfile로 변환해 실제 제작 가능한 방향으로 연결합니다.`,
       description: `음악 아이디어는 대부분 "비 오는 밤에 혼자 듣는 감성적인 기타 음악"처럼 감정적이고 추상적인 언어로 시작됩니다.
 하지만 작곡, 사운드 디자인, 앨범 커버, 공연 비주얼로 이어지기 위해서는 감정과 분위기를 장르, 템포, 악기, 사운드 톤, 시각 무드 같은 구체적인 요소로 변환해야 합니다.
@@ -450,6 +668,7 @@ GitHub Pages에서는 정적 데모로 동작하고, 실제 LLM 실행은 Vercel
       keyLearnings: `MDE를 통해 사용자의 추상적인 음악 아이디어를 감정, 장르, 템포감, 악기 구성, 사운드 톤, 비주얼 무드로 분해하는 구조를 설계했습니다.
 
 또한 MusicProfile이라는 중간 표현을 두면 음악 방향, 사운드 구성, 앨범 커버 목업, 콘텐츠 기획을 하나의 데이터 구조에서 확장할 수 있습니다.
+
 이미지 생성은 핵심 기능이 아니라 visual_association을 기반으로 콘셉트를 빠르게 확인하기 위한 보조 목업 단계로 분리했습니다.`,
       workingApproach: `MDE는 사용자의 자연어 입력을 LLM으로 분석해 MusicProfile이라는 구조화된 JSON으로 변환합니다.
 MusicProfile은 감정, 에너지, 템포감, 장르, 악기 구성, 사운드 방향, 분위기, 비주얼 연상, 청취 맥락, 콘텐츠 목표를 포함합니다.
@@ -497,6 +716,46 @@ User Input
           v
  Result UI`,
       techStack: ["Python", "FastAPI", "Next.js", "TypeScript", "SQLAlchemy", "Stable Diffusion", "ComfyUI", "PostgreSQL"],
+      codeSnippets: [
+        {
+          title: "call_gemini — LLM Structuring Layer",
+          language: "python",
+          code: `async def call_gemini(
+    system_prompt: str,
+    user_message: str,
+    temperature: float = 0.3,
+    max_tokens: int = 1024,
+) -> str:
+    """자연어 입력을 MusicProfile JSON으로 변환하는 Gemini API 호출 레이어."""
+    url = GEMINI_API_BASE + "/" + settings.llm_model + ":generateContent?key=" + settings.llm_api_key
+    payload = {
+        "system_instruction": {"parts": [{"text": system_prompt}]},
+        "contents": [{"role": "user", "parts": [{"text": user_message}]}],
+        "generationConfig": {"temperature": temperature, "maxOutputTokens": max_tokens},
+    }
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        resp = await client.post(url, json=payload)
+    if resp.status_code == 429:
+        raise GeminiRateLimitError("Gemini API rate limit exceeded")
+    if resp.status_code != 200:
+        raise GeminiServiceError("Gemini API error: " + str(resp.status_code))
+    data = resp.json()
+    text = data["candidates"][0]["content"]["parts"][0]["text"]
+    return text.strip()
+
+def extract_json(text: str) -> dict:
+    """LLM 응답에서 JSON을 추출합니다."""
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+    start = text.find("{")
+    if start >= 0:
+        return json.loads(text[start:])
+    raise ValueError("Could not extract JSON from LLM response")`,
+          explanation: "사용자의 추상적인 음악 아이디어를 Gemini에 전달해 MusicProfile JSON으로 구조화합니다. 시스템 프롬프트로 출력 형식을 강제하고, LLM 응답에서 마크다운 코드 블록을 제거해 안정적으로 JSON을 파싱합니다.",
+        },
+      ],
             thumbnailUrl: "/images/projects/mde-hero.png",
       heroImageUrl: "/images/projects/mde-hero.png",
       isFeatured: true,
@@ -508,7 +767,7 @@ User Input
     create: {
       title: "MDE",
       slug: "mde",
-      summary: `자연어로 입력한 음악 아이디어를 LLM으로 분석하고, 감정·장르·사운드·비주얼 방향을 구조화하는 음악 디렉션 엔진.
+      summary: `자연어로 입력한 음악 아이디어를 LLM으로 분석하고, 감정 장르 사운드 비주얼 방향을 구조화하는 음악 디렉션 엔진.
 추상적인 음악 감각을 MusicProfile로 변환해 실제 제작 가능한 방향으로 연결합니다.`,
       description: `음악 아이디어는 대부분 "비 오는 밤에 혼자 듣는 감성적인 기타 음악"처럼 감정적이고 추상적인 언어로 시작됩니다.
 하지만 작곡, 사운드 디자인, 앨범 커버, 공연 비주얼로 이어지기 위해서는 감정과 분위기를 장르, 템포, 악기, 사운드 톤, 시각 무드 같은 구체적인 요소로 변환해야 합니다.
@@ -531,6 +790,7 @@ GitHub Pages에서는 정적 데모로 동작하고, 실제 LLM 실행은 Vercel
       keyLearnings: `MDE를 통해 사용자의 추상적인 음악 아이디어를 감정, 장르, 템포감, 악기 구성, 사운드 톤, 비주얼 무드로 분해하는 구조를 설계했습니다.
 
 또한 MusicProfile이라는 중간 표현을 두면 음악 방향, 사운드 구성, 앨범 커버 목업, 콘텐츠 기획을 하나의 데이터 구조에서 확장할 수 있습니다.
+
 이미지 생성은 핵심 기능이 아니라 visual_association을 기반으로 콘셉트를 빠르게 확인하기 위한 보조 목업 단계로 분리했습니다.`,
       workingApproach: `MDE는 사용자의 자연어 입력을 LLM으로 분석해 MusicProfile이라는 구조화된 JSON으로 변환합니다.
 MusicProfile은 감정, 에너지, 템포감, 장르, 악기 구성, 사운드 방향, 분위기, 비주얼 연상, 청취 맥락, 콘텐츠 목표를 포함합니다.
@@ -578,6 +838,46 @@ User Input
           v
  Result UI`,
       techStack: ["Python", "FastAPI", "Next.js", "TypeScript", "SQLAlchemy", "Stable Diffusion", "ComfyUI", "PostgreSQL"],
+      codeSnippets: [
+        {
+          title: "call_gemini — LLM Structuring Layer",
+          language: "python",
+          code: `async def call_gemini(
+    system_prompt: str,
+    user_message: str,
+    temperature: float = 0.3,
+    max_tokens: int = 1024,
+) -> str:
+    """자연어 입력을 MusicProfile JSON으로 변환하는 Gemini API 호출 레이어."""
+    url = GEMINI_API_BASE + "/" + settings.llm_model + ":generateContent?key=" + settings.llm_api_key
+    payload = {
+        "system_instruction": {"parts": [{"text": system_prompt}]},
+        "contents": [{"role": "user", "parts": [{"text": user_message}]}],
+        "generationConfig": {"temperature": temperature, "maxOutputTokens": max_tokens},
+    }
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        resp = await client.post(url, json=payload)
+    if resp.status_code == 429:
+        raise GeminiRateLimitError("Gemini API rate limit exceeded")
+    if resp.status_code != 200:
+        raise GeminiServiceError("Gemini API error: " + str(resp.status_code))
+    data = resp.json()
+    text = data["candidates"][0]["content"]["parts"][0]["text"]
+    return text.strip()
+
+def extract_json(text: str) -> dict:
+    """LLM 응답에서 JSON을 추출합니다."""
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+    start = text.find("{")
+    if start >= 0:
+        return json.loads(text[start:])
+    raise ValueError("Could not extract JSON from LLM response")`,
+          explanation: "사용자의 추상적인 음악 아이디어를 Gemini에 전달해 MusicProfile JSON으로 구조화합니다. 시스템 프롬프트로 출력 형식을 강제하고, LLM 응답에서 마크다운 코드 블록을 제거해 안정적으로 JSON을 파싱합니다.",
+        },
+      ],
             thumbnailUrl: "/images/projects/mde-hero.png",
       heroImageUrl: "/images/projects/mde-hero.png",
       isFeatured: true,
@@ -651,6 +951,94 @@ faster-whisper 기반 STT를 적용해 실시간 음성 인식을 처리하고,
                                                          ↓
                               TTS(감정 톤 제어) ← LLM(감정 컨텍스트 반영)`,
       techStack: ["Python", "FastAPI", "WebSocket", "faster-whisper", "Ollama", "Claude API", "Next.js 14", "Tailwind CSS"],
+      codeSnippets: [
+        {
+          title: "voice_ws — Real-time Pipeline",
+          language: "python",
+          code: `@ws_router.websocket("/ws/voice")
+async def voice_ws(ws: WebSocket):
+    await ws.accept()
+    vad, stt, emotion, tts = _services()
+    audio_buffer: List[np.ndarray] = []
+    conversation_history: List[dict] = []
+
+    async for raw in ws.iter_text():
+        msg = json.loads(raw)
+        t = msg.get("type")
+
+        if t == "audio_chunk":
+            chunk = np.frombuffer(
+                base64.b64decode(msg["data"]), dtype=np.int16
+            ).astype(np.float32) / 32768.0
+            audio_buffer.append(chunk)
+            await ws.send_json({"type": "vad_result", "is_speech": vad.is_speech(chunk)})
+
+        elif t == "end_stream":
+            full = np.concatenate(audio_buffer)
+
+            # Stage 1: STT — transcribe with faster-whisper
+            stt_result = await asyncio.to_thread(stt.transcribe, full, "ko", 16000)
+
+            # Stage 2: Emotion — audio + text multimodal fusion
+            emo = emotion.analyze(full, sr=16000, transcript=stt_result["transcript"])
+
+            # Stage 3: LLM — emotion-conditioned response generation
+            ai_text = await get_llm_response(stt_result["transcript"], emo, conversation_history)
+
+            # Stage 4: TTS — prosody-adjusted synthesis
+            out = tts.synthesize(text=ai_text, emotion_label=emo["emotion_label"])
+
+            await ws.send_json({
+                "type": "response",
+                "transcript": stt_result["transcript"],
+                "emotion": emo,
+                "text": ai_text,
+                "audio": out,
+            })
+            audio_buffer.clear()`,
+          explanation: "WebSocket 한 세션에서 STT → 감정 분석 → LLM → TTS 파이프라인을 순차 실행합니다. 오디오 청크를 실시간으로 버퍼링하다가 end_stream 신호에 전체 파이프라인을 실행하고 응답을 반환합니다.",
+        },
+        {
+          title: "EmotionService — MFCC + Text Fusion",
+          language: "python",
+          code: `class EmotionService:
+    def __init__(self):
+        self.classifier = EmotionClassifier()
+        self._audio_w = settings.EMOTION_AUDIO_WEIGHT  # 0.6
+        self._text_w  = settings.EMOTION_TEXT_WEIGHT   # 0.4
+
+    def extract_audio_features(self, audio: np.ndarray, sr: int = 16000) -> dict:
+        frames    = _frames(audio)
+        f0        = _f0_autocorr(audio, sr)      # 피치: 자기상관 기반
+        rms       = _rms(frames).mean()
+        zcr       = _zcr(frames).mean()
+        mfccs     = _mfcc(audio, sr, n_mfcc=13)  # mel-filterbank + DCT
+        spk_rate  = _speaking_rate(audio, sr)
+        return {
+            "f0_mean": f0, "rms": rms, "zcr": zcr,
+            "mfcc_mean": mfccs.mean(axis=1).tolist(),
+            "speaking_rate": spk_rate,
+        }
+
+    def fuse(self, audio_result: dict, text_result: dict | None = None) -> dict:
+        p_audio = np.array(audio_result["probabilities"])
+        if text_result:
+            p_text = np.array(text_result["probabilities"])
+            fused  = self._audio_w * p_audio + self._text_w * p_text
+        else:
+            fused = p_audio
+        fused /= fused.sum()
+        label = EMOTION_LABELS[fused.argmax()]
+        return {"emotion_label": label, "probabilities": fused.tolist()}
+
+    def analyze(self, audio: np.ndarray, sr: int = 16000, transcript: str | None = None) -> dict:
+        features     = self.extract_audio_features(audio, sr)
+        audio_result = self.classifier.predict_from_features(features)
+        text_result  = self.classifier.predict_from_text(transcript) if transcript else None
+        return self.fuse(audio_result, text_result)`,
+          explanation: "오디오에서 MFCC·피치·RMS·ZCR를 추출하고, 텍스트 키워드 감정 분석 결과와 가중치 기반(오디오 0.6 / 텍스트 0.4)으로 융합해 최종 감정 레이블을 결정합니다.",
+        },
+      ],
             thumbnailUrl: "/images/projects/emotion-hero.png",
       heroImageUrl: "/images/projects/emotion-hero.png",
       isFeatured: true,
@@ -714,6 +1102,94 @@ faster-whisper 기반 STT를 적용해 실시간 음성 인식을 처리하고,
                                                          ↓
                               TTS(감정 톤 제어) ← LLM(감정 컨텍스트 반영)`,
       techStack: ["Python", "FastAPI", "WebSocket", "faster-whisper", "Ollama", "Claude API", "Next.js 14", "Tailwind CSS"],
+      codeSnippets: [
+        {
+          title: "voice_ws — Real-time Pipeline",
+          language: "python",
+          code: `@ws_router.websocket("/ws/voice")
+async def voice_ws(ws: WebSocket):
+    await ws.accept()
+    vad, stt, emotion, tts = _services()
+    audio_buffer: List[np.ndarray] = []
+    conversation_history: List[dict] = []
+
+    async for raw in ws.iter_text():
+        msg = json.loads(raw)
+        t = msg.get("type")
+
+        if t == "audio_chunk":
+            chunk = np.frombuffer(
+                base64.b64decode(msg["data"]), dtype=np.int16
+            ).astype(np.float32) / 32768.0
+            audio_buffer.append(chunk)
+            await ws.send_json({"type": "vad_result", "is_speech": vad.is_speech(chunk)})
+
+        elif t == "end_stream":
+            full = np.concatenate(audio_buffer)
+
+            # Stage 1: STT — transcribe with faster-whisper
+            stt_result = await asyncio.to_thread(stt.transcribe, full, "ko", 16000)
+
+            # Stage 2: Emotion — audio + text multimodal fusion
+            emo = emotion.analyze(full, sr=16000, transcript=stt_result["transcript"])
+
+            # Stage 3: LLM — emotion-conditioned response generation
+            ai_text = await get_llm_response(stt_result["transcript"], emo, conversation_history)
+
+            # Stage 4: TTS — prosody-adjusted synthesis
+            out = tts.synthesize(text=ai_text, emotion_label=emo["emotion_label"])
+
+            await ws.send_json({
+                "type": "response",
+                "transcript": stt_result["transcript"],
+                "emotion": emo,
+                "text": ai_text,
+                "audio": out,
+            })
+            audio_buffer.clear()`,
+          explanation: "WebSocket 한 세션에서 STT → 감정 분석 → LLM → TTS 파이프라인을 순차 실행합니다. 오디오 청크를 실시간으로 버퍼링하다가 end_stream 신호에 전체 파이프라인을 실행하고 응답을 반환합니다.",
+        },
+        {
+          title: "EmotionService — MFCC + Text Fusion",
+          language: "python",
+          code: `class EmotionService:
+    def __init__(self):
+        self.classifier = EmotionClassifier()
+        self._audio_w = settings.EMOTION_AUDIO_WEIGHT  # 0.6
+        self._text_w  = settings.EMOTION_TEXT_WEIGHT   # 0.4
+
+    def extract_audio_features(self, audio: np.ndarray, sr: int = 16000) -> dict:
+        frames    = _frames(audio)
+        f0        = _f0_autocorr(audio, sr)      # 피치: 자기상관 기반
+        rms       = _rms(frames).mean()
+        zcr       = _zcr(frames).mean()
+        mfccs     = _mfcc(audio, sr, n_mfcc=13)  # mel-filterbank + DCT
+        spk_rate  = _speaking_rate(audio, sr)
+        return {
+            "f0_mean": f0, "rms": rms, "zcr": zcr,
+            "mfcc_mean": mfccs.mean(axis=1).tolist(),
+            "speaking_rate": spk_rate,
+        }
+
+    def fuse(self, audio_result: dict, text_result: dict | None = None) -> dict:
+        p_audio = np.array(audio_result["probabilities"])
+        if text_result:
+            p_text = np.array(text_result["probabilities"])
+            fused  = self._audio_w * p_audio + self._text_w * p_text
+        else:
+            fused = p_audio
+        fused /= fused.sum()
+        label = EMOTION_LABELS[fused.argmax()]
+        return {"emotion_label": label, "probabilities": fused.tolist()}
+
+    def analyze(self, audio: np.ndarray, sr: int = 16000, transcript: str | None = None) -> dict:
+        features     = self.extract_audio_features(audio, sr)
+        audio_result = self.classifier.predict_from_features(features)
+        text_result  = self.classifier.predict_from_text(transcript) if transcript else None
+        return self.fuse(audio_result, text_result)`,
+          explanation: "오디오에서 MFCC·피치·RMS·ZCR를 추출하고, 텍스트 키워드 감정 분석 결과와 가중치 기반(오디오 0.6 / 텍스트 0.4)으로 융합해 최종 감정 레이블을 결정합니다.",
+        },
+      ],
             thumbnailUrl: "/images/projects/emotion-hero.png",
       heroImageUrl: "/images/projects/emotion-hero.png",
       isFeatured: true,
@@ -812,6 +1288,94 @@ WebCam Feed (30fps)
     v
 [MIDI/OSC Output] → External DAW`,
       techStack: ["React 18", "TypeScript", "Tauri", "Rust", "MediaPipe", "Web Audio API", "Zustand", "Vite"],
+      codeSnippets: [
+        {
+          title: "computeHandOpenness — Landmark Heuristic",
+          language: "typescript",
+          code: `private computeHandOpenness(hand: Hand | null): number {
+  if (!hand || hand.landmarks.length < 21) return 0
+  const wrist   = hand.landmarks[0]
+  const fingers = [
+    { tip: 8,  mcp: 5  },
+    { tip: 12, mcp: 9  },
+    { tip: 16, mcp: 13 },
+    { tip: 20, mcp: 17 },
+  ]
+  let extended = 0
+
+  for (const { tip, mcp } of fingers) {
+    const distTip = Math.hypot(
+      hand.landmarks[tip].x - wrist.x,
+      hand.landmarks[tip].y - wrist.y
+    )
+    const distMcp = Math.hypot(
+      hand.landmarks[mcp].x - wrist.x,
+      hand.landmarks[mcp].y - wrist.y
+    )
+    if (distTip > distMcp * 1.1) extended++
+  }
+
+  // Thumb spread check via wrist-to-index MCP distance ratio
+  const thumbSpread = Math.hypot(
+    hand.landmarks[4].x - hand.landmarks[5].x,
+    hand.landmarks[4].y - hand.landmarks[5].y
+  )
+  const handSize = Math.hypot(
+    wrist.x - hand.landmarks[9].x,
+    wrist.y - hand.landmarks[9].y
+  )
+  if (handSize > 0.01 && thumbSpread > handSize * 0.5) extended++
+
+  // EMA smoothing applied by caller: 0.7 * prev + 0.3 * raw
+  return extended / 5
+}`,
+          explanation: "MediaPipe 21개 랜드마크에서 손가락 4개의 tip-MCP 거리 비교로 신장 여부를 판단하고, 엄지 펼침을 별도 계산해 0~1 범위의 손 개방도를 반환합니다. 호출부에서 EMA(α=0.3)로 노이즈를 제거합니다.",
+        },
+        {
+          title: "DrumEngine — Procedural Synthesis",
+          language: "typescript",
+          code: `hit(type: DrumType, velocity = 0.8): void {
+  const t   = this.ctx!.currentTime
+  const vel = Math.max(0.1, Math.min(1, velocity))
+  switch (type) {
+    case "kick":        this.playKick(t, vel);         break
+    case "snare":       this.playSnare(t, vel);        break
+    case "hihatClosed": this.playHihat(t, vel, false); break
+    case "hihatOpen":   this.playHihat(t, vel, true);  break
+    case "tom1":        this.playTom(t, vel, 210);     break
+    case "tom2":        this.playTom(t, vel, 150);     break
+  }
+}
+
+private playKick(t: number, vel: number): void {
+  const osc  = this.ctx!.createOscillator()
+  const gain = this.ctx!.createGain()
+  // 160Hz → 30Hz pitch drop over 450ms (sine wave body)
+  osc.frequency.setValueAtTime(160, t)
+  osc.frequency.exponentialRampToValueAtTime(30, t + 0.45)
+  gain.gain.setValueAtTime(vel * 1.2, t)
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5)
+  osc.connect(gain)
+  gain.connect(this.masterGain!)
+  osc.start(t); osc.stop(t + 0.5)
+}
+
+private playSnare(t: number, vel: number): void {
+  // White noise through 2800Hz bandpass filter
+  const noise  = this.ctx!.createBufferSource()
+  noise.buffer = this.makeNoiseBuffer()
+  const filter = this.ctx!.createBiquadFilter()
+  filter.type  = "bandpass"
+  filter.frequency.value = 2800
+  const gain   = this.ctx!.createGain()
+  gain.gain.setValueAtTime(vel * 0.8, t)
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18)
+  noise.connect(filter); filter.connect(gain); gain.connect(this.masterGain!)
+  noise.start(t); noise.stop(t + 0.18)
+}`,
+          explanation: "외부 샘플 파일 없이 Web Audio API만으로 드럼 사운드를 합성합니다. 킥은 사인파 피치 드롭(160→30Hz), 스네어는 화이트 노이즈 + 밴드패스 필터로 구현하며 velocity가 gain과 decay를 제어합니다.",
+        },
+      ],
             thumbnailUrl: "/images/projects/muse-hero.png",
       heroImageUrl: "/images/projects/muse-hero.png",
       isFeatured: true,
@@ -901,6 +1465,94 @@ WebCam Feed (30fps)
     v
 [MIDI/OSC Output] → External DAW`,
       techStack: ["React 18", "TypeScript", "Tauri", "Rust", "MediaPipe", "Web Audio API", "Zustand", "Vite"],
+      codeSnippets: [
+        {
+          title: "computeHandOpenness — Landmark Heuristic",
+          language: "typescript",
+          code: `private computeHandOpenness(hand: Hand | null): number {
+  if (!hand || hand.landmarks.length < 21) return 0
+  const wrist   = hand.landmarks[0]
+  const fingers = [
+    { tip: 8,  mcp: 5  },
+    { tip: 12, mcp: 9  },
+    { tip: 16, mcp: 13 },
+    { tip: 20, mcp: 17 },
+  ]
+  let extended = 0
+
+  for (const { tip, mcp } of fingers) {
+    const distTip = Math.hypot(
+      hand.landmarks[tip].x - wrist.x,
+      hand.landmarks[tip].y - wrist.y
+    )
+    const distMcp = Math.hypot(
+      hand.landmarks[mcp].x - wrist.x,
+      hand.landmarks[mcp].y - wrist.y
+    )
+    if (distTip > distMcp * 1.1) extended++
+  }
+
+  // Thumb spread check via wrist-to-index MCP distance ratio
+  const thumbSpread = Math.hypot(
+    hand.landmarks[4].x - hand.landmarks[5].x,
+    hand.landmarks[4].y - hand.landmarks[5].y
+  )
+  const handSize = Math.hypot(
+    wrist.x - hand.landmarks[9].x,
+    wrist.y - hand.landmarks[9].y
+  )
+  if (handSize > 0.01 && thumbSpread > handSize * 0.5) extended++
+
+  // EMA smoothing applied by caller: 0.7 * prev + 0.3 * raw
+  return extended / 5
+}`,
+          explanation: "MediaPipe 21개 랜드마크에서 손가락 4개의 tip-MCP 거리 비교로 신장 여부를 판단하고, 엄지 펼침을 별도 계산해 0~1 범위의 손 개방도를 반환합니다. 호출부에서 EMA(α=0.3)로 노이즈를 제거합니다.",
+        },
+        {
+          title: "DrumEngine — Procedural Synthesis",
+          language: "typescript",
+          code: `hit(type: DrumType, velocity = 0.8): void {
+  const t   = this.ctx!.currentTime
+  const vel = Math.max(0.1, Math.min(1, velocity))
+  switch (type) {
+    case "kick":        this.playKick(t, vel);         break
+    case "snare":       this.playSnare(t, vel);        break
+    case "hihatClosed": this.playHihat(t, vel, false); break
+    case "hihatOpen":   this.playHihat(t, vel, true);  break
+    case "tom1":        this.playTom(t, vel, 210);     break
+    case "tom2":        this.playTom(t, vel, 150);     break
+  }
+}
+
+private playKick(t: number, vel: number): void {
+  const osc  = this.ctx!.createOscillator()
+  const gain = this.ctx!.createGain()
+  // 160Hz → 30Hz pitch drop over 450ms (sine wave body)
+  osc.frequency.setValueAtTime(160, t)
+  osc.frequency.exponentialRampToValueAtTime(30, t + 0.45)
+  gain.gain.setValueAtTime(vel * 1.2, t)
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5)
+  osc.connect(gain)
+  gain.connect(this.masterGain!)
+  osc.start(t); osc.stop(t + 0.5)
+}
+
+private playSnare(t: number, vel: number): void {
+  // White noise through 2800Hz bandpass filter
+  const noise  = this.ctx!.createBufferSource()
+  noise.buffer = this.makeNoiseBuffer()
+  const filter = this.ctx!.createBiquadFilter()
+  filter.type  = "bandpass"
+  filter.frequency.value = 2800
+  const gain   = this.ctx!.createGain()
+  gain.gain.setValueAtTime(vel * 0.8, t)
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18)
+  noise.connect(filter); filter.connect(gain); gain.connect(this.masterGain!)
+  noise.start(t); noise.stop(t + 0.18)
+}`,
+          explanation: "외부 샘플 파일 없이 Web Audio API만으로 드럼 사운드를 합성합니다. 킥은 사인파 피치 드롭(160→30Hz), 스네어는 화이트 노이즈 + 밴드패스 필터로 구현하며 velocity가 gain과 decay를 제어합니다.",
+        },
+      ],
             thumbnailUrl: "/images/projects/muse-hero.png",
       heroImageUrl: "/images/projects/muse-hero.png",
       isFeatured: true,
@@ -999,6 +1651,85 @@ Output Files
  ├── components/Header.tsx
  └── app/page.tsx`,
       techStack: ["Next.js 15", "TypeScript", "Tailwind CSS v4", "Python", "FastAPI", "Ollama", "Claude API", "PostgreSQL"],
+      codeSnippets: [
+        {
+          title: "run_pipeline — 6-Stage Async Pipeline",
+          language: "python",
+          code: `async def run_pipeline(db: AsyncSession, analysis_id: uuid.UUID) -> None:
+    """Figma JSON을 React + Tailwind 코드로 변환하는 6단계 파이프라인."""
+    run = await db.get(AnalysisRun, analysis_id)
+    run.status     = AnalysisStatus.running
+    run.started_at = datetime.now(timezone.utc)
+    await db.flush()
+
+    try:
+        raw_json   = run.raw_input or {}
+
+        # Stage 1: Figma JSON → 내부 노드 트리
+        parsed     = parse_figma_json(raw_json)
+
+        # Stage 2: 노드 계층 정규화 (중복 제거, 깊이 평탄화)
+        normalized = normalize_tree(parsed)
+        run.normalized_tree = normalized
+
+        # Stage 3: 디자인 토큰 추출 (색상, 타이포그래피, 간격, 반경)
+        tokens     = extract_tokens(normalized)
+        run.design_tokens = tokens
+
+        # Stage 4: LLM — 컴포넌트 후보 구조 분석
+        analysis_result  = await analyze_structure(normalized, tokens)
+        candidates       = analysis_result.get("componentCandidates", [])
+
+        # Stage 5: LLM — 컴포넌트 의미적 명명
+        named_result     = await name_components(candidates)
+        named_candidates = named_result.get("componentCandidates", candidates)
+        run.ai_interpretation = {**analysis_result, "componentCandidates": named_candidates}
+
+        # Stage 6: LLM — React + Tailwind TSX 코드 생성
+        code_result  = await generate_code(named_candidates, tokens)
+        run.generated_code   = code_result
+        run.status           = AnalysisStatus.completed
+        run.ai_model_used    = "claude-sonnet-4-6"
+
+    except InvalidFigmaJsonException as e:
+        run.status, run.error_message = AnalysisStatus.failed, str(e)
+    except Exception as e:
+        logger.error("파이프라인 실패: %s", e, exc_info=True)
+        run.status, run.error_message = AnalysisStatus.failed, "내부 오류: " + str(e)
+
+    run.completed_at = datetime.now(timezone.utc)
+    await db.flush()`,
+          explanation: "Figma JSON을 파싱 → 정규화 → 토큰 추출 → AI 구조 분석 → AI 컴포넌트 명명 → 코드 생성의 6단계로 처리합니다. 각 LLM 단계에 필요한 데이터만 전달해 응답 품질과 처리 효율을 함께 확보합니다.",
+        },
+        {
+          title: "run_analysis — Background Task Dispatch",
+          language: "python",
+          code: `@router.post("", response_model=AnalysisRunCreated, status_code=202)
+async def run_analysis(
+    data: AnalysisRunRequest,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        created = await analysis_service.create_analysis(db, data.project_id, data.figma_json)
+        await db.commit()
+        # 파이프라인을 백그라운드로 실행 — 클라이언트는 폴링으로 상태 확인
+        background_tasks.add_task(_run_pipeline_bg, created.id)
+        return created
+    except ProjectNotFoundException:
+        raise HTTPException(status_code=404, detail={"error": {"code": "NOT_FOUND"}})
+    except InvalidFigmaJsonException as e:
+        raise HTTPException(status_code=422, detail={"error": {"code": "INVALID_FIGMA_JSON", "message": str(e)}})
+
+@router.get("/{analysis_id}/status", response_model=AnalysisStatusResponse)
+async def get_status(analysis_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    try:
+        return await analysis_service.get_analysis_status(db, analysis_id)
+    except AnalysisNotFoundException:
+        raise HTTPException(status_code=404, detail={"error": {"code": "NOT_FOUND"}})`,
+          explanation: "분석 요청을 202로 즉시 수락하고 파이프라인을 백그라운드 태스크로 실행합니다. 클라이언트는 /status 엔드포인트를 폴링해 완료 여부를 확인하므로, 긴 처리 중에도 UI가 블로킹되지 않습니다.",
+        },
+      ],
             thumbnailUrl: "/images/projects/designflow-hero.png",
       heroImageUrl: "/images/projects/designflow-hero.png",
       isFeatured: true,
@@ -1089,6 +1820,85 @@ Output Files
  ├── components/Header.tsx
  └── app/page.tsx`,
       techStack: ["Next.js 15", "TypeScript", "Tailwind CSS v4", "Python", "FastAPI", "Ollama", "Claude API", "PostgreSQL"],
+      codeSnippets: [
+        {
+          title: "run_pipeline — 6-Stage Async Pipeline",
+          language: "python",
+          code: `async def run_pipeline(db: AsyncSession, analysis_id: uuid.UUID) -> None:
+    """Figma JSON을 React + Tailwind 코드로 변환하는 6단계 파이프라인."""
+    run = await db.get(AnalysisRun, analysis_id)
+    run.status     = AnalysisStatus.running
+    run.started_at = datetime.now(timezone.utc)
+    await db.flush()
+
+    try:
+        raw_json   = run.raw_input or {}
+
+        # Stage 1: Figma JSON → 내부 노드 트리
+        parsed     = parse_figma_json(raw_json)
+
+        # Stage 2: 노드 계층 정규화 (중복 제거, 깊이 평탄화)
+        normalized = normalize_tree(parsed)
+        run.normalized_tree = normalized
+
+        # Stage 3: 디자인 토큰 추출 (색상, 타이포그래피, 간격, 반경)
+        tokens     = extract_tokens(normalized)
+        run.design_tokens = tokens
+
+        # Stage 4: LLM — 컴포넌트 후보 구조 분석
+        analysis_result  = await analyze_structure(normalized, tokens)
+        candidates       = analysis_result.get("componentCandidates", [])
+
+        # Stage 5: LLM — 컴포넌트 의미적 명명
+        named_result     = await name_components(candidates)
+        named_candidates = named_result.get("componentCandidates", candidates)
+        run.ai_interpretation = {**analysis_result, "componentCandidates": named_candidates}
+
+        # Stage 6: LLM — React + Tailwind TSX 코드 생성
+        code_result  = await generate_code(named_candidates, tokens)
+        run.generated_code   = code_result
+        run.status           = AnalysisStatus.completed
+        run.ai_model_used    = "claude-sonnet-4-6"
+
+    except InvalidFigmaJsonException as e:
+        run.status, run.error_message = AnalysisStatus.failed, str(e)
+    except Exception as e:
+        logger.error("파이프라인 실패: %s", e, exc_info=True)
+        run.status, run.error_message = AnalysisStatus.failed, "내부 오류: " + str(e)
+
+    run.completed_at = datetime.now(timezone.utc)
+    await db.flush()`,
+          explanation: "Figma JSON을 파싱 → 정규화 → 토큰 추출 → AI 구조 분석 → AI 컴포넌트 명명 → 코드 생성의 6단계로 처리합니다. 각 LLM 단계에 필요한 데이터만 전달해 응답 품질과 처리 효율을 함께 확보합니다.",
+        },
+        {
+          title: "run_analysis — Background Task Dispatch",
+          language: "python",
+          code: `@router.post("", response_model=AnalysisRunCreated, status_code=202)
+async def run_analysis(
+    data: AnalysisRunRequest,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        created = await analysis_service.create_analysis(db, data.project_id, data.figma_json)
+        await db.commit()
+        # 파이프라인을 백그라운드로 실행 — 클라이언트는 폴링으로 상태 확인
+        background_tasks.add_task(_run_pipeline_bg, created.id)
+        return created
+    except ProjectNotFoundException:
+        raise HTTPException(status_code=404, detail={"error": {"code": "NOT_FOUND"}})
+    except InvalidFigmaJsonException as e:
+        raise HTTPException(status_code=422, detail={"error": {"code": "INVALID_FIGMA_JSON", "message": str(e)}})
+
+@router.get("/{analysis_id}/status", response_model=AnalysisStatusResponse)
+async def get_status(analysis_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    try:
+        return await analysis_service.get_analysis_status(db, analysis_id)
+    except AnalysisNotFoundException:
+        raise HTTPException(status_code=404, detail={"error": {"code": "NOT_FOUND"}})`,
+          explanation: "분석 요청을 202로 즉시 수락하고 파이프라인을 백그라운드 태스크로 실행합니다. 클라이언트는 /status 엔드포인트를 폴링해 완료 여부를 확인하므로, 긴 처리 중에도 UI가 블로킹되지 않습니다.",
+        },
+      ],
             thumbnailUrl: "/images/projects/designflow-hero.png",
       heroImageUrl: "/images/projects/designflow-hero.png",
       isFeatured: true,

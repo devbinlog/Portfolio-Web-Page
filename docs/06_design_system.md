@@ -19,7 +19,7 @@
 HTML/CSS에서는 이 토큰만을 사용한다.
 
 ```
-surface
+surface이메일로 
   surface-base       ← 기본 배경
   surface-elevated   ← 카드, 패널 배경
   surface-overlay    ← overlay 배경
