@@ -9,7 +9,7 @@ export function IdentitySection({ profile }: IdentitySectionProps) {
     <section aria-labelledby="identity-heading">
       <p className="text-xs font-mono text-text-disabled uppercase tracking-[0.2em] mb-4">About Me</p>
       <h2 id="identity-heading" className="text-display-md font-bold text-text-primary mb-6">
-        {profile.name}
+        김태빈
       </h2>
       <p className="text-lg text-text-secondary mb-4">{profile.roleTitle}</p>
       <div className="text-base text-text-secondary leading-relaxed space-y-4 max-w-prose">

@@ -52,7 +52,7 @@ async function main() {
   await prisma.profile.upsert({
     where: { id: "default" },
     update: {
-      name: "김태빈",
+      name: "binlog",
       roleTitle: "AI / LLM Engineer & Frontend Developer",
       tagline: "Developing imagination.",
       bio: `AI를 단순히 개발을 대신하는 도구가 아니라, 함께 문제를 해결하는 파트너로 활용합니다.
@@ -76,7 +76,7 @@ async function main() {
     },
     create: {
       id: "default",
-      name: "김태빈",
+      name: "binlog",
       roleTitle: "AI / LLM Engineer & Frontend Developer",
       tagline: "Developing imagination.",
       bio: `AI를 단순히 개발을 대신하는 도구가 아니라, 함께 문제를 해결하는 파트너로 활용합니다.
