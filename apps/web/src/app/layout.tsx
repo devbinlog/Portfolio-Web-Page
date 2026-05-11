@@ -53,8 +53,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans bg-surface-base text-text-primary antialiased">
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
-          enableSystem
+          defaultTheme="light"
+          enableSystem={false}
           disableTransitionOnChange
         >
           <LoadingScreen />

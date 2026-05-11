@@ -47,7 +47,7 @@ export function HomeProjectsSection({ projects }: Props) {
     if (d === 0) return { transform: 'translateX(0) scale(1)',               opacity: 1,    zIndex: 10, pointerEvents: 'auto'  as const }
     if (d === 1 || d === -1) {
       const dir = d > 0 ? 1 : -1
-      return { transform: `translateX(${dir * 72}%) scale(0.82)`, opacity: 0.38, zIndex: 5,  pointerEvents: 'none'  as const }
+      return { transform: `translateX(${dir * 72}%) scale(0.82)`, opacity: 0.38, zIndex: 5,  pointerEvents: 'auto'  as const }
     }
     return { transform: `translateX(${d > 0 ? 120 : -120}%) scale(0.65)`, opacity: 0, zIndex: 0, pointerEvents: 'none' as const }
   }
@@ -184,8 +184,9 @@ export function HomeProjectsSection({ projects }: Props) {
                 {projects.map((project, idx) => {
                   const style = getCardStyle(idx)
                   return (
-                    <div
+                    <Link
                       key={project.id}
+                      href={`/projects/${project.slug}`}
                       className="absolute w-full max-w-sm md:max-w-md"
                       style={{
                         transition: 'transform 0.45s cubic-bezier(0.4,0,0.2,1), opacity 0.45s ease',
@@ -197,7 +198,7 @@ export function HomeProjectsSection({ projects }: Props) {
                         gradient={GRADIENT_COLORS[idx % GRADIENT_COLORS.length]}
                         isActive={idx === current}
                       />
-                    </div>
+                    </Link>
                   )
                 })}
 
@@ -323,12 +324,9 @@ function AlbumCard({
             ))}
           </div>
           {isActive && (
-            <Link
-              href={`/projects/${project.slug}`}
-              className="flex-shrink-0 text-xs font-mono text-text-secondary hover:text-text-primary transition-colors whitespace-nowrap"
-            >
+            <span className="flex-shrink-0 text-xs font-mono text-text-secondary whitespace-nowrap">
               View →
-            </Link>
+            </span>
           )}
         </div>
       </div>
