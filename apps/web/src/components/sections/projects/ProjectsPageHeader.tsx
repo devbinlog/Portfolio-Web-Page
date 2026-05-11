@@ -91,7 +91,7 @@ export function ProjectsPageHeader({ count }: ProjectsPageHeaderProps) {
         </div>
 
         {/* 첫 방문 안내 */}
-        <p className="hidden md:block text-xs font-mono text-text-disabled leading-relaxed text-right">
+        <p className="text-xs font-mono text-text-disabled leading-relaxed text-right break-keep">
           첫 방문 시 프로젝트 페이지 로딩에<br />약 10초가량 소요될 수 있습니다.
         </p>
       </div>
