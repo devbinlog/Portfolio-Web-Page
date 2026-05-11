@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300
 
 export default async function ProjectDetailPage({ params }: PageProps) {
   const [project, profile] = await Promise.all([

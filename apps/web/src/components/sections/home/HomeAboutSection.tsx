@@ -76,7 +76,7 @@ export function HomeAboutSection({ profile }: Props) {
               Bio
             </p>
             <div className="text-base text-text-secondary leading-relaxed space-y-4 max-w-[680px]">
-              <p>창의적인 아이디어를 구조적인 흐름으로 설계하고,<br />AI와 인터랙션을 기반으로 사용자가 직접 탐색하고 몰입할 수 있는 경험 중심의 시스템을 구현합니다.</p>
+              <p className="break-keep">창의적인 아이디어를 구조적인 흐름으로 설계하고,<br />AI와 인터랙션을 기반으로 사용자가 직접 탐색하고 몰입할 수 있는 경험 중심의 시스템을 구현합니다.</p>
             </div>
 
             {/* 액션 버튼 */}

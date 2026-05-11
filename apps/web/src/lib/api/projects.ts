@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import type { ProjectSummary, ProjectDetail } from '@portfolio/types'
 import { prisma } from '@/lib/server/prisma'
 
@@ -45,7 +46,7 @@ export async function getAllProjects(): Promise<ProjectSummary[]> {
   }
 }
 
-export async function getProjectBySlug(slug: string): Promise<ProjectDetail | null> {
+export const getProjectBySlug = cache(async (slug: string): Promise<ProjectDetail | null> => {
   try {
     const project = await prisma.project.findFirst({
       where: { ...BASE_WHERE, slug },
@@ -61,7 +62,7 @@ export async function getProjectBySlug(slug: string): Promise<ProjectDetail | nu
   } catch {
     return null
   }
-}
+})
 
 export async function getAllProjectSlugs(): Promise<string[]> {
   try {
