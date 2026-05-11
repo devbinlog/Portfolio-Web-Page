@@ -91,7 +91,7 @@ export function ProjectsPageHeader({ count }: ProjectsPageHeaderProps) {
           <div className="w-px h-10 bg-border-default" />
 
           {/* 첫 방문 안내 */}
-          <p className="text-xs font-mono text-text-disabled leading-relaxed whitespace-nowrap">
+          <p className="text-xs font-mono text-text-disabled whitespace-nowrap self-end">
             첫 방문 시 프로젝트 페이지 로딩에 약 10초가량 소요될 수 있습니다.
           </p>
       </div>
