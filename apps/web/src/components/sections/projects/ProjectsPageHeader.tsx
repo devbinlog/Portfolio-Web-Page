@@ -56,37 +56,44 @@ export function ProjectsPageHeader({ count }: ProjectsPageHeaderProps) {
       <h1 className="text-display-md font-bold text-text-primary mb-12">Projects</h1>
 
       {/* 통계 카운터 */}
-      <div className="flex items-center gap-6 md:gap-10 mb-10 pb-10 border-b border-border-default">
-        <div>
-          <p className="text-4xl md:text-5xl font-bold tabular-nums tracking-tight text-text-primary leading-none">
-            {projectCount}
-          </p>
-          <p className="text-xs font-mono text-text-disabled uppercase tracking-widest mt-2">
-            Projects
-          </p>
+      <div className="flex items-center justify-between gap-6 md:gap-10 mb-10 pb-10 border-b border-border-default">
+        <div className="flex items-center gap-6 md:gap-10">
+          <div>
+            <p className="text-4xl md:text-5xl font-bold tabular-nums tracking-tight text-text-primary leading-none">
+              {projectCount}
+            </p>
+            <p className="text-xs font-mono text-text-disabled uppercase tracking-widest mt-2">
+              Projects
+            </p>
+          </div>
+
+          <div className="w-px h-10 bg-border-default" />
+
+          <div>
+            <p className="text-4xl md:text-5xl font-bold tabular-nums tracking-tight text-text-primary leading-none">
+              {techCount}+
+            </p>
+            <p className="text-xs font-mono text-text-disabled uppercase tracking-widest mt-2">
+              Technologies
+            </p>
+          </div>
+
+          <div className="w-px h-10 bg-border-default" />
+
+          <div>
+            <p className="text-4xl md:text-5xl font-bold tabular-nums tracking-tight text-text-primary leading-none">
+              2026
+            </p>
+            <p className="text-xs font-mono text-text-disabled uppercase tracking-widest mt-2">
+              Year
+            </p>
+          </div>
         </div>
 
-        <div className="w-px h-10 bg-border-default" />
-
-        <div>
-          <p className="text-4xl md:text-5xl font-bold tabular-nums tracking-tight text-text-primary leading-none">
-            {techCount}+
-          </p>
-          <p className="text-xs font-mono text-text-disabled uppercase tracking-widest mt-2">
-            Technologies
-          </p>
-        </div>
-
-        <div className="w-px h-10 bg-border-default" />
-
-        <div>
-          <p className="text-4xl md:text-5xl font-bold tabular-nums tracking-tight text-text-primary leading-none">
-            2026
-          </p>
-          <p className="text-xs font-mono text-text-disabled uppercase tracking-widest mt-2">
-            Year
-          </p>
-        </div>
+        {/* 첫 방문 안내 */}
+        <p className="hidden md:block text-xs font-mono text-text-disabled leading-relaxed text-right">
+          첫 방문 시 프로젝트 페이지 로딩에<br />약 10초가량 소요될 수 있습니다.
+        </p>
       </div>
 
       {/* 기술 스크롤 스트립 */}
