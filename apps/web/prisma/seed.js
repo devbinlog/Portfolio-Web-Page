@@ -1625,351 +1625,346 @@ private playSnare(t: number, vel: number): void {
     data: { projectId: muse.id, type: "GITHUB", label: "GitHub", url: "https://github.com/devbinlog/MUSE-Motion-based-User-Sound-Engine-", order: 1 },
   });
 
-  // ── 6. DesignFlow AI Builder ───────────────────────────────────────────────
-  const designflow = await prisma.project.upsert({
-    where: { slug: "designflow-ai-builder" },
+  // ── 6. TrackHub ──────────────────────────────────────────────────────────────
+  const trackhub = await prisma.project.upsert({
+    where: { slug: "trackhub" },
     update: {
-      title: "DesignFlow AI Builder",
-      summary: `Figma 디자인 구조를 분석해 컴포넌트를 식별하고, React + Tailwind 코드로 자동 변환하는 AI 기반 코드 생성 시스템.
-디자인 토큰 추출부터 LLM 기반 구조 해석, 코드 생성까지 하나의 파이프라인으로 연결했습니다.`,
-      description: `Figma로 완성된 디자인을 코드로 옮기는 과정에서, 개발자는 어떤 요소가 컴포넌트인지를 직접 판단해야 합니다.
+      title: "TrackHub",
+      summary: `음악 프로덕션 협업을 위한 오디오 버전 관리 플랫폼. Git의 이머터블 버전 관리 개념을 오디오 파일에 적용해
+작곡가, 프로듀서, 엔지니어가 하나의 워크스페이스에서 안전하게 협업할 수 있습니다.`,
+      description: `음악 프로덕션 팀은 KakaoTalk, 이메일, Discord에 파일이 흩어져 있어 어떤 WAV가 최신본인지 파악하기 어렵고,
+대용량 파일 전송과 버전 충돌로 협업 과정이 비효율적입니다.
 
-동일한 디자인이라도 개발자마다 컴포넌트 경계를 다르게 해석하고,
-색상·폰트·간격 같은 디자인 토큰을 코드 변수로 변환하는 작업도 매번 수동으로 이루어집니다.
-
-Figma는 CSS 수치를 제공하지만 실제 React 컴포넌트 구조는 제공하지 않아,
-디자인-개발 사이의 간격을 메우는 과정에 반복적인 수작업이 발생합니다.
+저작권 보호와 보안 취약점, 피드백 이력 관리 부재, 작업 과정 추적 불가 등의 문제가
+실제 음악 작업 현장에서 반복적으로 발생하고 있습니다.
 
 ---
 
-기존 디자인-to-코드 도구들은 마크업 수준의 CSS 변환에 그치며,
-컴포넌트 단위의 구조나 재사용 가능한 설계를 자동으로 추론하지 못합니다.
+TrackHub은 이러한 문제를 해결하기 위해 설계된 음악 프로덕션 전용 버전 관리 및 협업 플랫폼입니다.
 
-또한 색상, 타이포그래피, 간격이 각각 분리된 형태로 존재해
-하나의 디자인 시스템으로 통합하고 Tailwind 클래스로 매핑하는 과정이 체계화되어 있지 않습니다.
+Workspace → Project → Track → Version의 계층 구조로 작업물을 체계적으로 관리하며,
+한 번 업로드된 파일은 덮어쓰이지 않고 새로운 버전으로 불변 저장됩니다.
 
-Figma 노드 트리 분석, 토큰 추출, 컴포넌트 식별, 코드 생성이 각각 분리되어 있어
-이를 하나의 자동화된 흐름으로 연결하는 시스템이 부족합니다.`,
-      year: 2026,
-      role: "AI 백엔드 개발, 풀스택",
-      contribution: `Figma 노드 트리를 재귀 순회해 레이아웃 의도와 반복 패턴을 추론하는 구조 분석 로직을 구현했습니다.
+브라우저 내 스트리밍 재생과 파형 시각화로 다운로드 없이 오디오를 미리 들을 수 있고,
+타임스탬프 기반 피드백으로 특정 구간에 정확하게 코멘트를 남길 수 있습니다.
 
-색상·타이포그래피·간격·반경 값을 사용 빈도 기준으로 정규화하고,
-px 값을 Tailwind 유틸리티 클래스로 변환하는 토큰 매핑 로직을 외부 라이브러리 없이 직접 구현했습니다.
+Owner, Admin, Editor, Viewer의 4단계 역할 기반 접근 제어(RBAC)와
+Supabase RLS(Row-Level Security)를 통해 데이터베이스 레벨에서 권한을 보장합니다.`,
+      year: 2025,
+      role: "풀스택 개발",
+      contribution: `Workspace → Project → Track → Version의 4단계 계층 구조를 설계하고,
+Supabase PostgreSQL과 RLS 기반의 역할 권한 모델(Owner / Admin / Editor / Viewer)을 구현했습니다.
 
-LLM을 3단계(구조 분석 → 컴포넌트 명명 → 코드 생성)로 분리해 호출하고,
-각 단계는 전체 Figma JSON이 아닌 해당 단계에 필요한 데이터만 전달받도록 설계했습니다.
+Supabase Storage의 비공개 버킷과 Signed URL을 활용해 보안 파일 저장 구조를 설계하고,
+스토리지 경로를 /workspaces/{id}/projects/{id}/tracks/{id}/versions/{id}/{fileName} 형태로 정규화했습니다.
 
-분석 실행을 백그라운드 태스크로 처리하고 클라이언트에서 폴링하는 구조를 적용해
-응답 대기 중에도 UI가 블로킹되지 않도록 구성했습니다.`,
-      keyLearnings: `Figma 노드 구조를 컴포넌트 단위로 해석하는 과정에서,
-LLM을 단순 코드 생성기가 아니라 디자인 의도를 추론하는 해석 엔진으로 활용할 수 있음을 확인했습니다.
+wavesurfer.js를 활용한 브라우저 내 오디오 스트리밍 재생과 파형 시각화를 구현하고,
+타임스탬프 기반 피드백 시스템으로 특정 구간에 코멘트를 남길 수 있도록 설계했습니다.
 
-각 LLM 호출 단계에 전체 JSON이 아닌 필요한 데이터만 전달하는 방식이
-응답 품질과 파싱 안정성을 함께 높이는 데 효과적이었습니다.
+Supabase Realtime을 통한 실시간 구독과 전체 활동 감사 로그
+(업로드, 다운로드, 초대, 버전 생성, 코멘트, 권한 변경)를 구현해 작업 이력을 완전하게 추적했습니다.`,
+      keyLearnings: `Git의 이머터블 버전 관리 개념을 오디오 파일에 적용하면서,
+음악 협업에 특화된 UX가 단순한 파일 공유 도구와 어떻게 다른지 명확하게 이해할 수 있었습니다.
 
-또한 Auto Layout, Component Sets, Variants 같은 고급 Figma 기능은
-단순 노드 트리 분석으로 완전히 처리하기 어렵다는 한계를 확인했고,
-이를 처리하기 위해서는 Figma 플러그인 API 수준의 접근이 필요하다는 점을 파악했습니다.`,
-      workingApproach: `DesignFlow는 Figma JSON을 입력으로 받아 React + Tailwind 코드를 출력하는 과정을
-파싱 → 정규화 → 토큰 추출 → AI 해석 → 코드 생성의 4단계 파이프라인으로 설계했습니다.
+Supabase Storage와 RLS를 결합해 역할 기반 접근 제어를 구현하는 과정에서,
+데이터베이스 수준의 보안 정책이 애플리케이션 로직보다 더 신뢰할 수 있는 보안 레이어임을 확인했습니다.
 
-Figma 노드 트리를 재귀 순회해 레이아웃 의도와 반복 패턴을 추론하고,
-색상·타이포그래피·간격·반경 값을 사용 빈도 기준으로 정규화해 Tailwind 유틸리티 클래스로 매핑했습니다.
+wavesurfer.js로 브라우저 내 오디오 재생을 구현하면서,
+대용량 오디오 파일을 스트리밍 방식으로 처리하는 것이 전통적인 다운로드 방식보다
+협업 환경에서 훨씬 효율적임을 직접 경험했습니다.`,
+      workingApproach: `TrackHub은 음악 협업 과정의 고통 지점(버전 혼란, 보안 취약, 피드백 부재)을
+구조적으로 해결하는 방식으로 설계했습니다.
 
-LLM(Ollama 또는 Claude)을 3단계로 분리해 호출하도록 설계해,
-각 단계에 필요한 최소한의 데이터만 전달함으로써 응답 품질과 처리 효율을 함께 확보했습니다.
+데이터 모델을 먼저 정의하고 계층 구조를 확정한 뒤 구현에 진입했으며,
+RLS 정책은 애플리케이션 코드와 별개로 데이터베이스 레벨에서 동작하도록 설계해
+보안을 코드 바깥에서 보장했습니다.
 
 ---
 
-Figma JSON Input
-      |
-      v
-[figma_parser.py] → 노드 트리 파싱
-      |
-      v
-[normalizer.py] → 노드 계층 정규화
-      |
-      v
-[token_extractor.py] → 디자인 토큰 추출
- ├── colors     → Tailwind bg-[#hex]
- ├── typography → text-sm font-bold
- ├── spacing    → p-4 gap-6
- └── radius     → rounded-lg
-      |
-      v
-[Claude / Ollama — 3단계 AI 파이프라인]
- ├── analyze_structure() → componentCandidates + layoutPattern
- ├── name_components()   → suggestedName + filePath
- └── generate_code()     → React + Tailwind TSX
-      |
-      v
-Output Files
- ├── components/HeroSection.tsx
- ├── components/Header.tsx
- └── app/page.tsx`,
-      techStack: ["Next.js 15", "TypeScript", "Tailwind CSS v4", "Python", "FastAPI", "Ollama", "Claude API", "PostgreSQL"],
+[인증] Supabase Auth → JWT 기반 세션 관리
+         |
+         v
+[워크스페이스 계층]
+  Workspace → Project → Track → Version
+         |
+         v
+[스토리지 & 보안]
+  Supabase Storage (비공개 버킷) + Signed URL
+  RLS 권한 정책 (Owner / Admin / Editor / Viewer)
+  경로: /workspaces/{id}/projects/{id}/tracks/{id}/versions/{id}/{file}
+         |
+         v
+[오디오 재생]
+  wavesurfer.js → 브라우저 내 스트리밍 + 파형 시각화
+  타임스탬프 피드백 → 특정 구간 코멘트
+         |
+         v
+[실시간 & 감사]
+  Supabase Realtime → 실시간 구독
+  Activity Logs → 업로드·다운로드·초대·버전 생성·코멘트·권한 변경 이력 추적`,
+      techStack: ["Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "Zustand", "TanStack Query", "wavesurfer.js", "Supabase"],
       codeSnippets: [
         {
-          title: "run_pipeline — 6-Stage Async Pipeline",
-          language: "python",
-          code: `async def run_pipeline(db: AsyncSession, analysis_id: uuid.UUID) -> None:
-    """Figma JSON을 React + Tailwind 코드로 변환하는 6단계 파이프라인."""
-    run = await db.get(AnalysisRun, analysis_id)
-    run.status     = AnalysisStatus.running
-    run.started_at = datetime.now(timezone.utc)
-    await db.flush()
+          title: "RLS Policy — Track Access Control",
+          language: "sql",
+          code: `-- 트랙 조회: 워크스페이스 멤버만 접근 가능
+CREATE POLICY "track_select_policy" ON tracks
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM workspace_members wm
+      JOIN projects p ON p.workspace_id = wm.workspace_id
+      WHERE p.id = tracks.project_id
+        AND wm.user_id = auth.uid()
+    )
+  );
 
-    try:
-        raw_json   = run.raw_input or {}
+-- 트랙 생성: Editor 이상 권한만 허용
+CREATE POLICY "track_insert_policy" ON tracks
+  FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM workspace_members wm
+      JOIN projects p ON p.workspace_id = wm.workspace_id
+      WHERE p.id = tracks.project_id
+        AND wm.user_id = auth.uid()
+        AND wm.role IN ('owner', 'admin', 'editor')
+    )
+  );
 
-        # Stage 1: Figma JSON → 내부 노드 트리
-        parsed     = parse_figma_json(raw_json)
-
-        # Stage 2: 노드 계층 정규화 (중복 제거, 깊이 평탄화)
-        normalized = normalize_tree(parsed)
-        run.normalized_tree = normalized
-
-        # Stage 3: 디자인 토큰 추출 (색상, 타이포그래피, 간격, 반경)
-        tokens     = extract_tokens(normalized)
-        run.design_tokens = tokens
-
-        # Stage 4: LLM — 컴포넌트 후보 구조 분석
-        analysis_result  = await analyze_structure(normalized, tokens)
-        candidates       = analysis_result.get("componentCandidates", [])
-
-        # Stage 5: LLM — 컴포넌트 의미적 명명
-        named_result     = await name_components(candidates)
-        named_candidates = named_result.get("componentCandidates", candidates)
-        run.ai_interpretation = {**analysis_result, "componentCandidates": named_candidates}
-
-        # Stage 6: LLM — React + Tailwind TSX 코드 생성
-        code_result  = await generate_code(named_candidates, tokens)
-        run.generated_code   = code_result
-        run.status           = AnalysisStatus.completed
-        run.ai_model_used    = "claude-sonnet-4-6"
-
-    except InvalidFigmaJsonException as e:
-        run.status, run.error_message = AnalysisStatus.failed, str(e)
-    except Exception as e:
-        logger.error("파이프라인 실패: %s", e, exc_info=True)
-        run.status, run.error_message = AnalysisStatus.failed, "내부 오류: " + str(e)
-
-    run.completed_at = datetime.now(timezone.utc)
-    await db.flush()`,
-          explanation: "Figma JSON을 파싱 → 정규화 → 토큰 추출 → AI 구조 분석 → AI 컴포넌트 명명 → 코드 생성의 6단계로 처리합니다. 각 LLM 단계에 필요한 데이터만 전달해 응답 품질과 처리 효율을 함께 확보합니다.",
+-- 버전 삭제: Owner / Admin만 허용
+CREATE POLICY "version_delete_policy" ON track_versions
+  FOR DELETE USING (
+    EXISTS (
+      SELECT 1 FROM workspace_members wm
+      JOIN projects p ON p.workspace_id = wm.workspace_id
+      JOIN tracks t ON t.project_id = p.id
+      WHERE t.id = track_versions.track_id
+        AND wm.user_id = auth.uid()
+        AND wm.role IN ('owner', 'admin')
+    )
+  );`,
+          explanation: "RLS 정책을 데이터베이스 레벨에서 정의해 애플리케이션 코드와 독립적으로 보안을 보장합니다. 워크스페이스 멤버십과 역할(Owner/Admin/Editor/Viewer)을 기반으로 트랙 조회·생성·삭제 권한을 제어합니다.",
         },
         {
-          title: "run_analysis — Background Task Dispatch",
-          language: "python",
-          code: `@router.post("", response_model=AnalysisRunCreated, status_code=202)
-async def run_analysis(
-    data: AnalysisRunRequest,
-    background_tasks: BackgroundTasks,
-    db: AsyncSession = Depends(get_db),
-):
-    try:
-        created = await analysis_service.create_analysis(db, data.project_id, data.figma_json)
-        await db.commit()
-        # 파이프라인을 백그라운드로 실행 — 클라이언트는 폴링으로 상태 확인
-        background_tasks.add_task(_run_pipeline_bg, created.id)
-        return created
-    except ProjectNotFoundException:
-        raise HTTPException(status_code=404, detail={"error": {"code": "NOT_FOUND"}})
-    except InvalidFigmaJsonException as e:
-        raise HTTPException(status_code=422, detail={"error": {"code": "INVALID_FIGMA_JSON", "message": str(e)}})
+          title: "getSignedAudioUrl — Secure Streaming",
+          language: "typescript",
+          code: `export async function getSignedAudioUrl(
+  storagePath: string,
+  expiresIn = 3600
+): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from('audio-files')
+    .createSignedUrl(storagePath, expiresIn);
 
-@router.get("/{analysis_id}/status", response_model=AnalysisStatusResponse)
-async def get_status(analysis_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
-    try:
-        return await analysis_service.get_analysis_status(db, analysis_id)
-    except AnalysisNotFoundException:
-        raise HTTPException(status_code=404, detail={"error": {"code": "NOT_FOUND"}})`,
-          explanation: "분석 요청을 202로 즉시 수락하고 파이프라인을 백그라운드 태스크로 실행합니다. 클라이언트는 /status 엔드포인트를 폴링해 완료 여부를 확인하므로, 긴 처리 중에도 UI가 블로킹되지 않습니다.",
+  if (error) throw new Error(\`Signed URL 생성 실패: \${error.message}\`);
+  return data.signedUrl;
+}
+
+// wavesurfer.js 파형 시각화 + 스트리밍 재생 훅
+export function useAudioPlayer(storagePath: string) {
+  const waveformRef = useRef<HTMLDivElement>(null);
+  const wavesurferRef = useRef<WaveSurfer | null>(null);
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    if (!waveformRef.current) return;
+
+    getSignedAudioUrl(storagePath).then((signedUrl) => {
+      wavesurferRef.current = WaveSurfer.create({
+        container: waveformRef.current!,
+        waveColor: '#6366f1',
+        progressColor: '#4f46e5',
+        url: signedUrl,
+      });
+      wavesurferRef.current.on('ready', () => setIsReady(true));
+    });
+
+    return () => wavesurferRef.current?.destroy();
+  }, [storagePath]);
+
+  return { waveformRef, wavesurfer: wavesurferRef.current, isReady };
+}`,
+          explanation: "비공개 버킷의 오디오 파일을 Signed URL(1시간 만료)로 안전하게 스트리밍합니다. wavesurfer.js가 해당 URL로 직접 파형 시각화와 스트리밍 재생을 처리해 파일 다운로드 없이 브라우저에서 오디오를 미리 들을 수 있습니다.",
         },
       ],
-            thumbnailUrl: "/images/projects/designflow-hero.png",
-      heroImageUrl: "/images/projects/designflow-hero.png",
+      thumbnailUrl: "/images/projects/trackhub-hero.png",
+      heroImageUrl: "/images/projects/trackhub-hero.png",
       isFeatured: true,
       featuredOrder: 6,
       isPublished: true,
-      categoryId: designCategory.id,
-      secondaryCategoryId: aiCategory.id,
+      categoryId: musicCategory.id,
+      secondaryCategoryId: null,
     },
     create: {
-      title: "DesignFlow AI Builder",
-      slug: "designflow-ai-builder",
-      summary: `Figma 디자인 구조를 분석해 컴포넌트를 식별하고, React + Tailwind 코드로 자동 변환하는 AI 기반 코드 생성 시스템.
-디자인 토큰 추출부터 LLM 기반 구조 해석, 코드 생성까지 하나의 파이프라인으로 연결했습니다.`,
-      description: `Figma로 완성된 디자인을 코드로 옮기는 과정에서, 개발자는 어떤 요소가 컴포넌트인지를 직접 판단해야 합니다.
+      title: "TrackHub",
+      slug: "trackhub",
+      summary: `음악 프로덕션 협업을 위한 오디오 버전 관리 플랫폼. Git의 이머터블 버전 관리 개념을 오디오 파일에 적용해
+작곡가, 프로듀서, 엔지니어가 하나의 워크스페이스에서 안전하게 협업할 수 있습니다.`,
+      description: `음악 프로덕션 팀은 KakaoTalk, 이메일, Discord에 파일이 흩어져 있어 어떤 WAV가 최신본인지 파악하기 어렵고,
+대용량 파일 전송과 버전 충돌로 협업 과정이 비효율적입니다.
 
-동일한 디자인이라도 개발자마다 컴포넌트 경계를 다르게 해석하고,
-색상·폰트·간격 같은 디자인 토큰을 코드 변수로 변환하는 작업도 매번 수동으로 이루어집니다.
-
-Figma는 CSS 수치를 제공하지만 실제 React 컴포넌트 구조는 제공하지 않아,
-디자인-개발 사이의 간격을 메우는 과정에 반복적인 수작업이 발생합니다.
+저작권 보호와 보안 취약점, 피드백 이력 관리 부재, 작업 과정 추적 불가 등의 문제가
+실제 음악 작업 현장에서 반복적으로 발생하고 있습니다.
 
 ---
 
-기존 디자인-to-코드 도구들은 마크업 수준의 CSS 변환에 그치며,
-컴포넌트 단위의 구조나 재사용 가능한 설계를 자동으로 추론하지 못합니다.
+TrackHub은 이러한 문제를 해결하기 위해 설계된 음악 프로덕션 전용 버전 관리 및 협업 플랫폼입니다.
 
-또한 색상, 타이포그래피, 간격이 각각 분리된 형태로 존재해
-하나의 디자인 시스템으로 통합하고 Tailwind 클래스로 매핑하는 과정이 체계화되어 있지 않습니다.
+Workspace → Project → Track → Version의 계층 구조로 작업물을 체계적으로 관리하며,
+한 번 업로드된 파일은 덮어쓰이지 않고 새로운 버전으로 불변 저장됩니다.
 
-Figma 노드 트리 분석, 토큰 추출, 컴포넌트 식별, 코드 생성이 각각 분리되어 있어
-이를 하나의 자동화된 흐름으로 연결하는 시스템이 부족합니다.`,
-      year: 2026,
-      role: "AI 백엔드 개발, 풀스택",
-      contribution: `Figma 노드 트리를 재귀 순회해 레이아웃 의도와 반복 패턴을 추론하는 구조 분석 로직을 구현했습니다.
+브라우저 내 스트리밍 재생과 파형 시각화로 다운로드 없이 오디오를 미리 들을 수 있고,
+타임스탬프 기반 피드백으로 특정 구간에 정확하게 코멘트를 남길 수 있습니다.
 
-색상·타이포그래피·간격·반경 값을 사용 빈도 기준으로 정규화하고,
-px 값을 Tailwind 유틸리티 클래스로 변환하는 토큰 매핑 로직을 외부 라이브러리 없이 직접 구현했습니다.
+Owner, Admin, Editor, Viewer의 4단계 역할 기반 접근 제어(RBAC)와
+Supabase RLS(Row-Level Security)를 통해 데이터베이스 레벨에서 권한을 보장합니다.`,
+      year: 2025,
+      role: "풀스택 개발",
+      contribution: `Workspace → Project → Track → Version의 4단계 계층 구조를 설계하고,
+Supabase PostgreSQL과 RLS 기반의 역할 권한 모델(Owner / Admin / Editor / Viewer)을 구현했습니다.
 
-LLM을 3단계(구조 분석 → 컴포넌트 명명 → 코드 생성)로 분리해 호출하고,
-각 단계는 전체 Figma JSON이 아닌 해당 단계에 필요한 데이터만 전달받도록 설계했습니다.
+Supabase Storage의 비공개 버킷과 Signed URL을 활용해 보안 파일 저장 구조를 설계하고,
+스토리지 경로를 /workspaces/{id}/projects/{id}/tracks/{id}/versions/{id}/{fileName} 형태로 정규화했습니다.
 
-분석 실행을 백그라운드 태스크로 처리하고 클라이언트에서 폴링하는 구조를 적용해
-응답 대기 중에도 UI가 블로킹되지 않도록 구성했습니다.`,
-      keyLearnings: `Figma 노드 구조를 컴포넌트 단위로 해석하는 과정에서,
-LLM을 단순 코드 생성기가 아니라 디자인 의도를 추론하는 해석 엔진으로 활용할 수 있음을 확인했습니다.
+wavesurfer.js를 활용한 브라우저 내 오디오 스트리밍 재생과 파형 시각화를 구현하고,
+타임스탬프 기반 피드백 시스템으로 특정 구간에 코멘트를 남길 수 있도록 설계했습니다.
 
-각 LLM 호출 단계에 전체 JSON이 아닌 필요한 데이터만 전달하는 방식이
-응답 품질과 파싱 안정성을 함께 높이는 데 효과적이었습니다.
+Supabase Realtime을 통한 실시간 구독과 전체 활동 감사 로그
+(업로드, 다운로드, 초대, 버전 생성, 코멘트, 권한 변경)를 구현해 작업 이력을 완전하게 추적했습니다.`,
+      keyLearnings: `Git의 이머터블 버전 관리 개념을 오디오 파일에 적용하면서,
+음악 협업에 특화된 UX가 단순한 파일 공유 도구와 어떻게 다른지 명확하게 이해할 수 있었습니다.
 
-또한 Auto Layout, Component Sets, Variants 같은 고급 Figma 기능은
-단순 노드 트리 분석으로 완전히 처리하기 어렵다는 한계를 확인했고,
-이를 처리하기 위해서는 Figma 플러그인 API 수준의 접근이 필요하다는 점을 파악했습니다.`,
-      workingApproach: `DesignFlow는 Figma JSON을 입력으로 받아 React + Tailwind 코드를 출력하는 과정을
-파싱 → 정규화 → 토큰 추출 → AI 해석 → 코드 생성의 4단계 파이프라인으로 설계했습니다.
+Supabase Storage와 RLS를 결합해 역할 기반 접근 제어를 구현하는 과정에서,
+데이터베이스 수준의 보안 정책이 애플리케이션 로직보다 더 신뢰할 수 있는 보안 레이어임을 확인했습니다.
 
-Figma 노드 트리를 재귀 순회해 레이아웃 의도와 반복 패턴을 추론하고,
-색상·타이포그래피·간격·반경 값을 사용 빈도 기준으로 정규화해 Tailwind 유틸리티 클래스로 매핑했습니다.
+wavesurfer.js로 브라우저 내 오디오 재생을 구현하면서,
+대용량 오디오 파일을 스트리밍 방식으로 처리하는 것이 전통적인 다운로드 방식보다
+협업 환경에서 훨씬 효율적임을 직접 경험했습니다.`,
+      workingApproach: `TrackHub은 음악 협업 과정의 고통 지점(버전 혼란, 보안 취약, 피드백 부재)을
+구조적으로 해결하는 방식으로 설계했습니다.
 
-LLM(Ollama 또는 Claude)을 3단계로 분리해 호출하도록 설계해,
-각 단계에 필요한 최소한의 데이터만 전달함으로써 응답 품질과 처리 효율을 함께 확보했습니다.
+데이터 모델을 먼저 정의하고 계층 구조를 확정한 뒤 구현에 진입했으며,
+RLS 정책은 애플리케이션 코드와 별개로 데이터베이스 레벨에서 동작하도록 설계해
+보안을 코드 바깥에서 보장했습니다.
 
 ---
 
-Figma JSON Input
-      |
-      v
-[figma_parser.py] → 노드 트리 파싱
-      |
-      v
-[normalizer.py] → 노드 계층 정규화
-      |
-      v
-[token_extractor.py] → 디자인 토큰 추출
- ├── colors     → Tailwind bg-[#hex]
- ├── typography → text-sm font-bold
- ├── spacing    → p-4 gap-6
- └── radius     → rounded-lg
-      |
-      v
-[Claude / Ollama — 3단계 AI 파이프라인]
- ├── analyze_structure() → componentCandidates + layoutPattern
- ├── name_components()   → suggestedName + filePath
- └── generate_code()     → React + Tailwind TSX
-      |
-      v
-Output Files
- ├── components/HeroSection.tsx
- ├── components/Header.tsx
- └── app/page.tsx`,
-      techStack: ["Next.js 15", "TypeScript", "Tailwind CSS v4", "Python", "FastAPI", "Ollama", "Claude API", "PostgreSQL"],
+[인증] Supabase Auth → JWT 기반 세션 관리
+         |
+         v
+[워크스페이스 계층]
+  Workspace → Project → Track → Version
+         |
+         v
+[스토리지 & 보안]
+  Supabase Storage (비공개 버킷) + Signed URL
+  RLS 권한 정책 (Owner / Admin / Editor / Viewer)
+  경로: /workspaces/{id}/projects/{id}/tracks/{id}/versions/{id}/{file}
+         |
+         v
+[오디오 재생]
+  wavesurfer.js → 브라우저 내 스트리밍 + 파형 시각화
+  타임스탬프 피드백 → 특정 구간 코멘트
+         |
+         v
+[실시간 & 감사]
+  Supabase Realtime → 실시간 구독
+  Activity Logs → 업로드·다운로드·초대·버전 생성·코멘트·권한 변경 이력 추적`,
+      techStack: ["Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "Zustand", "TanStack Query", "wavesurfer.js", "Supabase"],
       codeSnippets: [
         {
-          title: "run_pipeline — 6-Stage Async Pipeline",
-          language: "python",
-          code: `async def run_pipeline(db: AsyncSession, analysis_id: uuid.UUID) -> None:
-    """Figma JSON을 React + Tailwind 코드로 변환하는 6단계 파이프라인."""
-    run = await db.get(AnalysisRun, analysis_id)
-    run.status     = AnalysisStatus.running
-    run.started_at = datetime.now(timezone.utc)
-    await db.flush()
+          title: "RLS Policy — Track Access Control",
+          language: "sql",
+          code: `-- 트랙 조회: 워크스페이스 멤버만 접근 가능
+CREATE POLICY "track_select_policy" ON tracks
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM workspace_members wm
+      JOIN projects p ON p.workspace_id = wm.workspace_id
+      WHERE p.id = tracks.project_id
+        AND wm.user_id = auth.uid()
+    )
+  );
 
-    try:
-        raw_json   = run.raw_input or {}
+-- 트랙 생성: Editor 이상 권한만 허용
+CREATE POLICY "track_insert_policy" ON tracks
+  FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM workspace_members wm
+      JOIN projects p ON p.workspace_id = wm.workspace_id
+      WHERE p.id = tracks.project_id
+        AND wm.user_id = auth.uid()
+        AND wm.role IN ('owner', 'admin', 'editor')
+    )
+  );
 
-        # Stage 1: Figma JSON → 내부 노드 트리
-        parsed     = parse_figma_json(raw_json)
-
-        # Stage 2: 노드 계층 정규화 (중복 제거, 깊이 평탄화)
-        normalized = normalize_tree(parsed)
-        run.normalized_tree = normalized
-
-        # Stage 3: 디자인 토큰 추출 (색상, 타이포그래피, 간격, 반경)
-        tokens     = extract_tokens(normalized)
-        run.design_tokens = tokens
-
-        # Stage 4: LLM — 컴포넌트 후보 구조 분석
-        analysis_result  = await analyze_structure(normalized, tokens)
-        candidates       = analysis_result.get("componentCandidates", [])
-
-        # Stage 5: LLM — 컴포넌트 의미적 명명
-        named_result     = await name_components(candidates)
-        named_candidates = named_result.get("componentCandidates", candidates)
-        run.ai_interpretation = {**analysis_result, "componentCandidates": named_candidates}
-
-        # Stage 6: LLM — React + Tailwind TSX 코드 생성
-        code_result  = await generate_code(named_candidates, tokens)
-        run.generated_code   = code_result
-        run.status           = AnalysisStatus.completed
-        run.ai_model_used    = "claude-sonnet-4-6"
-
-    except InvalidFigmaJsonException as e:
-        run.status, run.error_message = AnalysisStatus.failed, str(e)
-    except Exception as e:
-        logger.error("파이프라인 실패: %s", e, exc_info=True)
-        run.status, run.error_message = AnalysisStatus.failed, "내부 오류: " + str(e)
-
-    run.completed_at = datetime.now(timezone.utc)
-    await db.flush()`,
-          explanation: "Figma JSON을 파싱 → 정규화 → 토큰 추출 → AI 구조 분석 → AI 컴포넌트 명명 → 코드 생성의 6단계로 처리합니다. 각 LLM 단계에 필요한 데이터만 전달해 응답 품질과 처리 효율을 함께 확보합니다.",
+-- 버전 삭제: Owner / Admin만 허용
+CREATE POLICY "version_delete_policy" ON track_versions
+  FOR DELETE USING (
+    EXISTS (
+      SELECT 1 FROM workspace_members wm
+      JOIN projects p ON p.workspace_id = wm.workspace_id
+      JOIN tracks t ON t.project_id = p.id
+      WHERE t.id = track_versions.track_id
+        AND wm.user_id = auth.uid()
+        AND wm.role IN ('owner', 'admin')
+    )
+  );`,
+          explanation: "RLS 정책을 데이터베이스 레벨에서 정의해 애플리케이션 코드와 독립적으로 보안을 보장합니다. 워크스페이스 멤버십과 역할(Owner/Admin/Editor/Viewer)을 기반으로 트랙 조회·생성·삭제 권한을 제어합니다.",
         },
         {
-          title: "run_analysis — Background Task Dispatch",
-          language: "python",
-          code: `@router.post("", response_model=AnalysisRunCreated, status_code=202)
-async def run_analysis(
-    data: AnalysisRunRequest,
-    background_tasks: BackgroundTasks,
-    db: AsyncSession = Depends(get_db),
-):
-    try:
-        created = await analysis_service.create_analysis(db, data.project_id, data.figma_json)
-        await db.commit()
-        # 파이프라인을 백그라운드로 실행 — 클라이언트는 폴링으로 상태 확인
-        background_tasks.add_task(_run_pipeline_bg, created.id)
-        return created
-    except ProjectNotFoundException:
-        raise HTTPException(status_code=404, detail={"error": {"code": "NOT_FOUND"}})
-    except InvalidFigmaJsonException as e:
-        raise HTTPException(status_code=422, detail={"error": {"code": "INVALID_FIGMA_JSON", "message": str(e)}})
+          title: "getSignedAudioUrl — Secure Streaming",
+          language: "typescript",
+          code: `export async function getSignedAudioUrl(
+  storagePath: string,
+  expiresIn = 3600
+): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from('audio-files')
+    .createSignedUrl(storagePath, expiresIn);
 
-@router.get("/{analysis_id}/status", response_model=AnalysisStatusResponse)
-async def get_status(analysis_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
-    try:
-        return await analysis_service.get_analysis_status(db, analysis_id)
-    except AnalysisNotFoundException:
-        raise HTTPException(status_code=404, detail={"error": {"code": "NOT_FOUND"}})`,
-          explanation: "분석 요청을 202로 즉시 수락하고 파이프라인을 백그라운드 태스크로 실행합니다. 클라이언트는 /status 엔드포인트를 폴링해 완료 여부를 확인하므로, 긴 처리 중에도 UI가 블로킹되지 않습니다.",
+  if (error) throw new Error(\`Signed URL 생성 실패: \${error.message}\`);
+  return data.signedUrl;
+}
+
+// wavesurfer.js 파형 시각화 + 스트리밍 재생 훅
+export function useAudioPlayer(storagePath: string) {
+  const waveformRef = useRef<HTMLDivElement>(null);
+  const wavesurferRef = useRef<WaveSurfer | null>(null);
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    if (!waveformRef.current) return;
+
+    getSignedAudioUrl(storagePath).then((signedUrl) => {
+      wavesurferRef.current = WaveSurfer.create({
+        container: waveformRef.current!,
+        waveColor: '#6366f1',
+        progressColor: '#4f46e5',
+        url: signedUrl,
+      });
+      wavesurferRef.current.on('ready', () => setIsReady(true));
+    });
+
+    return () => wavesurferRef.current?.destroy();
+  }, [storagePath]);
+
+  return { waveformRef, wavesurfer: wavesurferRef.current, isReady };
+}`,
+          explanation: "비공개 버킷의 오디오 파일을 Signed URL(1시간 만료)로 안전하게 스트리밍합니다. wavesurfer.js가 해당 URL로 직접 파형 시각화와 스트리밍 재생을 처리해 파일 다운로드 없이 브라우저에서 오디오를 미리 들을 수 있습니다.",
         },
       ],
-            thumbnailUrl: "/images/projects/designflow-hero.png",
-      heroImageUrl: "/images/projects/designflow-hero.png",
+      thumbnailUrl: "/images/projects/trackhub-hero.png",
+      heroImageUrl: "/images/projects/trackhub-hero.png",
       isFeatured: true,
       featuredOrder: 6,
       isPublished: true,
-      categoryId: designCategory.id,
-      secondaryCategoryId: aiCategory.id,
+      categoryId: musicCategory.id,
     },
   });
 
-  await prisma.projectLink.deleteMany({ where: { projectId: designflow.id } });
+  await prisma.projectLink.deleteMany({ where: { projectId: trackhub.id } });
   await prisma.projectLink.create({
-    data: { projectId: designflow.id, type: "GITHUB", label: "GitHub", url: "https://github.com/devbinlog/DesignFlow_AI_Builder", order: 1 },
+    data: { projectId: trackhub.id, type: "GITHUB", label: "GitHub", url: "https://github.com/devbinlog/TrackHub", order: 1 },
   });
 
   console.log("Seeding complete.");
