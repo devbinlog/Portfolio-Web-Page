@@ -6,7 +6,8 @@ interface Props {
 }
 
 const SKILL_GENRES = [
-  { label: 'AI / LLM', color: '#6366f1' },
+  { label: 'AI Experience', color: '#6366f1' },
+  { label: 'Interaction Design', color: '#a855f7' },
   { label: 'Search Systems', color: '#8b5cf6' },
   { label: 'FastAPI', color: '#009688' },
   { label: 'Next.js', color: '#000000' },

@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/server/prisma'
 import { ok, apiError } from '@/lib/server/api-response'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const profile = await prisma.profile.findFirst({

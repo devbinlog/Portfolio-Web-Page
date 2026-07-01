@@ -3,13 +3,14 @@ import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { ThemeProvider } from 'next-themes'
 import { LoadingScreen } from '@/components/LoadingScreen'
+import { PageViewTracker } from '@/components/layout/PageViewTracker'
 import '@/styles/globals.css'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://binlog-devbinlog.vercel.app'),
   title: {
     template: '%s | binlog',
-    default: 'binlog — AI / LLM Engineer & Frontend Developer',
+    default: 'binlog — AX Engineer & Frontend Developer',
   },
   description:
     'Designing systems that transform unstructured input into structured user experiences.',
@@ -57,6 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           enableSystem={false}
           disableTransitionOnChange
         >
+          <PageViewTracker />
           <LoadingScreen />
           {children}
         </ThemeProvider>
