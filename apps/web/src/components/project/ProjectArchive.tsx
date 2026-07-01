@@ -10,6 +10,10 @@ export function ProjectArchive({ projects }: ProjectArchiveProps) {
     <div>
       {/* 프로젝트 그리드 */}
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {/* 빈 슬롯 — 추후 프로젝트 추가 예정 */}
+        <div className="group block p-5 rounded-lg border border-dashed border-border-default bg-surface-base aspect-[4/3] flex items-center justify-center">
+          <span className="text-xs font-mono text-text-disabled">Coming soon</span>
+        </div>
         {projects.map((project) => (
           <Link
             key={project.id}
