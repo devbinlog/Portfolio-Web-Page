@@ -40,6 +40,10 @@ async function main() {
     { name: "Supabase", slug: "supabase" },
     { name: "Tailwind CSS", slug: "tailwindcss" },
     { name: "Vite", slug: "vite" },
+    { name: "LangGraph", slug: "langgraph" },
+    { name: "Vercel AI SDK", slug: "vercel-ai-sdk" },
+    { name: "PostgreSQL", slug: "postgresql" },
+    { name: "Zustand", slug: "zustand" },
   ];
   const tags = [];
   for (const t of tagDefs) {
@@ -234,7 +238,7 @@ User (Fan)          User (Artist)        User (Venue Manager)
             thumbnailUrl: "/images/projects/bandstage-hero.png",
       heroImageUrl: "/images/projects/bandstage-hero.png",
       isFeatured: true,
-      featuredOrder: 1,
+      featuredOrder: 3,
       isPublished: true,
       categoryId: musicCategory.id,
     },
@@ -363,7 +367,7 @@ User (Fan)          User (Artist)        User (Venue Manager)
             thumbnailUrl: "/images/projects/bandstage-hero.png",
       heroImageUrl: "/images/projects/bandstage-hero.png",
       isFeatured: true,
-      featuredOrder: 1,
+      featuredOrder: 3,
       isPublished: true,
       categoryId: musicCategory.id,
     },
@@ -791,7 +795,7 @@ def extract_json(text: str) -> dict:
             thumbnailUrl: "/images/projects/mde-hero.png",
       heroImageUrl: "/images/projects/mde-hero.png",
       isFeatured: true,
-      featuredOrder: 3,
+      featuredOrder: 1,
       isPublished: true,
       categoryId: designCategory.id,
       secondaryCategoryId: aiCategory.id,
@@ -931,7 +935,7 @@ def extract_json(text: str) -> dict:
       thumbnailUrl: "/images/projects/mde-hero.png",
       heroImageUrl: "/images/projects/mde-hero.png",
       isFeatured: true,
-      featuredOrder: 3,
+      featuredOrder: 1,
       isPublished: true,
       categoryId: designCategory.id,
       secondaryCategoryId: aiCategory.id,
@@ -941,317 +945,6 @@ def extract_json(text: str) -> dict:
   await prisma.projectLink.deleteMany({ where: { projectId: mde.id } });
   await prisma.projectLink.create({
     data: { projectId: mde.id, type: "GITHUB", label: "GitHub", url: "https://github.com/devbinlog/MDE", order: 1 },
-  });
-
-  // ── 4. Emotion-Aware AI Voice Engine ──────────────────────────────────────
-  const emotionAI = await prisma.project.upsert({
-    where: { slug: "emotion-aware-ai-voice-engine" },
-    update: {
-      title: "Emotion-Aware AI Voice Engine",
-      summary: "STT, 감정 분석, LLM, TTS를 하나의 저지연 파이프라인으로 연결해 사용자의 감정 상태에 맞는 톤으로 응답하는 AI 음성 인터랙션 시스템.",
-      description: `기존 음성 AI 시스템은 사용자의 감정 상태를 고려하지 않고, 항상 동일한 톤으로 응답합니다.
-
-사용자가 화가 나거나 슬픈 상황에서도 AI는 중립적인 응답을 유지하며,
-이로 인해 대화 경험이 단절되고 AI가 기계적으로 느껴지는 문제가 발생합니다.
-
-특히 음성 기반 인터페이스에서는 감정이 중요한 요소임에도 불구하고,
-대부분의 시스템이 텍스트 기반 처리에만 집중하고 있다는 한계를 가지고 있습니다.
-
----
-
-기존 TTS 시스템은 텍스트만을 기반으로 동작하며,
-음성 신호에서 감정을 추출하거나 반영하는 구조를 가지고 있지 않습니다.
-
-또한 STT, 감정 분석, LLM, TTS를 개별적으로 연결할 경우
-각 단계의 처리 지연이 누적되어 전체 응답 시간이 7~12초까지 증가하는 문제가 발생합니다.
-
-이로 인해 실시간 대화 경험을 제공하기 어려운 구조적 한계를 가지고 있습니다.`,
-      year: 2026,
-      role: "AI 백엔드 개발",
-      contribution: `오디오 신호와 텍스트를 결합한 감정 분석 모듈을 구현해,
-멀티모달 기반으로 감정을 추출할 수 있도록 구성했습니다.
-
-FastAPI WebSocket 서버를 사용해 음성 입력과 응답을 실시간으로 처리하고,
-STT부터 TTS까지 이어지는 흐름을 하나의 연결된 세션으로 관리했습니다.
-
-faster-whisper 기반 STT를 적용해 실시간 음성 인식을 처리하고,
-감정 분석 결과를 LLM과 TTS에 전달해 응답 내용과 음성 톤을 함께 제어했습니다.`,
-      keyLearnings: `감정 정보를 파이프라인 전반에 전달하는 구조를 설계하면서,
-단순 텍스트 기반 응답보다 훨씬 자연스러운 음성 대화 경험을 구현할 수 있었습니다.
-
-멀티모달 감정 분석을 통해 동일한 입력이라도 상황에 따라 다른 응답을 생성할 수 있게 되었고,
-사용자와의 상호작용 품질을 개선할 수 있었습니다.
-
-또한 STT, 감정 분석, LLM, TTS를 하나의 흐름으로 통합하면서
-실시간 처리에서 지연을 줄이기 위한 파이프라인 설계의 중요성을 경험했습니다.`,
-      workingApproach: `음성과 텍스트를 동시에 활용해 감정을 추출하고, 이를 응답 생성까지 연결하는 파이프라인을 설계했습니다.
-
-오디오 신호에서는 피치, 에너지, 속도와 같은 특징을 추출해 감정 상태를 추정하고,
-텍스트에서는 키워드 기반 감정 분석을 통해 보조 정보를 생성했습니다.
-
-두 결과를 가중치 기반으로 통합해 최종 감정을 결정하고,
-이를 LLM과 TTS에 전달해 응답의 내용과 음성 톤이 일관되도록 구성했습니다.
-
-또한 전체 파이프라인을 하나의 흐름으로 연결해,
-각 단계의 처리 지연이 누적되지 않도록 구조를 설계했습니다.
-
----
-
-음성 입력 → STT → 감정 분석(오디오+텍스트 멀티모달) → 감정 통합
-                                                         ↓
-                              TTS(감정 톤 제어) ← LLM(감정 컨텍스트 반영)`,
-      techStack: ["Python", "FastAPI", "WebSocket", "faster-whisper", "Ollama", "Claude API", "Next.js 14", "Tailwind CSS"],
-      codeSnippets: [
-        {
-          title: "voice_ws — Real-time Pipeline",
-          language: "python",
-          code: `@ws_router.websocket("/ws/voice")
-async def voice_ws(ws: WebSocket):
-    await ws.accept()
-    vad, stt, emotion, tts = _services()
-    audio_buffer: List[np.ndarray] = []
-    conversation_history: List[dict] = []
-
-    async for raw in ws.iter_text():
-        msg = json.loads(raw)
-        t = msg.get("type")
-
-        if t == "audio_chunk":
-            chunk = np.frombuffer(
-                base64.b64decode(msg["data"]), dtype=np.int16
-            ).astype(np.float32) / 32768.0
-            audio_buffer.append(chunk)
-            await ws.send_json({"type": "vad_result", "is_speech": vad.is_speech(chunk)})
-
-        elif t == "end_stream":
-            full = np.concatenate(audio_buffer)
-
-            # Stage 1: STT — transcribe with faster-whisper
-            stt_result = await asyncio.to_thread(stt.transcribe, full, "ko", 16000)
-
-            # Stage 2: Emotion — audio + text multimodal fusion
-            emo = emotion.analyze(full, sr=16000, transcript=stt_result["transcript"])
-
-            # Stage 3: LLM — emotion-conditioned response generation
-            ai_text = await get_llm_response(stt_result["transcript"], emo, conversation_history)
-
-            # Stage 4: TTS — prosody-adjusted synthesis
-            out = tts.synthesize(text=ai_text, emotion_label=emo["emotion_label"])
-
-            await ws.send_json({
-                "type": "response",
-                "transcript": stt_result["transcript"],
-                "emotion": emo,
-                "text": ai_text,
-                "audio": out,
-            })
-            audio_buffer.clear()`,
-          explanation: "WebSocket 한 세션에서 STT → 감정 분석 → LLM → TTS 파이프라인을 순차 실행합니다. 오디오 청크를 실시간으로 버퍼링하다가 end_stream 신호에 전체 파이프라인을 실행하고 응답을 반환합니다.",
-        },
-        {
-          title: "EmotionService — MFCC + Text Fusion",
-          language: "python",
-          code: `class EmotionService:
-    def __init__(self):
-        self.classifier = EmotionClassifier()
-        self._audio_w = settings.EMOTION_AUDIO_WEIGHT  # 0.6
-        self._text_w  = settings.EMOTION_TEXT_WEIGHT   # 0.4
-
-    def extract_audio_features(self, audio: np.ndarray, sr: int = 16000) -> dict:
-        frames    = _frames(audio)
-        f0        = _f0_autocorr(audio, sr)      # 피치: 자기상관 기반
-        rms       = _rms(frames).mean()
-        zcr       = _zcr(frames).mean()
-        mfccs     = _mfcc(audio, sr, n_mfcc=13)  # mel-filterbank + DCT
-        spk_rate  = _speaking_rate(audio, sr)
-        return {
-            "f0_mean": f0, "rms": rms, "zcr": zcr,
-            "mfcc_mean": mfccs.mean(axis=1).tolist(),
-            "speaking_rate": spk_rate,
-        }
-
-    def fuse(self, audio_result: dict, text_result: dict | None = None) -> dict:
-        p_audio = np.array(audio_result["probabilities"])
-        if text_result:
-            p_text = np.array(text_result["probabilities"])
-            fused  = self._audio_w * p_audio + self._text_w * p_text
-        else:
-            fused = p_audio
-        fused /= fused.sum()
-        label = EMOTION_LABELS[fused.argmax()]
-        return {"emotion_label": label, "probabilities": fused.tolist()}
-
-    def analyze(self, audio: np.ndarray, sr: int = 16000, transcript: str | None = None) -> dict:
-        features     = self.extract_audio_features(audio, sr)
-        audio_result = self.classifier.predict_from_features(features)
-        text_result  = self.classifier.predict_from_text(transcript) if transcript else None
-        return self.fuse(audio_result, text_result)`,
-          explanation: "오디오에서 MFCC·피치·RMS·ZCR를 추출하고, 텍스트 키워드 감정 분석 결과와 가중치 기반(오디오 0.6 / 텍스트 0.4)으로 융합해 최종 감정 레이블을 결정합니다.",
-        },
-      ],
-            thumbnailUrl: "/images/projects/emotion-hero.png",
-      heroImageUrl: "/images/projects/emotion-hero.png",
-      isFeatured: true,
-      featuredOrder: 4,
-      isPublished: true,
-      categoryId: aiCategory.id,
-    },
-    create: {
-      title: "Emotion-Aware AI Voice Engine",
-      slug: "emotion-aware-ai-voice-engine",
-      summary: "STT, 감정 분석, LLM, TTS를 하나의 저지연 파이프라인으로 연결해 사용자의 감정 상태에 맞는 톤으로 응답하는 AI 음성 인터랙션 시스템.",
-      description: `기존 음성 AI 시스템은 사용자의 감정 상태를 고려하지 않고, 항상 동일한 톤으로 응답합니다.
-
-사용자가 화가 나거나 슬픈 상황에서도 AI는 중립적인 응답을 유지하며,
-이로 인해 대화 경험이 단절되고 AI가 기계적으로 느껴지는 문제가 발생합니다.
-
-특히 음성 기반 인터페이스에서는 감정이 중요한 요소임에도 불구하고,
-대부분의 시스템이 텍스트 기반 처리에만 집중하고 있다는 한계를 가지고 있습니다.
-
----
-
-기존 TTS 시스템은 텍스트만을 기반으로 동작하며,
-음성 신호에서 감정을 추출하거나 반영하는 구조를 가지고 있지 않습니다.
-
-또한 STT, 감정 분석, LLM, TTS를 개별적으로 연결할 경우
-각 단계의 처리 지연이 누적되어 전체 응답 시간이 7~12초까지 증가하는 문제가 발생합니다.
-
-이로 인해 실시간 대화 경험을 제공하기 어려운 구조적 한계를 가지고 있습니다.`,
-      year: 2026,
-      role: "AI 백엔드 개발",
-      contribution: `오디오 신호와 텍스트를 결합한 감정 분석 모듈을 구현해,
-멀티모달 기반으로 감정을 추출할 수 있도록 구성했습니다.
-
-FastAPI WebSocket 서버를 사용해 음성 입력과 응답을 실시간으로 처리하고,
-STT부터 TTS까지 이어지는 흐름을 하나의 연결된 세션으로 관리했습니다.
-
-faster-whisper 기반 STT를 적용해 실시간 음성 인식을 처리하고,
-감정 분석 결과를 LLM과 TTS에 전달해 응답 내용과 음성 톤을 함께 제어했습니다.`,
-      keyLearnings: `감정 정보를 파이프라인 전반에 전달하는 구조를 설계하면서,
-단순 텍스트 기반 응답보다 훨씬 자연스러운 음성 대화 경험을 구현할 수 있었습니다.
-
-멀티모달 감정 분석을 통해 동일한 입력이라도 상황에 따라 다른 응답을 생성할 수 있게 되었고,
-사용자와의 상호작용 품질을 개선할 수 있었습니다.
-
-또한 STT, 감정 분석, LLM, TTS를 하나의 흐름으로 통합하면서
-실시간 처리에서 지연을 줄이기 위한 파이프라인 설계의 중요성을 경험했습니다.`,
-      workingApproach: `음성과 텍스트를 동시에 활용해 감정을 추출하고, 이를 응답 생성까지 연결하는 파이프라인을 설계했습니다.
-
-오디오 신호에서는 피치, 에너지, 속도와 같은 특징을 추출해 감정 상태를 추정하고,
-텍스트에서는 키워드 기반 감정 분석을 통해 보조 정보를 생성했습니다.
-
-두 결과를 가중치 기반으로 통합해 최종 감정을 결정하고,
-이를 LLM과 TTS에 전달해 응답의 내용과 음성 톤이 일관되도록 구성했습니다.
-
-또한 전체 파이프라인을 하나의 흐름으로 연결해,
-각 단계의 처리 지연이 누적되지 않도록 구조를 설계했습니다.
-
----
-
-음성 입력 → STT → 감정 분석(오디오+텍스트 멀티모달) → 감정 통합
-                                                         ↓
-                              TTS(감정 톤 제어) ← LLM(감정 컨텍스트 반영)`,
-      techStack: ["Python", "FastAPI", "WebSocket", "faster-whisper", "Ollama", "Claude API", "Next.js 14", "Tailwind CSS"],
-      codeSnippets: [
-        {
-          title: "voice_ws — Real-time Pipeline",
-          language: "python",
-          code: `@ws_router.websocket("/ws/voice")
-async def voice_ws(ws: WebSocket):
-    await ws.accept()
-    vad, stt, emotion, tts = _services()
-    audio_buffer: List[np.ndarray] = []
-    conversation_history: List[dict] = []
-
-    async for raw in ws.iter_text():
-        msg = json.loads(raw)
-        t = msg.get("type")
-
-        if t == "audio_chunk":
-            chunk = np.frombuffer(
-                base64.b64decode(msg["data"]), dtype=np.int16
-            ).astype(np.float32) / 32768.0
-            audio_buffer.append(chunk)
-            await ws.send_json({"type": "vad_result", "is_speech": vad.is_speech(chunk)})
-
-        elif t == "end_stream":
-            full = np.concatenate(audio_buffer)
-
-            # Stage 1: STT — transcribe with faster-whisper
-            stt_result = await asyncio.to_thread(stt.transcribe, full, "ko", 16000)
-
-            # Stage 2: Emotion — audio + text multimodal fusion
-            emo = emotion.analyze(full, sr=16000, transcript=stt_result["transcript"])
-
-            # Stage 3: LLM — emotion-conditioned response generation
-            ai_text = await get_llm_response(stt_result["transcript"], emo, conversation_history)
-
-            # Stage 4: TTS — prosody-adjusted synthesis
-            out = tts.synthesize(text=ai_text, emotion_label=emo["emotion_label"])
-
-            await ws.send_json({
-                "type": "response",
-                "transcript": stt_result["transcript"],
-                "emotion": emo,
-                "text": ai_text,
-                "audio": out,
-            })
-            audio_buffer.clear()`,
-          explanation: "WebSocket 한 세션에서 STT → 감정 분석 → LLM → TTS 파이프라인을 순차 실행합니다. 오디오 청크를 실시간으로 버퍼링하다가 end_stream 신호에 전체 파이프라인을 실행하고 응답을 반환합니다.",
-        },
-        {
-          title: "EmotionService — MFCC + Text Fusion",
-          language: "python",
-          code: `class EmotionService:
-    def __init__(self):
-        self.classifier = EmotionClassifier()
-        self._audio_w = settings.EMOTION_AUDIO_WEIGHT  # 0.6
-        self._text_w  = settings.EMOTION_TEXT_WEIGHT   # 0.4
-
-    def extract_audio_features(self, audio: np.ndarray, sr: int = 16000) -> dict:
-        frames    = _frames(audio)
-        f0        = _f0_autocorr(audio, sr)      # 피치: 자기상관 기반
-        rms       = _rms(frames).mean()
-        zcr       = _zcr(frames).mean()
-        mfccs     = _mfcc(audio, sr, n_mfcc=13)  # mel-filterbank + DCT
-        spk_rate  = _speaking_rate(audio, sr)
-        return {
-            "f0_mean": f0, "rms": rms, "zcr": zcr,
-            "mfcc_mean": mfccs.mean(axis=1).tolist(),
-            "speaking_rate": spk_rate,
-        }
-
-    def fuse(self, audio_result: dict, text_result: dict | None = None) -> dict:
-        p_audio = np.array(audio_result["probabilities"])
-        if text_result:
-            p_text = np.array(text_result["probabilities"])
-            fused  = self._audio_w * p_audio + self._text_w * p_text
-        else:
-            fused = p_audio
-        fused /= fused.sum()
-        label = EMOTION_LABELS[fused.argmax()]
-        return {"emotion_label": label, "probabilities": fused.tolist()}
-
-    def analyze(self, audio: np.ndarray, sr: int = 16000, transcript: str | None = None) -> dict:
-        features     = self.extract_audio_features(audio, sr)
-        audio_result = self.classifier.predict_from_features(features)
-        text_result  = self.classifier.predict_from_text(transcript) if transcript else None
-        return self.fuse(audio_result, text_result)`,
-          explanation: "오디오에서 MFCC·피치·RMS·ZCR를 추출하고, 텍스트 키워드 감정 분석 결과와 가중치 기반(오디오 0.6 / 텍스트 0.4)으로 융합해 최종 감정 레이블을 결정합니다.",
-        },
-      ],
-            thumbnailUrl: "/images/projects/emotion-hero.png",
-      heroImageUrl: "/images/projects/emotion-hero.png",
-      isFeatured: true,
-      featuredOrder: 4,
-      isPublished: true,
-      categoryId: aiCategory.id,
-    },
-  });
-
-  await prisma.projectLink.deleteMany({ where: { projectId: emotionAI.id } });
-  await prisma.projectLink.create({
-    data: { projectId: emotionAI.id, type: "GITHUB", label: "GitHub", url: "https://github.com/devbinlog/Emotion-Aware-AI-Voice-Engine", order: 1 },
   });
 
   // ── 5. MUSE ───────────────────────────────────────────────────────────────
@@ -1429,7 +1122,7 @@ private playSnare(t: number, vel: number): void {
             thumbnailUrl: "/images/projects/muse-hero.png",
       heroImageUrl: "/images/projects/muse-hero.png",
       isFeatured: true,
-      featuredOrder: 5,
+      featuredOrder: 4,
       isPublished: true,
       categoryId: musicCategory.id,
     },
@@ -1606,7 +1299,7 @@ private playSnare(t: number, vel: number): void {
             thumbnailUrl: "/images/projects/muse-hero.png",
       heroImageUrl: "/images/projects/muse-hero.png",
       isFeatured: true,
-      featuredOrder: 5,
+      featuredOrder: 4,
       isPublished: true,
       categoryId: musicCategory.id,
     },
@@ -1617,346 +1310,316 @@ private playSnare(t: number, vel: number): void {
     data: { projectId: muse.id, type: "GITHUB", label: "GitHub", url: "https://github.com/devbinlog/MUSE-Motion-based-User-Sound-Engine-", order: 1 },
   });
 
-  // ── 6. TrackHub ──────────────────────────────────────────────────────────────
-  const trackhub = await prisma.project.upsert({
-    where: { slug: "trackhub" },
+
+  // ── 6. Personalized AI Assistant ─────────────────────────────────────────
+  const personalizedAI = await prisma.project.upsert({
+    where: { slug: "personalized-ai-assistant" },
     update: {
-      title: "TrackHub",
-      summary: `음악 프로덕션 협업을 위한 오디오 버전 관리 플랫폼. Git의 이머터블 버전 관리 개념을 오디오 파일에 적용해
-작곡가, 프로듀서, 엔지니어가 하나의 워크스페이스에서 안전하게 협업할 수 있습니다.`,
-      description: `음악 프로덕션 팀은 KakaoTalk, 이메일, Discord에 파일이 흩어져 있어 어떤 WAV가 최신본인지 파악하기 어렵고,
-대용량 파일 전송과 버전 충돌로 협업 과정이 비효율적입니다.
+      title: "Personalized AI Assistant",
+      summary: `사용자의 응답 선택 행동을 학습 신호로 변환해 응답 전략을 지속적으로 개인화하는 AX(AI Experience) 시스템.
+Learning Mode → 선호도 메모리 합성 → Normal Mode 자동 적용 구조로, AI가 사용자를 스스로 학습합니다.`,
+      description: `기존 AI 어시스턴트는 모든 사용자에게 동일한 응답 전략을 적용합니다.
+응답 길이, 톤, 구조, 예시 빈도, 기술 깊이 같은 선호도가 사람마다 다르지만, 시스템은 이를 학습하지 않고 매번 같은 방식으로 응답합니다.
 
-저작권 보호와 보안 취약점, 피드백 이력 관리 부재, 작업 과정 추적 불가 등의 문제가
-실제 음악 작업 현장에서 반복적으로 발생하고 있습니다.
-
----
-
-TrackHub은 이러한 문제를 해결하기 위해 설계된 음악 프로덕션 전용 버전 관리 및 협업 플랫폼입니다.
-
-Workspace → Project → Track → Version의 계층 구조로 작업물을 체계적으로 관리하며,
-한 번 업로드된 파일은 덮어쓰이지 않고 새로운 버전으로 불변 저장됩니다.
-
-브라우저 내 스트리밍 재생과 파형 시각화로 다운로드 없이 오디오를 미리 들을 수 있고,
-타임스탬프 기반 피드백으로 특정 구간에 정확하게 코멘트를 남길 수 있습니다.
-
-Owner, Admin, Editor, Viewer의 4단계 역할 기반 접근 제어(RBAC)와
-Supabase RLS(Row-Level Security)를 통해 데이터베이스 레벨에서 권한을 보장합니다.`,
-      year: 2025,
-      role: "풀스택 개발",
-      contribution: `Workspace → Project → Track → Version의 4단계 계층 구조를 설계하고,
-Supabase PostgreSQL과 RLS 기반의 역할 권한 모델(Owner / Admin / Editor / Viewer)을 구현했습니다.
-
-Supabase Storage의 비공개 버킷과 Signed URL을 활용해 보안 파일 저장 구조를 설계하고,
-스토리지 경로를 /workspaces/{id}/projects/{id}/tracks/{id}/versions/{id}/{fileName} 형태로 정규화했습니다.
-
-wavesurfer.js를 활용한 브라우저 내 오디오 스트리밍 재생과 파형 시각화를 구현하고,
-타임스탬프 기반 피드백 시스템으로 특정 구간에 코멘트를 남길 수 있도록 설계했습니다.
-
-Supabase Realtime을 통한 실시간 구독과 전체 활동 감사 로그
-(업로드, 다운로드, 초대, 버전 생성, 코멘트, 권한 변경)를 구현해 작업 이력을 완전하게 추적했습니다.`,
-      keyLearnings: `Git의 이머터블 버전 관리 개념을 오디오 파일에 적용하면서,
-음악 협업에 특화된 UX가 단순한 파일 공유 도구와 어떻게 다른지 명확하게 이해할 수 있었습니다.
-
-Supabase Storage와 RLS를 결합해 역할 기반 접근 제어를 구현하는 과정에서,
-데이터베이스 수준의 보안 정책이 애플리케이션 로직보다 더 신뢰할 수 있는 보안 레이어임을 확인했습니다.
-
-wavesurfer.js로 브라우저 내 오디오 재생을 구현하면서,
-대용량 오디오 파일을 스트리밍 방식으로 처리하는 것이 전통적인 다운로드 방식보다
-협업 환경에서 훨씬 효율적임을 직접 경험했습니다.`,
-      workingApproach: `TrackHub은 음악 협업 과정의 고통 지점(버전 혼란, 보안 취약, 피드백 부재)을
-구조적으로 해결하는 방식으로 설계했습니다.
-
-데이터 모델을 먼저 정의하고 계층 구조를 확정한 뒤 구현에 진입했으며,
-RLS 정책은 애플리케이션 코드와 별개로 데이터베이스 레벨에서 동작하도록 설계해
-보안을 코드 바깥에서 보장했습니다.
+사용자가 매번 "짧게", "예시 없이", "단계별로" 같은 지시를 내려야 하며, 이를 누락하면 선호도와 맞지 않는 응답이 반복됩니다.
 
 ---
 
-[인증] Supabase Auth → JWT 기반 세션 관리
-         |
-         v
-[워크스페이스 계층]
-  Workspace → Project → Track → Version
-         |
-         v
-[스토리지 & 보안]
-  Supabase Storage (비공개 버킷) + Signed URL
-  RLS 권한 정책 (Owner / Admin / Editor / Viewer)
-  경로: /workspaces/{id}/projects/{id}/tracks/{id}/versions/{id}/{file}
-         |
-         v
-[오디오 재생]
-  wavesurfer.js → 브라우저 내 스트리밍 + 파형 시각화
-  타임스탬프 피드백 → 특정 구간 코멘트
-         |
-         v
-[실시간 & 감사]
-  Supabase Realtime → 실시간 구독
-  Activity Logs → 업로드·다운로드·초대·버전 생성·코멘트·권한 변경 이력 추적`,
-      techStack: ["Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "Zustand", "TanStack Query", "wavesurfer.js", "Supabase"],
+명시적 설정(사용자가 직접 선호도를 입력하는 방식)은 초기 부담이 크고, 실제 대화 맥락에서 미세하게 달라지는 선호도를 반영하기 어렵습니다.
+
+또한 AI가 어떤 전략으로 응답하고 있는지 설명하지 않기 때문에, 사용자는 시스템을 이해하거나 의도적으로 조정할 수 없는 블랙박스 구조에 머무르게 됩니다.`,
+      year: 2026,
+      role: "풀스택 개발, AI 시스템 설계",
+      contribution: `LangGraph StateGraph로 Learning Mode 파이프라인을 구성했습니다.
+generate_candidates 노드가 3개 후보를 전략별로 병렬 생성하고, Human-in-the-loop 노드에서 사용자 선택을 기다린 뒤 evaluate_selection이 9차원 분석을 수행합니다.
+
+9차원 평가 엔진을 직접 설계했습니다. 응답 길이, 예시 밀도, 기술 깊이, 어조 직접성, 구조 복잡도, 감정 표현, 단계 분해, 비유 사용, 코드 포함 비율을 각각 독립적인 측정 함수로 구현해 선호도 벡터를 추출합니다.
+
+EMA(α=0.3) 기반 선호도 합성으로 최근 선택에 더 높은 가중치를 부여하면서도 누적 기록에서 안정된 프로파일을 유지했습니다.
+
+XAI 패널은 Vercel AI SDK의 스트리밍 응답과 함께, 어떤 선호도 차원이 현재 응답 전략에 반영됐는지 실시간으로 시각화합니다.
+
+Execution Mode는 사용자 목표를 단계별 LangGraph 체크포인트로 분해해, 단계 완료 시 자동으로 다음 코칭 흐름으로 전환되도록 구현했습니다.`,
+      keyLearnings: `사용자의 선택 행동을 학습 신호로 변환하는 방식이, 명시적 설정보다 훨씬 자연스러운 개인화를 만든다는 것을 확인했습니다. 대화 맥락이 달라질수록 선호도도 미세하게 변하며, 이를 EMA로 반영하는 구조가 유효했습니다.
+
+9차원 평가를 독립적인 함수로 분리하면, 각 차원의 가중치를 개별 조정할 수 있어 향후 새로운 선호도 차원 추가도 파이프라인 전체를 바꾸지 않고 확장할 수 있습니다.
+
+XAI 패널을 도입하면서, AI 시스템의 투명성이 사용자 신뢰와 직접 연결된다는 것을 경험했습니다. 사용자가 "왜 이렇게 응답하는지" 이해하면 더 의도적으로 시스템을 조정하고 활용하는 패턴이 나타났습니다.
+
+LangGraph의 Human-in-the-loop 패턴은 AI 응답 생성과 사용자 입력을 하나의 상태 그래프 안에서 관리할 수 있어, 복잡한 멀티스텝 인터랙션을 명확하게 모델링하는 데 효과적이었습니다.`,
+      workingApproach: `Personalized AI Assistant는 선호도를 직접 묻지 않고, 사용자의 선택 행동 자체를 학습 신호로 사용합니다.
+
+Learning Mode: 동일한 입력에 대해 3개의 응답 후보를 서로 다른 전략(간결/상세/대화체)으로 병렬 생성합니다.
+사용자가 선택한 응답을 9차원 평가 엔진으로 분석해 선호도 벡터를 추출하고, PostgreSQL에 누적 저장된 기록에서 EMA로 안정된 선호도 프로파일을 합성합니다.
+
+Normal Mode: 합성된 선호도 프로파일이 시스템 프롬프트에 자동 반영되어 응답 전략이 개인화됩니다.
+XAI 패널이 어떤 차원의 선호도가 어떻게 적용됐는지 실시간으로 투명하게 시각화합니다.
+
+Execution Mode: 사용자가 목표(예: "LangGraph 마스터하기")를 입력하면, LangGraph가 단계를 분해하고 각 단계별 코칭 흐름을 생성합니다.
+체크포인트를 통해 진행 상태를 추적하고 다음 단계로의 전환을 관리합니다.
+
+---
+
+User Input
+    |
+    v
+[Mode Router] ─────────────────────────────────────
+    |                    |                         |
+Learning Mode       Normal Mode           Execution Mode
+    |                    |                         |
+3 Candidates        Preference Profile        Goal Input
+Parallel Gen        Load & Apply           Step Decompose
+    |                    |                         |
+User Selection      Strategy Inject        Coaching Loop
+    |                    |                         |
+9D Evaluation       XAI Panel           Checkpoint Track
+    |
+Preference Vector
+    |
+EMA Synthesis (α=0.3, last 20 sessions)
+    |
+PostgreSQL Store`,
+      techStack: ["Next.js 15", "TypeScript", "Vercel AI SDK", "LangGraph", "FastAPI", "Python", "PostgreSQL", "Prisma", "Zustand", "Tailwind CSS"],
       codeSnippets: [
         {
-          title: "RLS Policy — Track Access Control",
-          language: "sql",
-          code: `-- 트랙 조회: 워크스페이스 멤버만 접근 가능
-CREATE POLICY "track_select_policy" ON tracks
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM workspace_members wm
-      JOIN projects p ON p.workspace_id = wm.workspace_id
-      WHERE p.id = tracks.project_id
-        AND wm.user_id = auth.uid()
+          title: "learning_graph.py — LangGraph Human-in-the-loop 파이프라인",
+          language: "python",
+          code: `from langgraph.graph import StateGraph, START, END
+from langgraph.checkpoint.postgres import PostgresSaver
+from typing import TypedDict
+import asyncio
+
+class PreferenceState(TypedDict):
+    user_input: str
+    candidates: list[str]
+    selected_index: int | None
+    preference_vector: dict[str, float]
+    synthesized_profile: dict[str, float]
+
+async def generate_candidates(state: PreferenceState) -> dict:
+    """3개 후보 응답 병렬 생성 — 전략별로 다른 시스템 프롬프트 적용"""
+    strategies = [
+        {"length": "concise",  "examples": False, "tone": "direct"},
+        {"length": "detailed", "examples": True,  "tone": "educational"},
+        {"length": "moderate", "examples": True,  "tone": "conversational"},
+    ]
+    candidates = await asyncio.gather(*[
+        llm.ainvoke(build_prompt(state["user_input"], s))
+        for s in strategies
+    ])
+    return {"candidates": [c.content for c in candidates]}
+
+def evaluate_selection(state: PreferenceState) -> dict:
+    """선택된 응답을 9차원으로 분석해 선호도 벡터 추출"""
+    selected = state["candidates"][state["selected_index"]]
+    return {
+        "preference_vector": {
+            "length_preference":    compute_length_score(selected),
+            "example_density":      compute_example_density(selected),
+            "technical_depth":      compute_technical_depth(selected),
+            "tone_directness":      compute_directness(selected),
+            "structure_complexity": compute_structure(selected),
+            "emotional_warmth":     compute_warmth(selected),
+            "step_decomposition":   compute_steps(selected),
+            "analogy_usage":        compute_analogies(selected),
+            "code_inclusion":       compute_code_ratio(selected),
+        }
+    }
+
+async def synthesize_memory(state: PreferenceState, config: dict) -> dict:
+    """EMA(α=0.3)로 누적 기록에서 안정된 선호도 프로파일 합성"""
+    history = await db.get_preference_history(
+        user_id=config["configurable"]["user_id"], limit=20
     )
-  );
+    alpha = 0.3
+    profile = history[0] if history else default_profile()
+    for h in history[1:]:
+        profile = {k: alpha * h[k] + (1 - alpha) * profile[k]
+                   for k in profile}
+    profile.update(state["preference_vector"])
+    await db.save_preference(config["configurable"]["user_id"], profile)
+    return {"synthesized_profile": profile}
 
--- 트랙 생성: Editor 이상 권한만 허용
-CREATE POLICY "track_insert_policy" ON tracks
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM workspace_members wm
-      JOIN projects p ON p.workspace_id = wm.workspace_id
-      WHERE p.id = tracks.project_id
-        AND wm.user_id = auth.uid()
-        AND wm.role IN ('owner', 'admin', 'editor')
-    )
-  );
+# StateGraph 정의
+builder = StateGraph(PreferenceState)
+builder.add_node("generate",   generate_candidates)
+builder.add_node("evaluate",   evaluate_selection)
+builder.add_node("synthesize", synthesize_memory)
+builder.add_edge(START,       "generate")
+builder.add_edge("generate",  "evaluate")
+builder.add_edge("evaluate",  "synthesize")
+builder.add_edge("synthesize", END)
 
--- 버전 삭제: Owner / Admin만 허용
-CREATE POLICY "version_delete_policy" ON track_versions
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM workspace_members wm
-      JOIN projects p ON p.workspace_id = wm.workspace_id
-      JOIN tracks t ON t.project_id = p.id
-      WHERE t.id = track_versions.track_id
-        AND wm.user_id = auth.uid()
-        AND wm.role IN ('owner', 'admin')
-    )
-  );`,
-          explanation: "RLS 정책을 데이터베이스 레벨에서 정의해 애플리케이션 코드와 독립적으로 보안을 보장합니다. 워크스페이스 멤버십과 역할(Owner/Admin/Editor/Viewer)을 기반으로 트랙 조회·생성·삭제 권한을 제어합니다.",
-        },
-        {
-          title: "getSignedAudioUrl — Secure Streaming",
-          language: "typescript",
-          code: `export async function getSignedAudioUrl(
-  storagePath: string,
-  expiresIn = 3600
-): Promise<string> {
-  const { data, error } = await supabase.storage
-    .from('audio-files')
-    .createSignedUrl(storagePath, expiresIn);
-
-  if (error) throw new Error(\`Signed URL 생성 실패: \${error.message}\`);
-  return data.signedUrl;
-}
-
-// wavesurfer.js 파형 시각화 + 스트리밍 재생 훅
-export function useAudioPlayer(storagePath: string) {
-  const waveformRef = useRef<HTMLDivElement>(null);
-  const wavesurferRef = useRef<WaveSurfer | null>(null);
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    if (!waveformRef.current) return;
-
-    getSignedAudioUrl(storagePath).then((signedUrl) => {
-      wavesurferRef.current = WaveSurfer.create({
-        container: waveformRef.current!,
-        waveColor: '#6366f1',
-        progressColor: '#4f46e5',
-        url: signedUrl,
-      });
-      wavesurferRef.current.on('ready', () => setIsReady(true));
-    });
-
-    return () => wavesurferRef.current?.destroy();
-  }, [storagePath]);
-
-  return { waveformRef, wavesurfer: wavesurferRef.current, isReady };
-}`,
-          explanation: "비공개 버킷의 오디오 파일을 Signed URL(1시간 만료)로 안전하게 스트리밍합니다. wavesurfer.js가 해당 URL로 직접 파형 시각화와 스트리밍 재생을 처리해 파일 다운로드 없이 브라우저에서 오디오를 미리 들을 수 있습니다.",
+graph = builder.compile(
+    checkpointer=PostgresSaver.from_conn_string(DATABASE_URL),
+    interrupt_after=["generate"],  # 사용자 선택 대기 (Human-in-the-loop)
+)`,
+          explanation: "LangGraph StateGraph로 Learning Mode 파이프라인을 구현합니다. generate_candidates가 3개 후보를 asyncio.gather로 병렬 생성하고, interrupt_after=[\"generate\"]로 Human-in-the-loop 대기를 설정합니다. evaluate_selection이 9차원 벡터를 추출하고, synthesize_memory가 EMA(α=0.3)로 최근 20회 기록에서 안정된 선호도 프로파일을 합성해 PostgreSQL에 저장합니다.",
         },
       ],
-      thumbnailUrl: "/images/projects/trackhub-hero.png",
-      heroImageUrl: "/images/projects/trackhub-hero.png",
+      thumbnailUrl: "/images/projects/personalized-ai-assistant-hero.png",
+      heroImageUrl: "/images/projects/personalized-ai-assistant-hero.png",
       isFeatured: true,
-      featuredOrder: 6,
+      featuredOrder: 0,
       isPublished: true,
-      categoryId: musicCategory.id,
-      secondaryCategoryId: null,
+      categoryId: aiCategory.id,
     },
     create: {
-      title: "TrackHub",
-      slug: "trackhub",
-      summary: `음악 프로덕션 협업을 위한 오디오 버전 관리 플랫폼. Git의 이머터블 버전 관리 개념을 오디오 파일에 적용해
-작곡가, 프로듀서, 엔지니어가 하나의 워크스페이스에서 안전하게 협업할 수 있습니다.`,
-      description: `음악 프로덕션 팀은 KakaoTalk, 이메일, Discord에 파일이 흩어져 있어 어떤 WAV가 최신본인지 파악하기 어렵고,
-대용량 파일 전송과 버전 충돌로 협업 과정이 비효율적입니다.
+      title: "Personalized AI Assistant",
+      slug: "personalized-ai-assistant",
+      summary: `사용자의 응답 선택 행동을 학습 신호로 변환해 응답 전략을 지속적으로 개인화하는 AX(AI Experience) 시스템.
+Learning Mode → 선호도 메모리 합성 → Normal Mode 자동 적용 구조로, AI가 사용자를 스스로 학습합니다.`,
+      description: `기존 AI 어시스턴트는 모든 사용자에게 동일한 응답 전략을 적용합니다.
+응답 길이, 톤, 구조, 예시 빈도, 기술 깊이 같은 선호도가 사람마다 다르지만, 시스템은 이를 학습하지 않고 매번 같은 방식으로 응답합니다.
 
-저작권 보호와 보안 취약점, 피드백 이력 관리 부재, 작업 과정 추적 불가 등의 문제가
-실제 음악 작업 현장에서 반복적으로 발생하고 있습니다.
-
----
-
-TrackHub은 이러한 문제를 해결하기 위해 설계된 음악 프로덕션 전용 버전 관리 및 협업 플랫폼입니다.
-
-Workspace → Project → Track → Version의 계층 구조로 작업물을 체계적으로 관리하며,
-한 번 업로드된 파일은 덮어쓰이지 않고 새로운 버전으로 불변 저장됩니다.
-
-브라우저 내 스트리밍 재생과 파형 시각화로 다운로드 없이 오디오를 미리 들을 수 있고,
-타임스탬프 기반 피드백으로 특정 구간에 정확하게 코멘트를 남길 수 있습니다.
-
-Owner, Admin, Editor, Viewer의 4단계 역할 기반 접근 제어(RBAC)와
-Supabase RLS(Row-Level Security)를 통해 데이터베이스 레벨에서 권한을 보장합니다.`,
-      year: 2025,
-      role: "풀스택 개발",
-      contribution: `Workspace → Project → Track → Version의 4단계 계층 구조를 설계하고,
-Supabase PostgreSQL과 RLS 기반의 역할 권한 모델(Owner / Admin / Editor / Viewer)을 구현했습니다.
-
-Supabase Storage의 비공개 버킷과 Signed URL을 활용해 보안 파일 저장 구조를 설계하고,
-스토리지 경로를 /workspaces/{id}/projects/{id}/tracks/{id}/versions/{id}/{fileName} 형태로 정규화했습니다.
-
-wavesurfer.js를 활용한 브라우저 내 오디오 스트리밍 재생과 파형 시각화를 구현하고,
-타임스탬프 기반 피드백 시스템으로 특정 구간에 코멘트를 남길 수 있도록 설계했습니다.
-
-Supabase Realtime을 통한 실시간 구독과 전체 활동 감사 로그
-(업로드, 다운로드, 초대, 버전 생성, 코멘트, 권한 변경)를 구현해 작업 이력을 완전하게 추적했습니다.`,
-      keyLearnings: `Git의 이머터블 버전 관리 개념을 오디오 파일에 적용하면서,
-음악 협업에 특화된 UX가 단순한 파일 공유 도구와 어떻게 다른지 명확하게 이해할 수 있었습니다.
-
-Supabase Storage와 RLS를 결합해 역할 기반 접근 제어를 구현하는 과정에서,
-데이터베이스 수준의 보안 정책이 애플리케이션 로직보다 더 신뢰할 수 있는 보안 레이어임을 확인했습니다.
-
-wavesurfer.js로 브라우저 내 오디오 재생을 구현하면서,
-대용량 오디오 파일을 스트리밍 방식으로 처리하는 것이 전통적인 다운로드 방식보다
-협업 환경에서 훨씬 효율적임을 직접 경험했습니다.`,
-      workingApproach: `TrackHub은 음악 협업 과정의 고통 지점(버전 혼란, 보안 취약, 피드백 부재)을
-구조적으로 해결하는 방식으로 설계했습니다.
-
-데이터 모델을 먼저 정의하고 계층 구조를 확정한 뒤 구현에 진입했으며,
-RLS 정책은 애플리케이션 코드와 별개로 데이터베이스 레벨에서 동작하도록 설계해
-보안을 코드 바깥에서 보장했습니다.
+사용자가 매번 "짧게", "예시 없이", "단계별로" 같은 지시를 내려야 하며, 이를 누락하면 선호도와 맞지 않는 응답이 반복됩니다.
 
 ---
 
-[인증] Supabase Auth → JWT 기반 세션 관리
-         |
-         v
-[워크스페이스 계층]
-  Workspace → Project → Track → Version
-         |
-         v
-[스토리지 & 보안]
-  Supabase Storage (비공개 버킷) + Signed URL
-  RLS 권한 정책 (Owner / Admin / Editor / Viewer)
-  경로: /workspaces/{id}/projects/{id}/tracks/{id}/versions/{id}/{file}
-         |
-         v
-[오디오 재생]
-  wavesurfer.js → 브라우저 내 스트리밍 + 파형 시각화
-  타임스탬프 피드백 → 특정 구간 코멘트
-         |
-         v
-[실시간 & 감사]
-  Supabase Realtime → 실시간 구독
-  Activity Logs → 업로드·다운로드·초대·버전 생성·코멘트·권한 변경 이력 추적`,
-      techStack: ["Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "Zustand", "TanStack Query", "wavesurfer.js", "Supabase"],
+명시적 설정(사용자가 직접 선호도를 입력하는 방식)은 초기 부담이 크고, 실제 대화 맥락에서 미세하게 달라지는 선호도를 반영하기 어렵습니다.
+
+또한 AI가 어떤 전략으로 응답하고 있는지 설명하지 않기 때문에, 사용자는 시스템을 이해하거나 의도적으로 조정할 수 없는 블랙박스 구조에 머무르게 됩니다.`,
+      year: 2026,
+      role: "풀스택 개발, AI 시스템 설계",
+      contribution: `LangGraph StateGraph로 Learning Mode 파이프라인을 구성했습니다.
+generate_candidates 노드가 3개 후보를 전략별로 병렬 생성하고, Human-in-the-loop 노드에서 사용자 선택을 기다린 뒤 evaluate_selection이 9차원 분석을 수행합니다.
+
+9차원 평가 엔진을 직접 설계했습니다. 응답 길이, 예시 밀도, 기술 깊이, 어조 직접성, 구조 복잡도, 감정 표현, 단계 분해, 비유 사용, 코드 포함 비율을 각각 독립적인 측정 함수로 구현해 선호도 벡터를 추출합니다.
+
+EMA(α=0.3) 기반 선호도 합성으로 최근 선택에 더 높은 가중치를 부여하면서도 누적 기록에서 안정된 프로파일을 유지했습니다.
+
+XAI 패널은 Vercel AI SDK의 스트리밍 응답과 함께, 어떤 선호도 차원이 현재 응답 전략에 반영됐는지 실시간으로 시각화합니다.
+
+Execution Mode는 사용자 목표를 단계별 LangGraph 체크포인트로 분해해, 단계 완료 시 자동으로 다음 코칭 흐름으로 전환되도록 구현했습니다.`,
+      keyLearnings: `사용자의 선택 행동을 학습 신호로 변환하는 방식이, 명시적 설정보다 훨씬 자연스러운 개인화를 만든다는 것을 확인했습니다. 대화 맥락이 달라질수록 선호도도 미세하게 변하며, 이를 EMA로 반영하는 구조가 유효했습니다.
+
+9차원 평가를 독립적인 함수로 분리하면, 각 차원의 가중치를 개별 조정할 수 있어 향후 새로운 선호도 차원 추가도 파이프라인 전체를 바꾸지 않고 확장할 수 있습니다.
+
+XAI 패널을 도입하면서, AI 시스템의 투명성이 사용자 신뢰와 직접 연결된다는 것을 경험했습니다. 사용자가 "왜 이렇게 응답하는지" 이해하면 더 의도적으로 시스템을 조정하고 활용하는 패턴이 나타났습니다.
+
+LangGraph의 Human-in-the-loop 패턴은 AI 응답 생성과 사용자 입력을 하나의 상태 그래프 안에서 관리할 수 있어, 복잡한 멀티스텝 인터랙션을 명확하게 모델링하는 데 효과적이었습니다.`,
+      workingApproach: `Personalized AI Assistant는 선호도를 직접 묻지 않고, 사용자의 선택 행동 자체를 학습 신호로 사용합니다.
+
+Learning Mode: 동일한 입력에 대해 3개의 응답 후보를 서로 다른 전략(간결/상세/대화체)으로 병렬 생성합니다.
+사용자가 선택한 응답을 9차원 평가 엔진으로 분석해 선호도 벡터를 추출하고, PostgreSQL에 누적 저장된 기록에서 EMA로 안정된 선호도 프로파일을 합성합니다.
+
+Normal Mode: 합성된 선호도 프로파일이 시스템 프롬프트에 자동 반영되어 응답 전략이 개인화됩니다.
+XAI 패널이 어떤 차원의 선호도가 어떻게 적용됐는지 실시간으로 투명하게 시각화합니다.
+
+Execution Mode: 사용자가 목표(예: "LangGraph 마스터하기")를 입력하면, LangGraph가 단계를 분해하고 각 단계별 코칭 흐름을 생성합니다.
+체크포인트를 통해 진행 상태를 추적하고 다음 단계로의 전환을 관리합니다.
+
+---
+
+User Input
+    |
+    v
+[Mode Router] ─────────────────────────────────────
+    |                    |                         |
+Learning Mode       Normal Mode           Execution Mode
+    |                    |                         |
+3 Candidates        Preference Profile        Goal Input
+Parallel Gen        Load & Apply           Step Decompose
+    |                    |                         |
+User Selection      Strategy Inject        Coaching Loop
+    |                    |                         |
+9D Evaluation       XAI Panel           Checkpoint Track
+    |
+Preference Vector
+    |
+EMA Synthesis (α=0.3, last 20 sessions)
+    |
+PostgreSQL Store`,
+      techStack: ["Next.js 15", "TypeScript", "Vercel AI SDK", "LangGraph", "FastAPI", "Python", "PostgreSQL", "Prisma", "Zustand", "Tailwind CSS"],
       codeSnippets: [
         {
-          title: "RLS Policy — Track Access Control",
-          language: "sql",
-          code: `-- 트랙 조회: 워크스페이스 멤버만 접근 가능
-CREATE POLICY "track_select_policy" ON tracks
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM workspace_members wm
-      JOIN projects p ON p.workspace_id = wm.workspace_id
-      WHERE p.id = tracks.project_id
-        AND wm.user_id = auth.uid()
+          title: "learning_graph.py — LangGraph Human-in-the-loop 파이프라인",
+          language: "python",
+          code: `from langgraph.graph import StateGraph, START, END
+from langgraph.checkpoint.postgres import PostgresSaver
+from typing import TypedDict
+import asyncio
+
+class PreferenceState(TypedDict):
+    user_input: str
+    candidates: list[str]
+    selected_index: int | None
+    preference_vector: dict[str, float]
+    synthesized_profile: dict[str, float]
+
+async def generate_candidates(state: PreferenceState) -> dict:
+    """3개 후보 응답 병렬 생성 — 전략별로 다른 시스템 프롬프트 적용"""
+    strategies = [
+        {"length": "concise",  "examples": False, "tone": "direct"},
+        {"length": "detailed", "examples": True,  "tone": "educational"},
+        {"length": "moderate", "examples": True,  "tone": "conversational"},
+    ]
+    candidates = await asyncio.gather(*[
+        llm.ainvoke(build_prompt(state["user_input"], s))
+        for s in strategies
+    ])
+    return {"candidates": [c.content for c in candidates]}
+
+def evaluate_selection(state: PreferenceState) -> dict:
+    """선택된 응답을 9차원으로 분석해 선호도 벡터 추출"""
+    selected = state["candidates"][state["selected_index"]]
+    return {
+        "preference_vector": {
+            "length_preference":    compute_length_score(selected),
+            "example_density":      compute_example_density(selected),
+            "technical_depth":      compute_technical_depth(selected),
+            "tone_directness":      compute_directness(selected),
+            "structure_complexity": compute_structure(selected),
+            "emotional_warmth":     compute_warmth(selected),
+            "step_decomposition":   compute_steps(selected),
+            "analogy_usage":        compute_analogies(selected),
+            "code_inclusion":       compute_code_ratio(selected),
+        }
+    }
+
+async def synthesize_memory(state: PreferenceState, config: dict) -> dict:
+    """EMA(α=0.3)로 누적 기록에서 안정된 선호도 프로파일 합성"""
+    history = await db.get_preference_history(
+        user_id=config["configurable"]["user_id"], limit=20
     )
-  );
+    alpha = 0.3
+    profile = history[0] if history else default_profile()
+    for h in history[1:]:
+        profile = {k: alpha * h[k] + (1 - alpha) * profile[k]
+                   for k in profile}
+    profile.update(state["preference_vector"])
+    await db.save_preference(config["configurable"]["user_id"], profile)
+    return {"synthesized_profile": profile}
 
--- 트랙 생성: Editor 이상 권한만 허용
-CREATE POLICY "track_insert_policy" ON tracks
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM workspace_members wm
-      JOIN projects p ON p.workspace_id = wm.workspace_id
-      WHERE p.id = tracks.project_id
-        AND wm.user_id = auth.uid()
-        AND wm.role IN ('owner', 'admin', 'editor')
-    )
-  );
+# StateGraph 정의
+builder = StateGraph(PreferenceState)
+builder.add_node("generate",   generate_candidates)
+builder.add_node("evaluate",   evaluate_selection)
+builder.add_node("synthesize", synthesize_memory)
+builder.add_edge(START,       "generate")
+builder.add_edge("generate",  "evaluate")
+builder.add_edge("evaluate",  "synthesize")
+builder.add_edge("synthesize", END)
 
--- 버전 삭제: Owner / Admin만 허용
-CREATE POLICY "version_delete_policy" ON track_versions
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM workspace_members wm
-      JOIN projects p ON p.workspace_id = wm.workspace_id
-      JOIN tracks t ON t.project_id = p.id
-      WHERE t.id = track_versions.track_id
-        AND wm.user_id = auth.uid()
-        AND wm.role IN ('owner', 'admin')
-    )
-  );`,
-          explanation: "RLS 정책을 데이터베이스 레벨에서 정의해 애플리케이션 코드와 독립적으로 보안을 보장합니다. 워크스페이스 멤버십과 역할(Owner/Admin/Editor/Viewer)을 기반으로 트랙 조회·생성·삭제 권한을 제어합니다.",
-        },
-        {
-          title: "getSignedAudioUrl — Secure Streaming",
-          language: "typescript",
-          code: `export async function getSignedAudioUrl(
-  storagePath: string,
-  expiresIn = 3600
-): Promise<string> {
-  const { data, error } = await supabase.storage
-    .from('audio-files')
-    .createSignedUrl(storagePath, expiresIn);
-
-  if (error) throw new Error(\`Signed URL 생성 실패: \${error.message}\`);
-  return data.signedUrl;
-}
-
-// wavesurfer.js 파형 시각화 + 스트리밍 재생 훅
-export function useAudioPlayer(storagePath: string) {
-  const waveformRef = useRef<HTMLDivElement>(null);
-  const wavesurferRef = useRef<WaveSurfer | null>(null);
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    if (!waveformRef.current) return;
-
-    getSignedAudioUrl(storagePath).then((signedUrl) => {
-      wavesurferRef.current = WaveSurfer.create({
-        container: waveformRef.current!,
-        waveColor: '#6366f1',
-        progressColor: '#4f46e5',
-        url: signedUrl,
-      });
-      wavesurferRef.current.on('ready', () => setIsReady(true));
-    });
-
-    return () => wavesurferRef.current?.destroy();
-  }, [storagePath]);
-
-  return { waveformRef, wavesurfer: wavesurferRef.current, isReady };
-}`,
-          explanation: "비공개 버킷의 오디오 파일을 Signed URL(1시간 만료)로 안전하게 스트리밍합니다. wavesurfer.js가 해당 URL로 직접 파형 시각화와 스트리밍 재생을 처리해 파일 다운로드 없이 브라우저에서 오디오를 미리 들을 수 있습니다.",
+graph = builder.compile(
+    checkpointer=PostgresSaver.from_conn_string(DATABASE_URL),
+    interrupt_after=["generate"],  # 사용자 선택 대기 (Human-in-the-loop)
+)`,
+          explanation: "LangGraph StateGraph로 Learning Mode 파이프라인을 구현합니다. generate_candidates가 3개 후보를 asyncio.gather로 병렬 생성하고, interrupt_after=[\"generate\"]로 Human-in-the-loop 대기를 설정합니다. evaluate_selection이 9차원 벡터를 추출하고, synthesize_memory가 EMA(α=0.3)로 최근 20회 기록에서 안정된 선호도 프로파일을 합성해 PostgreSQL에 저장합니다.",
         },
       ],
-      thumbnailUrl: "/images/projects/trackhub-hero.png",
-      heroImageUrl: "/images/projects/trackhub-hero.png",
+      thumbnailUrl: "/images/projects/personalized-ai-assistant-hero.png",
+      heroImageUrl: "/images/projects/personalized-ai-assistant-hero.png",
       isFeatured: true,
-      featuredOrder: 6,
+      featuredOrder: 0,
       isPublished: true,
-      categoryId: musicCategory.id,
+      categoryId: aiCategory.id,
     },
   });
 
-  await prisma.projectLink.deleteMany({ where: { projectId: trackhub.id } });
+  await prisma.projectLink.deleteMany({ where: { projectId: personalizedAI.id } });
   await prisma.projectLink.create({
-    data: { projectId: trackhub.id, type: "GITHUB", label: "GitHub", url: "https://github.com/devbinlog/TrackHub", order: 1 },
+    data: { projectId: personalizedAI.id, type: "GITHUB", label: "GitHub", url: "https://github.com/devbinlog/Personalized_AI_Assistant", order: 1 },
   });
 
   console.log("Seeding complete.");
