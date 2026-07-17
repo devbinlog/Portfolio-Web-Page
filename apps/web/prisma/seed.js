@@ -1318,143 +1318,120 @@ private playSnare(t: number, vel: number): void {
       title: "Personalized AI Assistant",
       summary: `사용자의 응답 선택 행동을 학습 신호로 변환해 응답 전략을 지속적으로 개인화하는 AX(AI Experience) 시스템.
 Learning Mode → 선호도 메모리 합성 → Normal Mode 자동 적용 구조로, AI가 사용자를 스스로 학습합니다.`,
-      description: `기존 AI 어시스턴트는 모든 사용자에게 동일한 응답 전략을 적용합니다.
-응답 길이, 톤, 구조, 예시 빈도, 기술 깊이 같은 선호도가 사람마다 다르지만, 시스템은 이를 학습하지 않고 매번 같은 방식으로 응답합니다.
+      description: `매번 "코드로 보여줘", "너무 길어", "단계별로 설명해줘"를 반복해야 했습니다. GPT-4를 반년 넘게 사용했지만, AI는 매번 처음 쓰는 것처럼 동일한 방식으로 응답했습니다. 개발 질문에는 코드 예제 중심, 기획 논의에는 간결한 요점 — 이 선호도를 AI는 학습하지 않았습니다.
 
-사용자가 매번 "짧게", "예시 없이", "단계별로" 같은 지시를 내려야 하며, 이를 누락하면 선호도와 맞지 않는 응답이 반복됩니다.
+기존 AI 어시스턴트와의 차이는 여기에 있습니다. 기존 시스템은 정보를 저장합니다("이 사람은 개발자야"). 이 시스템은 행동이 바뀝니다(코드 예제 중심으로 응답 전략 변경). 정보를 기억하는 것과 행동이 변하는 것은 다릅니다.
 
 ---
 
-명시적 설정(사용자가 직접 선호도를 입력하는 방식)은 초기 부담이 크고, 실제 대화 맥락에서 미세하게 달라지는 선호도를 반영하기 어렵습니다.
+선호도를 직접 설정하는 방식은 초기 부담이 크고, 대화 맥락마다 미세하게 달라지는 선호도를 반영하기 어렵습니다.
 
-또한 AI가 어떤 전략으로 응답하고 있는지 설명하지 않기 때문에, 사용자는 시스템을 이해하거나 의도적으로 조정할 수 없는 블랙박스 구조에 머무르게 됩니다.`,
+Learning Mode의 API 3배 호출 비용, Vercel 서버리스 환경의 Python 미지원(LangGraph를 독립 서버로 분리해 해결), LLM 자기 참조 평가의 신뢰도 문제(18차원 → 9차원으로 축소) — 이 트레이드오프들이 설계 과정에서 가장 어려운 결정이었습니다.`,
       year: 2026,
       role: "풀스택 개발, AI 시스템 설계",
-      contribution: `LangGraph StateGraph로 Learning Mode 파이프라인을 구성했습니다.
-generate_candidates 노드가 3개 후보를 전략별로 병렬 생성하고, Human-in-the-loop 노드에서 사용자 선택을 기다린 뒤 evaluate_selection이 9차원 분석을 수행합니다.
+      contribution: `/api/chat 12단계 파이프라인 전체를 설계했습니다. Task Analyzer가 13가지 유형으로 입력을 분류하고, Candidate Generator가 5개 전략으로 Promise.all 병렬 생성합니다. 응답 스트리밍 완료 후 XAI 생성과 detectSuggestions()를 비동기 체인으로 분리해, 사이드이펙트가 사용자 체감 응답 속도에 영향을 주지 않도록 설계했습니다.
 
-9차원 평가 엔진을 직접 설계했습니다. 응답 길이, 예시 밀도, 기술 깊이, 어조 직접성, 구조 복잡도, 감정 표현, 단계 분해, 비유 사용, 코드 포함 비율을 각각 독립적인 측정 함수로 구현해 선호도 벡터를 추출합니다.
+Preference Memory 합성을 LLM 기반으로 구현했습니다. 선호도 로그 5개 이상이 쌓이면 LLM이 전체 로그를 분석해 preferredTone, preferredLength, preferredStrategies, avoidedPatterns를 포함한 자연어 요약으로 합성합니다. 50개 로그를 그대로 프롬프트에 넣는 것보다 LLM이 합성한 요약 1개가 효과와 비용 모두에서 유리합니다.
 
-EMA(α=0.3) 기반 선호도 합성으로 최근 선택에 더 높은 가중치를 부여하면서도 누적 기록에서 안정된 프로파일을 유지했습니다.
+Evaluation Engine을 18차원에서 9차원으로 줄이는 설계 결정을 내렸습니다. LLM에게 LLM 응답의 사실 정확성을 평가하게 하는 것은 자기 참조 편향이 발생합니다. 신뢰 있게 측정 가능한 9개 차원(structure, readability, specificity, completeness, professionalism, formatting, preferenceMatch, taskMatch, overall)만 남겨 평가 노이즈를 제거했습니다.
 
-XAI 패널은 Vercel AI SDK의 스트리밍 응답과 함께, 어떤 선호도 차원이 현재 응답 전략에 반영됐는지 실시간으로 시각화합니다.
+Execution Mode의 목표 격리 구조를 설계했습니다. Zustand 전역 상태로만 관리했을 때 A 채팅방 목표가 B 채팅방에도 주입되는 문제를 발견하고, conv_executionGoal_{conversationId} 키로 localStorage에 대화 단위 격리 저장하는 방식으로 해결했습니다.
 
-Execution Mode는 사용자 목표를 단계별 LangGraph 체크포인트로 분해해, 단계 완료 시 자동으로 다음 코칭 흐름으로 전환되도록 구현했습니다.`,
-      keyLearnings: `사용자의 선택 행동을 학습 신호로 변환하는 방식이, 명시적 설정보다 훨씬 자연스러운 개인화를 만든다는 것을 확인했습니다. 대화 맥락이 달라질수록 선호도도 미세하게 변하며, 이를 EMA로 반영하는 구조가 유효했습니다.
+resolveUserContext()로 인증 상태 전환을 처리했습니다. NextAuth 세션 → 쿠키 세션 ID → anonymous 폴백의 3단계로, 로그인 상태가 바뀌어도 동일한 사용자로 선호도 데이터가 유지됩니다.`,
+      keyLearnings: `AX는 기능이 아니라 설계입니다. 스트리밍 속도, 후보 선택 인터페이스, XAI 투명성 모두가 사용자 경험의 일부입니다. AI 챗봇을 만드는 것과 AI 경험 시스템을 설계하는 것은 다릅니다.
 
-9차원 평가를 독립적인 함수로 분리하면, 각 차원의 가중치를 개별 조정할 수 있어 향후 새로운 선호도 차원 추가도 파이프라인 전체를 바꾸지 않고 확장할 수 있습니다.
+개인화는 정보 저장이 아니라 행동 변화입니다. "나는 개발자야"를 기억하는 것과 코드 예제 중심으로 응답 전략이 바뀌는 것은 다릅니다. 전략이 바뀌어야 진짜 개인화입니다.
 
-XAI 패널을 도입하면서, AI 시스템의 투명성이 사용자 신뢰와 직접 연결된다는 것을 경험했습니다. 사용자가 "왜 이렇게 응답하는지" 이해하면 더 의도적으로 시스템을 조정하고 활용하는 패턴이 나타났습니다.
+평가를 설계하는 것이 가장 어렵습니다. 18차원에서 9차원으로 줄이는 과정에서, 측정 가능한 기준과 측정 불가능한 기준을 구분하는 것 자체가 핵심 설계 결정이었습니다. 적은 차원, 더 정확한 평가가 더 많은 차원, 낮은 신뢰도보다 낫습니다.
 
-LangGraph의 Human-in-the-loop 패턴은 AI 응답 생성과 사용자 입력을 하나의 상태 그래프 안에서 관리할 수 있어, 복잡한 멀티스텝 인터랙션을 명확하게 모델링하는 데 효과적이었습니다.`,
-      workingApproach: `Personalized AI Assistant는 선호도를 직접 묻지 않고, 사용자의 선택 행동 자체를 학습 신호로 사용합니다.
+비동기 사이드이펙트 설계가 UX를 결정합니다. 어떤 작업을 응답 경로에 넣고 어떤 작업을 비동기로 분리할지가 사용자 체감 응답 속도를 결정합니다. 스트리밍 완료 후 XAI 생성과 적응형 제안 탐지를 분리한 것이 이 판단에서 나왔습니다.
 
-Learning Mode: 동일한 입력에 대해 3개의 응답 후보를 서로 다른 전략(간결/상세/대화체)으로 병렬 생성합니다.
-사용자가 선택한 응답을 9차원 평가 엔진으로 분석해 선호도 벡터를 추출하고, PostgreSQL에 누적 저장된 기록에서 EMA로 안정된 선호도 프로파일을 합성합니다.
+목표 기반 AI 설계는 단발성 QA 설계와 근본적으로 다릅니다. 대화와 대화를 이어주는 구조가 코칭과 QA의 차이입니다.`,
+      workingApproach: `사용자의 선택 행동 자체를 학습 신호로 변환합니다. 직접 묻지 않고, 인터페이스가 데이터 수집 채널이 됩니다.
 
-Normal Mode: 합성된 선호도 프로파일이 시스템 프롬프트에 자동 반영되어 응답 전략이 개인화됩니다.
-XAI 패널이 어떤 차원의 선호도가 어떻게 적용됐는지 실시간으로 투명하게 시각화합니다.
+Learning Mode: 동일한 입력에 3개 응답 후보를 5가지 전략(STRUCTURED / CONCISE / PROFESSIONAL / ANALYTICAL / CONVERSATIONAL)으로 병렬 생성합니다. 사용자 선택 → /api/preferences가 선호도 로그 저장 → 로그 5개 이상이면 LLM이 전체 로그를 분석해 사용자 프로파일 합성 → 다음 대화 시스템 프롬프트 [MEMORY] 블록에 자동 주입.
 
-Execution Mode: 사용자가 목표(예: "LangGraph 마스터하기")를 입력하면, LangGraph가 단계를 분해하고 각 단계별 코칭 흐름을 생성합니다.
-체크포인트를 통해 진행 상태를 추적하고 다음 단계로의 전환을 관리합니다.
+Normal Mode: 합성된 선호도 프로파일 기반으로 응답이 자동 개인화됩니다.
+최종 점수 = 평가 점수(0~1) + 선호도 메모리 가중치(0~0.3)
+
+Execution Mode: 목표 입력 → Journey Planner(LLM)가 4~8단계 여정 자동 설계 → 각 대화에서 Progress Engine이 현재 단계 컨텍스트를 [EXECUTION] 블록으로 주입 → AI가 여정 맥락을 유지하며 코칭. 목표는 conv_executionGoal_{conversationId} 키로 대화 단위 격리 저장.
 
 ---
 
-User Input
-    |
-    v
-[Mode Router] ─────────────────────────────────────
-    |                    |                         |
-Learning Mode       Normal Mode           Execution Mode
-    |                    |                         |
-3 Candidates        Preference Profile        Goal Input
-Parallel Gen        Load & Apply           Step Decompose
-    |                    |                         |
-User Selection      Strategy Inject        Coaching Loop
-    |                    |                         |
-9D Evaluation       XAI Panel           Checkpoint Track
-    |
-Preference Vector
-    |
-EMA Synthesis (α=0.3, last 20 sessions)
-    |
-PostgreSQL Store`,
+/api/chat 12단계 파이프라인              buildSystemPrompt 8-layer 조립
+
+resolveUserContext()                    [1] BASE      페르소나 지시사항
+  → loadPreferenceMemory()             [2] MEMORY    학습된 선호도 요약
+  → Task Analyzer (13가지 유형)        [3] TASK      태스크 유형 + 복잡도
+  → Persona Selector (5가지)           [4] FLOW      활성 플로우 + 단계 지시
+  → Candidate Generator (×5, 병렬)    [5] EXECUTION 실행 목표 + 진행 단계
+  → Evaluation Engine (9차원, 0~1)    [6] SEARCH    웹 검색 결과
+  → Ranker                             [7] ONBOARDING 스타일 + 포맷 규칙
+  → buildSystemPrompt() [8-layer]     [8] STRATEGY  응답 전략 힌트
+  → streamText() → SSE 스트리밍
+  → [비동기] XAI 생성 → DB
+  → [비동기] detectSuggestions() → DB
+
+규모: API Routes 38개 이상 / DB 테이블 24개 / LangGraph 노드 12개 / 구현 Phase 14단계`,
       techStack: ["Next.js 15", "TypeScript", "Vercel AI SDK", "LangGraph", "FastAPI", "Python", "PostgreSQL", "Prisma", "Zustand", "Tailwind CSS"],
       codeSnippets: [
         {
-          title: "learning_graph.py — LangGraph Human-in-the-loop 파이프라인",
-          language: "python",
-          code: `from langgraph.graph import StateGraph, START, END
-from langgraph.checkpoint.postgres import PostgresSaver
-from typing import TypedDict
-import asyncio
+          title: "preferences/route.ts — 선호도 로그 저장 & LLM 메모리 합성",
+          language: "typescript",
+          code: `// /api/preferences/route.ts
+export async function POST(req: Request) {
+  const { selectedIndex, candidates } = await req.json()
+  const userCtx = await resolveUserContext(req)
 
-class PreferenceState(TypedDict):
-    user_input: str
-    candidates: list[str]
-    selected_index: int | None
-    preference_vector: dict[str, float]
-    synthesized_profile: dict[str, float]
+  // 선호도 로그 저장 (선택된 전략 + 거부된 전략)
+  await db.preferenceLog.create({
+    data: {
+      userId: userCtx.userId,
+      selectedStrategy: candidates[selectedIndex].strategy,
+      taskType: candidates[selectedIndex].taskType,
+      rejectedStrategies: candidates
+        .filter((_, i) => i !== selectedIndex)
+        .map((c) => c.strategy),
+    },
+  })
 
-async def generate_candidates(state: PreferenceState) -> dict:
-    """3개 후보 응답 병렬 생성 — 전략별로 다른 시스템 프롬프트 적용"""
-    strategies = [
-        {"length": "concise",  "examples": False, "tone": "direct"},
-        {"length": "detailed", "examples": True,  "tone": "educational"},
-        {"length": "moderate", "examples": True,  "tone": "conversational"},
-    ]
-    candidates = await asyncio.gather(*[
-        llm.ainvoke(build_prompt(state["user_input"], s))
-        for s in strategies
-    ])
-    return {"candidates": [c.content for c in candidates]}
+  // 로그 임계치(5개) 이상이면 LLM 메모리 합성 트리거
+  const logCount = await db.preferenceLog.count({
+    where: { userId: userCtx.userId },
+  })
 
-def evaluate_selection(state: PreferenceState) -> dict:
-    """선택된 응답을 9차원으로 분석해 선호도 벡터 추출"""
-    selected = state["candidates"][state["selected_index"]]
-    return {
-        "preference_vector": {
-            "length_preference":    compute_length_score(selected),
-            "example_density":      compute_example_density(selected),
-            "technical_depth":      compute_technical_depth(selected),
-            "tone_directness":      compute_directness(selected),
-            "structure_complexity": compute_structure(selected),
-            "emotional_warmth":     compute_warmth(selected),
-            "step_decomposition":   compute_steps(selected),
-            "analogy_usage":        compute_analogies(selected),
-            "code_inclusion":       compute_code_ratio(selected),
-        }
-    }
+  if (logCount >= SYNTHESIS_THRESHOLD) {
+    const recentLogs = await db.preferenceLog.findMany({
+      where: { userId: userCtx.userId },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    })
 
-async def synthesize_memory(state: PreferenceState, config: dict) -> dict:
-    """EMA(α=0.3)로 누적 기록에서 안정된 선호도 프로파일 합성"""
-    history = await db.get_preference_history(
-        user_id=config["configurable"]["user_id"], limit=20
-    )
-    alpha = 0.3
-    profile = history[0] if history else default_profile()
-    for h in history[1:]:
-        profile = {k: alpha * h[k] + (1 - alpha) * profile[k]
-                   for k in profile}
-    profile.update(state["preference_vector"])
-    await db.save_preference(config["configurable"]["user_id"], profile)
-    return {"synthesized_profile": profile}
+    // LLM이 전체 로그를 분석해 사용자 프로파일 합성
+    // (로그 50개를 그대로 넣는 것보다 합성된 요약 1개가 효과·비용 모두 유리)
+    const { object: profile } = await generateObject({
+      model: openai('gpt-4o-mini'),
+      schema: z.object({
+        preferredTone: z.enum(['casual', 'professional', 'academic']),
+        preferredLength: z.enum(['concise', 'moderate', 'detailed']),
+        preferredStrategies: z.array(z.string()),
+        avoidedPatterns: z.array(z.string()),
+        rawSummary: z.string(),
+      }),
+      prompt: \`다음 선호도 로그를 분석해 사용자 응답 프로파일을 합성하세요:\\n\${JSON.stringify(recentLogs)}\`,
+    })
 
-# StateGraph 정의
-builder = StateGraph(PreferenceState)
-builder.add_node("generate",   generate_candidates)
-builder.add_node("evaluate",   evaluate_selection)
-builder.add_node("synthesize", synthesize_memory)
-builder.add_edge(START,       "generate")
-builder.add_edge("generate",  "evaluate")
-builder.add_edge("evaluate",  "synthesize")
-builder.add_edge("synthesize", END)
+    // 합성된 프로파일 → 다음 대화 buildSystemPrompt() [MEMORY] 블록에 주입
+    await db.preferenceMemory.upsert({
+      where: { userId: userCtx.userId },
+      update: { ...profile, synthesizedAt: new Date() },
+      create: { userId: userCtx.userId, ...profile },
+    })
+  }
 
-graph = builder.compile(
-    checkpointer=PostgresSaver.from_conn_string(DATABASE_URL),
-    interrupt_after=["generate"],  # 사용자 선택 대기 (Human-in-the-loop)
-)`,
-          explanation: "LangGraph StateGraph로 Learning Mode 파이프라인을 구현합니다. generate_candidates가 3개 후보를 asyncio.gather로 병렬 생성하고, interrupt_after=[\"generate\"]로 Human-in-the-loop 대기를 설정합니다. evaluate_selection이 9차원 벡터를 추출하고, synthesize_memory가 EMA(α=0.3)로 최근 20회 기록에서 안정된 선호도 프로파일을 합성해 PostgreSQL에 저장합니다.",
+  return Response.json({ ok: true })
+}`,
+          explanation: "사용자가 3개 후보 중 하나를 선택하면 선택된 전략과 거부된 전략이 로그로 저장됩니다. 로그 5개 이상이 쌓이면 LLM이 최근 50개 로그를 분석해 preferredTone, preferredLength, preferredStrategies, avoidedPatterns를 자연어 요약으로 합성합니다. 합성된 프로파일은 다음 대화의 buildSystemPrompt() [MEMORY] 블록에 주입되어, 사용자가 명시적으로 지시하지 않아도 AI가 이미 알고 있는 상태가 만들어집니다.",
         },
       ],
       thumbnailUrl: "/images/projects/personalized-ai-assistant-hero.png",
@@ -1469,143 +1446,120 @@ graph = builder.compile(
       slug: "personalized-ai-assistant",
       summary: `사용자의 응답 선택 행동을 학습 신호로 변환해 응답 전략을 지속적으로 개인화하는 AX(AI Experience) 시스템.
 Learning Mode → 선호도 메모리 합성 → Normal Mode 자동 적용 구조로, AI가 사용자를 스스로 학습합니다.`,
-      description: `기존 AI 어시스턴트는 모든 사용자에게 동일한 응답 전략을 적용합니다.
-응답 길이, 톤, 구조, 예시 빈도, 기술 깊이 같은 선호도가 사람마다 다르지만, 시스템은 이를 학습하지 않고 매번 같은 방식으로 응답합니다.
+      description: `매번 "코드로 보여줘", "너무 길어", "단계별로 설명해줘"를 반복해야 했습니다. GPT-4를 반년 넘게 사용했지만, AI는 매번 처음 쓰는 것처럼 동일한 방식으로 응답했습니다. 개발 질문에는 코드 예제 중심, 기획 논의에는 간결한 요점 — 이 선호도를 AI는 학습하지 않았습니다.
 
-사용자가 매번 "짧게", "예시 없이", "단계별로" 같은 지시를 내려야 하며, 이를 누락하면 선호도와 맞지 않는 응답이 반복됩니다.
+기존 AI 어시스턴트와의 차이는 여기에 있습니다. 기존 시스템은 정보를 저장합니다("이 사람은 개발자야"). 이 시스템은 행동이 바뀝니다(코드 예제 중심으로 응답 전략 변경). 정보를 기억하는 것과 행동이 변하는 것은 다릅니다.
 
 ---
 
-명시적 설정(사용자가 직접 선호도를 입력하는 방식)은 초기 부담이 크고, 실제 대화 맥락에서 미세하게 달라지는 선호도를 반영하기 어렵습니다.
+선호도를 직접 설정하는 방식은 초기 부담이 크고, 대화 맥락마다 미세하게 달라지는 선호도를 반영하기 어렵습니다.
 
-또한 AI가 어떤 전략으로 응답하고 있는지 설명하지 않기 때문에, 사용자는 시스템을 이해하거나 의도적으로 조정할 수 없는 블랙박스 구조에 머무르게 됩니다.`,
+Learning Mode의 API 3배 호출 비용, Vercel 서버리스 환경의 Python 미지원(LangGraph를 독립 서버로 분리해 해결), LLM 자기 참조 평가의 신뢰도 문제(18차원 → 9차원으로 축소) — 이 트레이드오프들이 설계 과정에서 가장 어려운 결정이었습니다.`,
       year: 2026,
       role: "풀스택 개발, AI 시스템 설계",
-      contribution: `LangGraph StateGraph로 Learning Mode 파이프라인을 구성했습니다.
-generate_candidates 노드가 3개 후보를 전략별로 병렬 생성하고, Human-in-the-loop 노드에서 사용자 선택을 기다린 뒤 evaluate_selection이 9차원 분석을 수행합니다.
+      contribution: `/api/chat 12단계 파이프라인 전체를 설계했습니다. Task Analyzer가 13가지 유형으로 입력을 분류하고, Candidate Generator가 5개 전략으로 Promise.all 병렬 생성합니다. 응답 스트리밍 완료 후 XAI 생성과 detectSuggestions()를 비동기 체인으로 분리해, 사이드이펙트가 사용자 체감 응답 속도에 영향을 주지 않도록 설계했습니다.
 
-9차원 평가 엔진을 직접 설계했습니다. 응답 길이, 예시 밀도, 기술 깊이, 어조 직접성, 구조 복잡도, 감정 표현, 단계 분해, 비유 사용, 코드 포함 비율을 각각 독립적인 측정 함수로 구현해 선호도 벡터를 추출합니다.
+Preference Memory 합성을 LLM 기반으로 구현했습니다. 선호도 로그 5개 이상이 쌓이면 LLM이 전체 로그를 분석해 preferredTone, preferredLength, preferredStrategies, avoidedPatterns를 포함한 자연어 요약으로 합성합니다. 50개 로그를 그대로 프롬프트에 넣는 것보다 LLM이 합성한 요약 1개가 효과와 비용 모두에서 유리합니다.
 
-EMA(α=0.3) 기반 선호도 합성으로 최근 선택에 더 높은 가중치를 부여하면서도 누적 기록에서 안정된 프로파일을 유지했습니다.
+Evaluation Engine을 18차원에서 9차원으로 줄이는 설계 결정을 내렸습니다. LLM에게 LLM 응답의 사실 정확성을 평가하게 하는 것은 자기 참조 편향이 발생합니다. 신뢰 있게 측정 가능한 9개 차원(structure, readability, specificity, completeness, professionalism, formatting, preferenceMatch, taskMatch, overall)만 남겨 평가 노이즈를 제거했습니다.
 
-XAI 패널은 Vercel AI SDK의 스트리밍 응답과 함께, 어떤 선호도 차원이 현재 응답 전략에 반영됐는지 실시간으로 시각화합니다.
+Execution Mode의 목표 격리 구조를 설계했습니다. Zustand 전역 상태로만 관리했을 때 A 채팅방 목표가 B 채팅방에도 주입되는 문제를 발견하고, conv_executionGoal_{conversationId} 키로 localStorage에 대화 단위 격리 저장하는 방식으로 해결했습니다.
 
-Execution Mode는 사용자 목표를 단계별 LangGraph 체크포인트로 분해해, 단계 완료 시 자동으로 다음 코칭 흐름으로 전환되도록 구현했습니다.`,
-      keyLearnings: `사용자의 선택 행동을 학습 신호로 변환하는 방식이, 명시적 설정보다 훨씬 자연스러운 개인화를 만든다는 것을 확인했습니다. 대화 맥락이 달라질수록 선호도도 미세하게 변하며, 이를 EMA로 반영하는 구조가 유효했습니다.
+resolveUserContext()로 인증 상태 전환을 처리했습니다. NextAuth 세션 → 쿠키 세션 ID → anonymous 폴백의 3단계로, 로그인 상태가 바뀌어도 동일한 사용자로 선호도 데이터가 유지됩니다.`,
+      keyLearnings: `AX는 기능이 아니라 설계입니다. 스트리밍 속도, 후보 선택 인터페이스, XAI 투명성 모두가 사용자 경험의 일부입니다. AI 챗봇을 만드는 것과 AI 경험 시스템을 설계하는 것은 다릅니다.
 
-9차원 평가를 독립적인 함수로 분리하면, 각 차원의 가중치를 개별 조정할 수 있어 향후 새로운 선호도 차원 추가도 파이프라인 전체를 바꾸지 않고 확장할 수 있습니다.
+개인화는 정보 저장이 아니라 행동 변화입니다. "나는 개발자야"를 기억하는 것과 코드 예제 중심으로 응답 전략이 바뀌는 것은 다릅니다. 전략이 바뀌어야 진짜 개인화입니다.
 
-XAI 패널을 도입하면서, AI 시스템의 투명성이 사용자 신뢰와 직접 연결된다는 것을 경험했습니다. 사용자가 "왜 이렇게 응답하는지" 이해하면 더 의도적으로 시스템을 조정하고 활용하는 패턴이 나타났습니다.
+평가를 설계하는 것이 가장 어렵습니다. 18차원에서 9차원으로 줄이는 과정에서, 측정 가능한 기준과 측정 불가능한 기준을 구분하는 것 자체가 핵심 설계 결정이었습니다. 적은 차원, 더 정확한 평가가 더 많은 차원, 낮은 신뢰도보다 낫습니다.
 
-LangGraph의 Human-in-the-loop 패턴은 AI 응답 생성과 사용자 입력을 하나의 상태 그래프 안에서 관리할 수 있어, 복잡한 멀티스텝 인터랙션을 명확하게 모델링하는 데 효과적이었습니다.`,
-      workingApproach: `Personalized AI Assistant는 선호도를 직접 묻지 않고, 사용자의 선택 행동 자체를 학습 신호로 사용합니다.
+비동기 사이드이펙트 설계가 UX를 결정합니다. 어떤 작업을 응답 경로에 넣고 어떤 작업을 비동기로 분리할지가 사용자 체감 응답 속도를 결정합니다. 스트리밍 완료 후 XAI 생성과 적응형 제안 탐지를 분리한 것이 이 판단에서 나왔습니다.
 
-Learning Mode: 동일한 입력에 대해 3개의 응답 후보를 서로 다른 전략(간결/상세/대화체)으로 병렬 생성합니다.
-사용자가 선택한 응답을 9차원 평가 엔진으로 분석해 선호도 벡터를 추출하고, PostgreSQL에 누적 저장된 기록에서 EMA로 안정된 선호도 프로파일을 합성합니다.
+목표 기반 AI 설계는 단발성 QA 설계와 근본적으로 다릅니다. 대화와 대화를 이어주는 구조가 코칭과 QA의 차이입니다.`,
+      workingApproach: `사용자의 선택 행동 자체를 학습 신호로 변환합니다. 직접 묻지 않고, 인터페이스가 데이터 수집 채널이 됩니다.
 
-Normal Mode: 합성된 선호도 프로파일이 시스템 프롬프트에 자동 반영되어 응답 전략이 개인화됩니다.
-XAI 패널이 어떤 차원의 선호도가 어떻게 적용됐는지 실시간으로 투명하게 시각화합니다.
+Learning Mode: 동일한 입력에 3개 응답 후보를 5가지 전략(STRUCTURED / CONCISE / PROFESSIONAL / ANALYTICAL / CONVERSATIONAL)으로 병렬 생성합니다. 사용자 선택 → /api/preferences가 선호도 로그 저장 → 로그 5개 이상이면 LLM이 전체 로그를 분석해 사용자 프로파일 합성 → 다음 대화 시스템 프롬프트 [MEMORY] 블록에 자동 주입.
 
-Execution Mode: 사용자가 목표(예: "LangGraph 마스터하기")를 입력하면, LangGraph가 단계를 분해하고 각 단계별 코칭 흐름을 생성합니다.
-체크포인트를 통해 진행 상태를 추적하고 다음 단계로의 전환을 관리합니다.
+Normal Mode: 합성된 선호도 프로파일 기반으로 응답이 자동 개인화됩니다.
+최종 점수 = 평가 점수(0~1) + 선호도 메모리 가중치(0~0.3)
+
+Execution Mode: 목표 입력 → Journey Planner(LLM)가 4~8단계 여정 자동 설계 → 각 대화에서 Progress Engine이 현재 단계 컨텍스트를 [EXECUTION] 블록으로 주입 → AI가 여정 맥락을 유지하며 코칭. 목표는 conv_executionGoal_{conversationId} 키로 대화 단위 격리 저장.
 
 ---
 
-User Input
-    |
-    v
-[Mode Router] ─────────────────────────────────────
-    |                    |                         |
-Learning Mode       Normal Mode           Execution Mode
-    |                    |                         |
-3 Candidates        Preference Profile        Goal Input
-Parallel Gen        Load & Apply           Step Decompose
-    |                    |                         |
-User Selection      Strategy Inject        Coaching Loop
-    |                    |                         |
-9D Evaluation       XAI Panel           Checkpoint Track
-    |
-Preference Vector
-    |
-EMA Synthesis (α=0.3, last 20 sessions)
-    |
-PostgreSQL Store`,
+/api/chat 12단계 파이프라인              buildSystemPrompt 8-layer 조립
+
+resolveUserContext()                    [1] BASE      페르소나 지시사항
+  → loadPreferenceMemory()             [2] MEMORY    학습된 선호도 요약
+  → Task Analyzer (13가지 유형)        [3] TASK      태스크 유형 + 복잡도
+  → Persona Selector (5가지)           [4] FLOW      활성 플로우 + 단계 지시
+  → Candidate Generator (×5, 병렬)    [5] EXECUTION 실행 목표 + 진행 단계
+  → Evaluation Engine (9차원, 0~1)    [6] SEARCH    웹 검색 결과
+  → Ranker                             [7] ONBOARDING 스타일 + 포맷 규칙
+  → buildSystemPrompt() [8-layer]     [8] STRATEGY  응답 전략 힌트
+  → streamText() → SSE 스트리밍
+  → [비동기] XAI 생성 → DB
+  → [비동기] detectSuggestions() → DB
+
+규모: API Routes 38개 이상 / DB 테이블 24개 / LangGraph 노드 12개 / 구현 Phase 14단계`,
       techStack: ["Next.js 15", "TypeScript", "Vercel AI SDK", "LangGraph", "FastAPI", "Python", "PostgreSQL", "Prisma", "Zustand", "Tailwind CSS"],
       codeSnippets: [
         {
-          title: "learning_graph.py — LangGraph Human-in-the-loop 파이프라인",
-          language: "python",
-          code: `from langgraph.graph import StateGraph, START, END
-from langgraph.checkpoint.postgres import PostgresSaver
-from typing import TypedDict
-import asyncio
+          title: "preferences/route.ts — 선호도 로그 저장 & LLM 메모리 합성",
+          language: "typescript",
+          code: `// /api/preferences/route.ts
+export async function POST(req: Request) {
+  const { selectedIndex, candidates } = await req.json()
+  const userCtx = await resolveUserContext(req)
 
-class PreferenceState(TypedDict):
-    user_input: str
-    candidates: list[str]
-    selected_index: int | None
-    preference_vector: dict[str, float]
-    synthesized_profile: dict[str, float]
+  // 선호도 로그 저장 (선택된 전략 + 거부된 전략)
+  await db.preferenceLog.create({
+    data: {
+      userId: userCtx.userId,
+      selectedStrategy: candidates[selectedIndex].strategy,
+      taskType: candidates[selectedIndex].taskType,
+      rejectedStrategies: candidates
+        .filter((_, i) => i !== selectedIndex)
+        .map((c) => c.strategy),
+    },
+  })
 
-async def generate_candidates(state: PreferenceState) -> dict:
-    """3개 후보 응답 병렬 생성 — 전략별로 다른 시스템 프롬프트 적용"""
-    strategies = [
-        {"length": "concise",  "examples": False, "tone": "direct"},
-        {"length": "detailed", "examples": True,  "tone": "educational"},
-        {"length": "moderate", "examples": True,  "tone": "conversational"},
-    ]
-    candidates = await asyncio.gather(*[
-        llm.ainvoke(build_prompt(state["user_input"], s))
-        for s in strategies
-    ])
-    return {"candidates": [c.content for c in candidates]}
+  // 로그 임계치(5개) 이상이면 LLM 메모리 합성 트리거
+  const logCount = await db.preferenceLog.count({
+    where: { userId: userCtx.userId },
+  })
 
-def evaluate_selection(state: PreferenceState) -> dict:
-    """선택된 응답을 9차원으로 분석해 선호도 벡터 추출"""
-    selected = state["candidates"][state["selected_index"]]
-    return {
-        "preference_vector": {
-            "length_preference":    compute_length_score(selected),
-            "example_density":      compute_example_density(selected),
-            "technical_depth":      compute_technical_depth(selected),
-            "tone_directness":      compute_directness(selected),
-            "structure_complexity": compute_structure(selected),
-            "emotional_warmth":     compute_warmth(selected),
-            "step_decomposition":   compute_steps(selected),
-            "analogy_usage":        compute_analogies(selected),
-            "code_inclusion":       compute_code_ratio(selected),
-        }
-    }
+  if (logCount >= SYNTHESIS_THRESHOLD) {
+    const recentLogs = await db.preferenceLog.findMany({
+      where: { userId: userCtx.userId },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    })
 
-async def synthesize_memory(state: PreferenceState, config: dict) -> dict:
-    """EMA(α=0.3)로 누적 기록에서 안정된 선호도 프로파일 합성"""
-    history = await db.get_preference_history(
-        user_id=config["configurable"]["user_id"], limit=20
-    )
-    alpha = 0.3
-    profile = history[0] if history else default_profile()
-    for h in history[1:]:
-        profile = {k: alpha * h[k] + (1 - alpha) * profile[k]
-                   for k in profile}
-    profile.update(state["preference_vector"])
-    await db.save_preference(config["configurable"]["user_id"], profile)
-    return {"synthesized_profile": profile}
+    // LLM이 전체 로그를 분석해 사용자 프로파일 합성
+    // (로그 50개를 그대로 넣는 것보다 합성된 요약 1개가 효과·비용 모두 유리)
+    const { object: profile } = await generateObject({
+      model: openai('gpt-4o-mini'),
+      schema: z.object({
+        preferredTone: z.enum(['casual', 'professional', 'academic']),
+        preferredLength: z.enum(['concise', 'moderate', 'detailed']),
+        preferredStrategies: z.array(z.string()),
+        avoidedPatterns: z.array(z.string()),
+        rawSummary: z.string(),
+      }),
+      prompt: \`다음 선호도 로그를 분석해 사용자 응답 프로파일을 합성하세요:\\n\${JSON.stringify(recentLogs)}\`,
+    })
 
-# StateGraph 정의
-builder = StateGraph(PreferenceState)
-builder.add_node("generate",   generate_candidates)
-builder.add_node("evaluate",   evaluate_selection)
-builder.add_node("synthesize", synthesize_memory)
-builder.add_edge(START,       "generate")
-builder.add_edge("generate",  "evaluate")
-builder.add_edge("evaluate",  "synthesize")
-builder.add_edge("synthesize", END)
+    // 합성된 프로파일 → 다음 대화 buildSystemPrompt() [MEMORY] 블록에 주입
+    await db.preferenceMemory.upsert({
+      where: { userId: userCtx.userId },
+      update: { ...profile, synthesizedAt: new Date() },
+      create: { userId: userCtx.userId, ...profile },
+    })
+  }
 
-graph = builder.compile(
-    checkpointer=PostgresSaver.from_conn_string(DATABASE_URL),
-    interrupt_after=["generate"],  # 사용자 선택 대기 (Human-in-the-loop)
-)`,
-          explanation: "LangGraph StateGraph로 Learning Mode 파이프라인을 구현합니다. generate_candidates가 3개 후보를 asyncio.gather로 병렬 생성하고, interrupt_after=[\"generate\"]로 Human-in-the-loop 대기를 설정합니다. evaluate_selection이 9차원 벡터를 추출하고, synthesize_memory가 EMA(α=0.3)로 최근 20회 기록에서 안정된 선호도 프로파일을 합성해 PostgreSQL에 저장합니다.",
+  return Response.json({ ok: true })
+}`,
+          explanation: "사용자가 3개 후보 중 하나를 선택하면 선택된 전략과 거부된 전략이 로그로 저장됩니다. 로그 5개 이상이 쌓이면 LLM이 최근 50개 로그를 분석해 preferredTone, preferredLength, preferredStrategies, avoidedPatterns를 자연어 요약으로 합성합니다. 합성된 프로파일은 다음 대화의 buildSystemPrompt() [MEMORY] 블록에 주입되어, 사용자가 명시적으로 지시하지 않아도 AI가 이미 알고 있는 상태가 만들어집니다.",
         },
       ],
       thumbnailUrl: "/images/projects/personalized-ai-assistant-hero.png",
@@ -1618,8 +1572,11 @@ graph = builder.compile(
   });
 
   await prisma.projectLink.deleteMany({ where: { projectId: personalizedAI.id } });
-  await prisma.projectLink.create({
-    data: { projectId: personalizedAI.id, type: "GITHUB", label: "GitHub", url: "https://github.com/devbinlog/Personalized_AI_Assistant", order: 1 },
+  await prisma.projectLink.createMany({
+    data: [
+      { projectId: personalizedAI.id, type: "GITHUB", label: "GitHub", url: "https://github.com/devbinlog/Personalized_AI_Assistant", order: 1 },
+      { projectId: personalizedAI.id, type: "DEMO", label: "Live Demo", url: "https://frontend-mu-liard-59.vercel.app", order: 2 },
+    ],
   });
 
   console.log("Seeding complete.");
