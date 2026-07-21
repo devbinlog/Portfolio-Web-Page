@@ -111,7 +111,7 @@ export function ProjectsPageHeader({ count }: ProjectsPageHeaderProps) {
               className="text-xs font-mono text-text-disabled whitespace-nowrap px-4"
             >
               {tech}
-              <span className="ml-4 text-border-strong">·</span>
+              <span className="ml-4 text-border-strong">/</span>
             </span>
           ))}
         </div>

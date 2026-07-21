@@ -4,9 +4,9 @@ interface WorkingMethodSectionProps {
 
 const DEFAULT_PRINCIPLES = [
   {
-    title: 'Problem Solving',
-    body: '문제를 기능 목록으로 보지 않고 서비스 구조로 분리합니다. 데이터 흐름과 역할 경계를 먼저 정의한 뒤 구현에 들어갑니다.',
-    example: 'ex. BandStage — 공연·아티스트·장소·티켓을 4계층으로 분리해 구조화하고, 지역·날짜·장르 기준 탐색 흐름까지 함께 설계했습니다.',
+    title: 'Interaction & Systems',
+    body: '사용자의 행동을 시스템 입력으로 정의하고, 인터랙션 흐름 전체를 설계합니다. UI 동작이 곧 데이터 탐색 구조가 되도록 연결합니다.',
+    example: 'ex. Personalized AI Assistant — 사용자의 응답 선택 행동을 학습 신호로 정의했습니다. Learning Mode의 후보 선택 UI가 곧 선호도 데이터 수집 구조가 되도록 설계하고, 이 인터랙션이 Normal Mode 자동 개인화로 이어지는 시스템 흐름 전체를 구성했습니다.\n\nex. Page of Artist — 3D 카드 인터페이스에서 이동, 포커싱, 선택 흐름을 설계해 인터랙션이 정보 탐색으로 이어지도록 구현했습니다.',
   },
   {
     title: 'AI Experience Design',
@@ -14,14 +14,14 @@ const DEFAULT_PRINCIPLES = [
     example: 'ex. MDE — 사용자의 자연어 기반 음악 아이디어를 MusicProfile이라는 구조화된 스키마로 변환하는 프롬프트를 설계했습니다. 생성된 구조체는 음악 방향, 사운드 구성, 비주얼 무드 생성 과정에서 공통 데이터 레이어로 재사용되도록 구성했습니다.',
   },
   {
+    title: 'Problem Solving',
+    body: '문제를 기능 목록으로 보지 않고 서비스 구조로 분리합니다. 데이터 흐름과 역할 경계를 먼저 정의한 뒤 구현에 들어갑니다.',
+    example: 'ex. BandStage — 공연, 아티스트, 장소, 티켓을 4계층으로 분리해 구조화하고, 지역, 날짜, 장르 기준 탐색 흐름까지 함께 설계했습니다.',
+  },
+  {
     title: 'Data & Experience',
     body: '데이터 처리 결과와 사용자 경험을 함께 설계합니다. 인식된 데이터가 어떤 피드백으로 이어져야 자연스러운지 실험하며 개선합니다.',
     example: 'ex. MUSE — 손동작 인식 결과를 사운드 제어 경험으로 연결하기 위해 화면 영역별 역할을 정의하고 실시간성과 안정성을 반복 개선했습니다.',
-  },
-  {
-    title: 'Interaction & Systems',
-    body: '사용자의 행동을 시스템 입력으로 정의하고, 인터랙션 흐름 전체를 설계합니다. UI 동작이 곧 데이터 탐색 구조가 되도록 연결합니다.',
-    example: 'ex. Page of Artist — 3D 카드 인터페이스에서 이동·포커싱·선택 흐름을 설계해 인터랙션이 정보 탐색으로 이어지도록 구현했습니다.',
   },
 ]
 
@@ -47,7 +47,7 @@ export function WorkingMethodSection({ workingMethod }: WorkingMethodSectionProp
             <p className="text-sm text-text-secondary leading-relaxed mb-3">
               {principle.body}
             </p>
-            <p className="text-xs text-text-disabled leading-relaxed">
+            <p className="text-xs text-text-disabled leading-relaxed whitespace-pre-line">
               {principle.example}
             </p>
           </div>

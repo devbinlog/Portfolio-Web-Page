@@ -38,7 +38,7 @@ export default async function DevLogPage() {
     <div className="min-h-dvh pt-24 pb-16 px-6 md:px-10 max-w-3xl mx-auto">
       <header className="mb-12">
         <h1 className="text-3xl font-bold text-text-primary mb-2">DevLog</h1>
-        <p className="text-text-secondary text-sm">개발 일지 · 학습 기록 · 회고</p>
+        <p className="text-text-secondary text-sm">개발 일지 / 학습 기록 / 회고</p>
       </header>
 
       {posts.length === 0 ? (
