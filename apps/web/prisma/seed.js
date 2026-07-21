@@ -1341,7 +1341,9 @@ resolveUserContext()로 인증 상태 전환을 처리했습니다. NextAuth 세
 
 Flow Designer로 도메인별 대화 플로우를 설계했습니다. 트리거 키워드를 정의하면 resolveFlow()가 사용자 메시지와 키워드를 매칭해 현재 단계를 결정하고, 해당 단계의 AI 지시사항이 buildSystemPrompt()의 [FLOW] 블록으로 주입됩니다. Persona System이 '어떤 어조로 말하는가'를 정의한다면, Flow Designer는 '어떤 상황에서 어떤 방식으로 접근하는가'를 정의합니다. 기술 지원 / 커리어 코칭 / 학습 멘토링 3가지 기본 플로우를 제공하고, 커스텀 플로우 생성과 실제 배포 전 시뮬레이션을 지원합니다.
 
-축적된 사용자 데이터를 AI 파인튜닝용 데이터셋으로 내보내는 파이프라인을 구현했습니다. 선호도 로그는 DPO(Direct Preference Optimization) 형식의 chosen/rejected 응답 쌍으로, 평가 데이터는 9차원 루브릭 점수로, 대화 기록은 system/user/assistant 역할 레이블이 붙은 SFT 포맷으로 변환됩니다. JSON / JSONL / CSV 세 가지 형식으로 내보낼 수 있으며, 이 시스템은 AI를 사용하는 것에서 멈추지 않고 사용 데이터를 다시 AI 학습에 활용하는 데이터 루프를 갖추고 있습니다.`,
+축적된 사용자 데이터를 AI 파인튜닝용 데이터셋으로 내보내는 파이프라인을 구현했습니다. 선호도 로그는 DPO(Direct Preference Optimization) 형식의 chosen/rejected 응답 쌍으로, 평가 데이터는 9차원 루브릭 점수로, 대화 기록은 system/user/assistant 역할 레이블이 붙은 SFT 포맷으로 변환됩니다. JSON / JSONL / CSV 세 가지 형식으로 내보낼 수 있으며, 이 시스템은 AI를 사용하는 것에서 멈추지 않고 사용 데이터를 다시 AI 학습에 활용하는 데이터 루프를 갖추고 있습니다.
+
+LangGraph Recommendation 노드를 실제 GPT-4o-mini에 연결했습니다. Python FastAPI + LangGraph 0.2 StateGraph로 구현하며, 첫 대화에서는 목표, 단계 컨텍스트 기반 현황 파악 질문을, 이후 대화에서는 직전 대화를 이어받아 다음 행동을 유도하는 질문을 생성합니다. /api/goals/{id}/recommend에서 FastAPI 백엔드를 우선 호출하고 실패 시 Next.js 서비스로 폴백하는 구조입니다.`,
       keyLearnings: `AX는 기능이 아니라 설계입니다. 스트리밍 속도, 후보 선택 인터페이스, XAI 투명성 모두가 사용자 경험의 일부입니다. AI 챗봇을 만드는 것과 AI 경험 시스템을 설계하는 것은 다릅니다.
 
 개인화는 정보 저장이 아니라 행동 변화입니다. "나는 개발자야"를 기억하는 것과 코드 예제 중심으로 응답 전략이 바뀌는 것은 다릅니다. 전략이 바뀌어야 진짜 개인화입니다.
@@ -1360,7 +1362,7 @@ Learning Mode: 동일한 입력에 3개 응답 후보를, 5가지 전략(STRUCTU
 Normal Mode: 합성된 선호도 프로파일 기반으로 응답이 자동 개인화됩니다.
 최종 점수 = 평가 점수(0~1) + 선호도 메모리 가중치(0~0.3)
 
-Execution Mode: 목표 입력 → Journey Planner(LLM)가 4~8단계 여정 자동 설계 → 각 대화에서 Progress Engine이 현재 단계 컨텍스트를 [EXECUTION] 블록으로 주입 → AI가 여정 맥락을 유지하며 코칭. 목표는 conv_executionGoal_{conversationId} 키로 대화 단위 격리 저장.
+Execution Mode: 목표 입력 → Journey Planner(LLM)가 4~8단계 여정 자동 설계 → 각 대화에서 Progress Engine이 현재 단계 컨텍스트를 [EXECUTION] 블록으로 주입 → AI가 여정 맥락을 유지하며 코칭. 목표는 conv_executionGoal_{conversationId} 키로 대화 단위 격리 저장. 대화 종료 후 LangGraph StateGraph에 연결된 GPT-4o-mini가 목표, 마일스톤, 현재 단계 컨텍스트를 읽고, 다음 행동을 유도하는 코칭 질문을 실시간 생성합니다.
 
 ---
 
@@ -1379,7 +1381,7 @@ resolveUserContext()                    [1] BASE      페르소나 지시사항
   → [비동기] XAI 생성 → DB
   → [비동기] detectSuggestions() → DB
 
-규모: API Routes 38개 이상 / DB 테이블 24개 / 대화 플로우 템플릿 3가지 / 데이터 내보내기 형식 3가지(DPO / 평가 / 대화) / LangGraph 노드 12개 / 구현 Phase 14단계`,
+규모: API Routes 38개 이상 / DB 테이블 24개 / 대화 플로우 템플릿 3가지 / 데이터 내보내기 형식 3가지(DPO / 평가 / 대화) / LangGraph 노드 12개 (Recommendation 노드 GPT-4o-mini 실제 연결) / 구현 Phase 14단계`,
       techStack: ["Next.js 15", "TypeScript", "Vercel AI SDK", "LangGraph", "FastAPI", "Python", "PostgreSQL", "Prisma", "Zustand", "Tailwind CSS"],
       codeSnippets: [
         {
@@ -1476,7 +1478,9 @@ resolveUserContext()로 인증 상태 전환을 처리했습니다. NextAuth 세
 
 Flow Designer로 도메인별 대화 플로우를 설계했습니다. 트리거 키워드를 정의하면 resolveFlow()가 사용자 메시지와 키워드를 매칭해 현재 단계를 결정하고, 해당 단계의 AI 지시사항이 buildSystemPrompt()의 [FLOW] 블록으로 주입됩니다. Persona System이 '어떤 어조로 말하는가'를 정의한다면, Flow Designer는 '어떤 상황에서 어떤 방식으로 접근하는가'를 정의합니다. 기술 지원 / 커리어 코칭 / 학습 멘토링 3가지 기본 플로우를 제공하고, 커스텀 플로우 생성과 실제 배포 전 시뮬레이션을 지원합니다.
 
-축적된 사용자 데이터를 AI 파인튜닝용 데이터셋으로 내보내는 파이프라인을 구현했습니다. 선호도 로그는 DPO(Direct Preference Optimization) 형식의 chosen/rejected 응답 쌍으로, 평가 데이터는 9차원 루브릭 점수로, 대화 기록은 system/user/assistant 역할 레이블이 붙은 SFT 포맷으로 변환됩니다. JSON / JSONL / CSV 세 가지 형식으로 내보낼 수 있으며, 이 시스템은 AI를 사용하는 것에서 멈추지 않고 사용 데이터를 다시 AI 학습에 활용하는 데이터 루프를 갖추고 있습니다.`,
+축적된 사용자 데이터를 AI 파인튜닝용 데이터셋으로 내보내는 파이프라인을 구현했습니다. 선호도 로그는 DPO(Direct Preference Optimization) 형식의 chosen/rejected 응답 쌍으로, 평가 데이터는 9차원 루브릭 점수로, 대화 기록은 system/user/assistant 역할 레이블이 붙은 SFT 포맷으로 변환됩니다. JSON / JSONL / CSV 세 가지 형식으로 내보낼 수 있으며, 이 시스템은 AI를 사용하는 것에서 멈추지 않고 사용 데이터를 다시 AI 학습에 활용하는 데이터 루프를 갖추고 있습니다.
+
+LangGraph Recommendation 노드를 실제 GPT-4o-mini에 연결했습니다. Python FastAPI + LangGraph 0.2 StateGraph로 구현하며, 첫 대화에서는 목표, 단계 컨텍스트 기반 현황 파악 질문을, 이후 대화에서는 직전 대화를 이어받아 다음 행동을 유도하는 질문을 생성합니다. /api/goals/{id}/recommend에서 FastAPI 백엔드를 우선 호출하고 실패 시 Next.js 서비스로 폴백하는 구조입니다.`,
       keyLearnings: `AX는 기능이 아니라 설계입니다. 스트리밍 속도, 후보 선택 인터페이스, XAI 투명성 모두가 사용자 경험의 일부입니다. AI 챗봇을 만드는 것과 AI 경험 시스템을 설계하는 것은 다릅니다.
 
 개인화는 정보 저장이 아니라 행동 변화입니다. "나는 개발자야"를 기억하는 것과 코드 예제 중심으로 응답 전략이 바뀌는 것은 다릅니다. 전략이 바뀌어야 진짜 개인화입니다.
@@ -1495,7 +1499,7 @@ Learning Mode: 동일한 입력에 3개 응답 후보를, 5가지 전략(STRUCTU
 Normal Mode: 합성된 선호도 프로파일 기반으로 응답이 자동 개인화됩니다.
 최종 점수 = 평가 점수(0~1) + 선호도 메모리 가중치(0~0.3)
 
-Execution Mode: 목표 입력 → Journey Planner(LLM)가 4~8단계 여정 자동 설계 → 각 대화에서 Progress Engine이 현재 단계 컨텍스트를 [EXECUTION] 블록으로 주입 → AI가 여정 맥락을 유지하며 코칭. 목표는 conv_executionGoal_{conversationId} 키로 대화 단위 격리 저장.
+Execution Mode: 목표 입력 → Journey Planner(LLM)가 4~8단계 여정 자동 설계 → 각 대화에서 Progress Engine이 현재 단계 컨텍스트를 [EXECUTION] 블록으로 주입 → AI가 여정 맥락을 유지하며 코칭. 목표는 conv_executionGoal_{conversationId} 키로 대화 단위 격리 저장. 대화 종료 후 LangGraph StateGraph에 연결된 GPT-4o-mini가 목표, 마일스톤, 현재 단계 컨텍스트를 읽고, 다음 행동을 유도하는 코칭 질문을 실시간 생성합니다.
 
 ---
 
@@ -1514,7 +1518,7 @@ resolveUserContext()                    [1] BASE      페르소나 지시사항
   → [비동기] XAI 생성 → DB
   → [비동기] detectSuggestions() → DB
 
-규모: API Routes 38개 이상 / DB 테이블 24개 / 대화 플로우 템플릿 3가지 / 데이터 내보내기 형식 3가지(DPO / 평가 / 대화) / LangGraph 노드 12개 / 구현 Phase 14단계`,
+규모: API Routes 38개 이상 / DB 테이블 24개 / 대화 플로우 템플릿 3가지 / 데이터 내보내기 형식 3가지(DPO / 평가 / 대화) / LangGraph 노드 12개 (Recommendation 노드 GPT-4o-mini 실제 연결) / 구현 Phase 14단계`,
       techStack: ["Next.js 15", "TypeScript", "Vercel AI SDK", "LangGraph", "FastAPI", "Python", "PostgreSQL", "Prisma", "Zustand", "Tailwind CSS"],
       codeSnippets: [
         {
