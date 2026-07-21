@@ -1316,8 +1316,8 @@ private playSnare(t: number, vel: number): void {
     where: { slug: "personalized-ai-assistant" },
     update: {
       title: "Personalized AI Assistant",
-      summary: `사용자의 응답 선택 행동을 학습 신호로 변환해 응답 전략을 지속적으로 개인화하는 AX(AI Experience) 시스템.
-Learning Mode → 선호도 메모리 합성 → Normal Mode 자동 적용 구조로, AI가 사용자를 스스로 학습합니다.`,
+      summary: `응답을 3개 생성하고, 선택하면, AI가 학습합니다.
+선택 행동 자체가 개인화 데이터가 되어, 사용할수록 나를 닮아가는 AI 어시스턴트.`,
       description: `매번 "코드로 보여줘", "너무 길어", "단계별로 설명해줘"를 반복해야 했습니다. GPT-4를 반년 넘게 사용했지만, AI는 매번 처음 쓰는 것처럼 동일한 방식으로 응답했습니다. 개발 질문에는 코드 예제 중심, 기획 논의에는 간결한 요점 — 이 선호도를 AI는 학습하지 않았습니다.
 
 기존 AI 어시스턴트와의 차이는 여기에 있습니다. 기존 시스템은 정보를 저장합니다("이 사람은 개발자야"). 이 시스템은 행동이 바뀝니다(코드 예제 중심으로 응답 전략 변경). 정보를 기억하는 것과 행동이 변하는 것은 다릅니다.
@@ -1451,8 +1451,8 @@ export async function POST(req: Request) {
     create: {
       title: "Personalized AI Assistant",
       slug: "personalized-ai-assistant",
-      summary: `사용자의 응답 선택 행동을 학습 신호로 변환해 응답 전략을 지속적으로 개인화하는 AX(AI Experience) 시스템.
-Learning Mode → 선호도 메모리 합성 → Normal Mode 자동 적용 구조로, AI가 사용자를 스스로 학습합니다.`,
+      summary: `응답을 3개 생성하고, 선택하면, AI가 학습합니다.
+선택 행동 자체가 개인화 데이터가 되어, 사용할수록 나를 닮아가는 AI 어시스턴트.`,
       description: `매번 "코드로 보여줘", "너무 길어", "단계별로 설명해줘"를 반복해야 했습니다. GPT-4를 반년 넘게 사용했지만, AI는 매번 처음 쓰는 것처럼 동일한 방식으로 응답했습니다. 개발 질문에는 코드 예제 중심, 기획 논의에는 간결한 요점 — 이 선호도를 AI는 학습하지 않았습니다.
 
 기존 AI 어시스턴트와의 차이는 여기에 있습니다. 기존 시스템은 정보를 저장합니다("이 사람은 개발자야"). 이 시스템은 행동이 바뀝니다(코드 예제 중심으로 응답 전략 변경). 정보를 기억하는 것과 행동이 변하는 것은 다릅니다.
