@@ -1337,7 +1337,11 @@ Evaluation Engine을 18차원에서 9차원으로 줄이는 설계 결정을 내
 
 Execution Mode의 목표 격리 구조를 설계했습니다. Zustand 전역 상태로만 관리했을 때 A 채팅방 목표가 B 채팅방에도 주입되는 문제를 발견하고, conv_executionGoal_{conversationId} 키로 localStorage에 대화 단위 격리 저장하는 방식으로 해결했습니다.
 
-resolveUserContext()로 인증 상태 전환을 처리했습니다. NextAuth 세션 → 쿠키 세션 ID → anonymous 폴백의 3단계로, 로그인 상태가 바뀌어도 동일한 사용자로 선호도 데이터가 유지됩니다.`,
+resolveUserContext()로 인증 상태 전환을 처리했습니다. NextAuth 세션 → 쿠키 세션 ID → anonymous 폴백의 3단계로, 로그인 상태가 바뀌어도 동일한 사용자로 선호도 데이터가 유지됩니다.
+
+Flow Designer로 도메인별 대화 플로우를 설계했습니다. 트리거 키워드를 정의하면 resolveFlow()가 사용자 메시지와 키워드를 매칭해 현재 단계를 결정하고, 해당 단계의 AI 지시사항이 buildSystemPrompt()의 [FLOW] 블록으로 주입됩니다. Persona System이 '어떤 어조로 말하는가'를 정의한다면, Flow Designer는 '어떤 상황에서 어떤 방식으로 접근하는가'를 정의합니다. 기술 지원 / 커리어 코칭 / 학습 멘토링 3가지 기본 플로우를 제공하고, 커스텀 플로우 생성과 실제 배포 전 시뮬레이션을 지원합니다.
+
+축적된 사용자 데이터를 AI 파인튜닝용 데이터셋으로 내보내는 파이프라인을 구현했습니다. 선호도 로그는 DPO(Direct Preference Optimization) 형식의 chosen/rejected 응답 쌍으로, 평가 데이터는 9차원 루브릭 점수로, 대화 기록은 system/user/assistant 역할 레이블이 붙은 SFT 포맷으로 변환됩니다. JSON / JSONL / CSV 세 가지 형식으로 내보낼 수 있으며, 이 시스템은 AI를 사용하는 것에서 멈추지 않고 사용 데이터를 다시 AI 학습에 활용하는 데이터 루프를 갖추고 있습니다.`,
       keyLearnings: `AX는 기능이 아니라 설계입니다. 스트리밍 속도, 후보 선택 인터페이스, XAI 투명성 모두가 사용자 경험의 일부입니다. AI 챗봇을 만드는 것과 AI 경험 시스템을 설계하는 것은 다릅니다.
 
 개인화는 정보 저장이 아니라 행동 변화입니다. "나는 개발자야"를 기억하는 것과 코드 예제 중심으로 응답 전략이 바뀌는 것은 다릅니다. 전략이 바뀌어야 진짜 개인화입니다.
@@ -1346,10 +1350,12 @@ resolveUserContext()로 인증 상태 전환을 처리했습니다. NextAuth 세
 
 비동기 사이드이펙트 설계가 UX를 결정합니다. 어떤 작업을 응답 경로에 넣고 어떤 작업을 비동기로 분리할지가 사용자 체감 응답 속도를 결정합니다. 스트리밍 완료 후 XAI 생성과 적응형 제안 탐지를 분리한 것이 이 판단에서 나왔습니다.
 
-목표 기반 AI 설계는 단발성 QA 설계와 근본적으로 다릅니다. 대화와 대화를 이어주는 구조가 코칭과 QA의 차이입니다.`,
+목표 기반 AI 설계는 단발성 QA 설계와 근본적으로 다릅니다. 대화와 대화를 이어주는 구조가 코칭과 QA의 차이입니다.
+
+사용 데이터가 다시 학습 데이터가 됩니다. 선호도 로그 → DPO 데이터셋, 평가 결과 → 루브릭 학습 데이터로 내보내는 구조를 설계하면서, 사용자 경험이 끝나는 지점이 모델 개선의 시작점이 될 수 있다는 것을 배웠습니다.`,
       workingApproach: `사용자의 선택 행동 자체를 학습 신호로 변환합니다. 직접 묻지 않고, 인터페이스가 데이터 수집 채널이 됩니다.
 
-Learning Mode: 동일한 입력에 3개 응답 후보를 5가지 전략(STRUCTURED / CONCISE / PROFESSIONAL / ANALYTICAL / CONVERSATIONAL)으로 병렬 생성합니다. 사용자 선택 → /api/preferences가 선호도 로그 저장 → 로그 5개 이상이면 LLM이 전체 로그를 분석해 사용자 프로파일 합성 → 다음 대화 시스템 프롬프트 [MEMORY] 블록에 자동 주입.
+Learning Mode: 동일한 입력에 3개 응답 후보를, 5가지 전략(STRUCTURED / CONCISE / PROFESSIONAL / ANALYTICAL / CONVERSATIONAL) 중 질문 유형과 사용자 선호도에 맞는 3가지를 선택해 Promise.all 병렬 생성합니다. 사용자 선택 → /api/preferences가 선호도 로그 저장 → 로그 5개 이상이면 LLM이 전체 로그를 분석해 사용자 프로파일 합성 → 다음 대화 시스템 프롬프트 [MEMORY] 블록에 자동 주입.
 
 Normal Mode: 합성된 선호도 프로파일 기반으로 응답이 자동 개인화됩니다.
 최종 점수 = 평가 점수(0~1) + 선호도 메모리 가중치(0~0.3)
@@ -1364,7 +1370,8 @@ resolveUserContext()                    [1] BASE      페르소나 지시사항
   → loadPreferenceMemory()             [2] MEMORY    학습된 선호도 요약
   → Task Analyzer (13가지 유형)        [3] TASK      태스크 유형 + 복잡도
   → Persona Selector (5가지)           [4] FLOW      활성 플로우 + 단계 지시
-  → Candidate Generator (×5, 병렬)    [5] EXECUTION 실행 목표 + 진행 단계
+  → resolveFlow() — 활성 플로우 + 단계 매칭
+  → Candidate Generator (×3, 병렬)    [5] EXECUTION 실행 목표 + 진행 단계
   → Evaluation Engine (9차원, 0~1)    [6] SEARCH    웹 검색 결과
   → Ranker                             [7] ONBOARDING 스타일 + 포맷 규칙
   → buildSystemPrompt() [8-layer]     [8] STRATEGY  응답 전략 힌트
@@ -1372,7 +1379,7 @@ resolveUserContext()                    [1] BASE      페르소나 지시사항
   → [비동기] XAI 생성 → DB
   → [비동기] detectSuggestions() → DB
 
-규모: API Routes 38개 이상 / DB 테이블 24개 / LangGraph 노드 12개 / 구현 Phase 14단계`,
+규모: API Routes 38개 이상 / DB 테이블 24개 / 대화 플로우 템플릿 3가지 / 데이터 내보내기 형식 3가지(DPO / 평가 / 대화) / LangGraph 노드 12개 / 구현 Phase 14단계`,
       techStack: ["Next.js 15", "TypeScript", "Vercel AI SDK", "LangGraph", "FastAPI", "Python", "PostgreSQL", "Prisma", "Zustand", "Tailwind CSS"],
       codeSnippets: [
         {
@@ -1465,7 +1472,11 @@ Evaluation Engine을 18차원에서 9차원으로 줄이는 설계 결정을 내
 
 Execution Mode의 목표 격리 구조를 설계했습니다. Zustand 전역 상태로만 관리했을 때 A 채팅방 목표가 B 채팅방에도 주입되는 문제를 발견하고, conv_executionGoal_{conversationId} 키로 localStorage에 대화 단위 격리 저장하는 방식으로 해결했습니다.
 
-resolveUserContext()로 인증 상태 전환을 처리했습니다. NextAuth 세션 → 쿠키 세션 ID → anonymous 폴백의 3단계로, 로그인 상태가 바뀌어도 동일한 사용자로 선호도 데이터가 유지됩니다.`,
+resolveUserContext()로 인증 상태 전환을 처리했습니다. NextAuth 세션 → 쿠키 세션 ID → anonymous 폴백의 3단계로, 로그인 상태가 바뀌어도 동일한 사용자로 선호도 데이터가 유지됩니다.
+
+Flow Designer로 도메인별 대화 플로우를 설계했습니다. 트리거 키워드를 정의하면 resolveFlow()가 사용자 메시지와 키워드를 매칭해 현재 단계를 결정하고, 해당 단계의 AI 지시사항이 buildSystemPrompt()의 [FLOW] 블록으로 주입됩니다. Persona System이 '어떤 어조로 말하는가'를 정의한다면, Flow Designer는 '어떤 상황에서 어떤 방식으로 접근하는가'를 정의합니다. 기술 지원 / 커리어 코칭 / 학습 멘토링 3가지 기본 플로우를 제공하고, 커스텀 플로우 생성과 실제 배포 전 시뮬레이션을 지원합니다.
+
+축적된 사용자 데이터를 AI 파인튜닝용 데이터셋으로 내보내는 파이프라인을 구현했습니다. 선호도 로그는 DPO(Direct Preference Optimization) 형식의 chosen/rejected 응답 쌍으로, 평가 데이터는 9차원 루브릭 점수로, 대화 기록은 system/user/assistant 역할 레이블이 붙은 SFT 포맷으로 변환됩니다. JSON / JSONL / CSV 세 가지 형식으로 내보낼 수 있으며, 이 시스템은 AI를 사용하는 것에서 멈추지 않고 사용 데이터를 다시 AI 학습에 활용하는 데이터 루프를 갖추고 있습니다.`,
       keyLearnings: `AX는 기능이 아니라 설계입니다. 스트리밍 속도, 후보 선택 인터페이스, XAI 투명성 모두가 사용자 경험의 일부입니다. AI 챗봇을 만드는 것과 AI 경험 시스템을 설계하는 것은 다릅니다.
 
 개인화는 정보 저장이 아니라 행동 변화입니다. "나는 개발자야"를 기억하는 것과 코드 예제 중심으로 응답 전략이 바뀌는 것은 다릅니다. 전략이 바뀌어야 진짜 개인화입니다.
@@ -1474,10 +1485,12 @@ resolveUserContext()로 인증 상태 전환을 처리했습니다. NextAuth 세
 
 비동기 사이드이펙트 설계가 UX를 결정합니다. 어떤 작업을 응답 경로에 넣고 어떤 작업을 비동기로 분리할지가 사용자 체감 응답 속도를 결정합니다. 스트리밍 완료 후 XAI 생성과 적응형 제안 탐지를 분리한 것이 이 판단에서 나왔습니다.
 
-목표 기반 AI 설계는 단발성 QA 설계와 근본적으로 다릅니다. 대화와 대화를 이어주는 구조가 코칭과 QA의 차이입니다.`,
+목표 기반 AI 설계는 단발성 QA 설계와 근본적으로 다릅니다. 대화와 대화를 이어주는 구조가 코칭과 QA의 차이입니다.
+
+사용 데이터가 다시 학습 데이터가 됩니다. 선호도 로그 → DPO 데이터셋, 평가 결과 → 루브릭 학습 데이터로 내보내는 구조를 설계하면서, 사용자 경험이 끝나는 지점이 모델 개선의 시작점이 될 수 있다는 것을 배웠습니다.`,
       workingApproach: `사용자의 선택 행동 자체를 학습 신호로 변환합니다. 직접 묻지 않고, 인터페이스가 데이터 수집 채널이 됩니다.
 
-Learning Mode: 동일한 입력에 3개 응답 후보를 5가지 전략(STRUCTURED / CONCISE / PROFESSIONAL / ANALYTICAL / CONVERSATIONAL)으로 병렬 생성합니다. 사용자 선택 → /api/preferences가 선호도 로그 저장 → 로그 5개 이상이면 LLM이 전체 로그를 분석해 사용자 프로파일 합성 → 다음 대화 시스템 프롬프트 [MEMORY] 블록에 자동 주입.
+Learning Mode: 동일한 입력에 3개 응답 후보를, 5가지 전략(STRUCTURED / CONCISE / PROFESSIONAL / ANALYTICAL / CONVERSATIONAL) 중 질문 유형과 사용자 선호도에 맞는 3가지를 선택해 Promise.all 병렬 생성합니다. 사용자 선택 → /api/preferences가 선호도 로그 저장 → 로그 5개 이상이면 LLM이 전체 로그를 분석해 사용자 프로파일 합성 → 다음 대화 시스템 프롬프트 [MEMORY] 블록에 자동 주입.
 
 Normal Mode: 합성된 선호도 프로파일 기반으로 응답이 자동 개인화됩니다.
 최종 점수 = 평가 점수(0~1) + 선호도 메모리 가중치(0~0.3)
@@ -1492,7 +1505,8 @@ resolveUserContext()                    [1] BASE      페르소나 지시사항
   → loadPreferenceMemory()             [2] MEMORY    학습된 선호도 요약
   → Task Analyzer (13가지 유형)        [3] TASK      태스크 유형 + 복잡도
   → Persona Selector (5가지)           [4] FLOW      활성 플로우 + 단계 지시
-  → Candidate Generator (×5, 병렬)    [5] EXECUTION 실행 목표 + 진행 단계
+  → resolveFlow() — 활성 플로우 + 단계 매칭
+  → Candidate Generator (×3, 병렬)    [5] EXECUTION 실행 목표 + 진행 단계
   → Evaluation Engine (9차원, 0~1)    [6] SEARCH    웹 검색 결과
   → Ranker                             [7] ONBOARDING 스타일 + 포맷 규칙
   → buildSystemPrompt() [8-layer]     [8] STRATEGY  응답 전략 힌트
@@ -1500,7 +1514,7 @@ resolveUserContext()                    [1] BASE      페르소나 지시사항
   → [비동기] XAI 생성 → DB
   → [비동기] detectSuggestions() → DB
 
-규모: API Routes 38개 이상 / DB 테이블 24개 / LangGraph 노드 12개 / 구현 Phase 14단계`,
+규모: API Routes 38개 이상 / DB 테이블 24개 / 대화 플로우 템플릿 3가지 / 데이터 내보내기 형식 3가지(DPO / 평가 / 대화) / LangGraph 노드 12개 / 구현 Phase 14단계`,
       techStack: ["Next.js 15", "TypeScript", "Vercel AI SDK", "LangGraph", "FastAPI", "Python", "PostgreSQL", "Prisma", "Zustand", "Tailwind CSS"],
       codeSnippets: [
         {
