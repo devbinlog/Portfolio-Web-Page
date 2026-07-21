@@ -80,12 +80,14 @@ export function ProjectDetailContent({ project }: ProjectDetailContentProps) {
 
       {/* 히어로 이미지 */}
       {project.heroImageUrl && (
-        <div className="aspect-video rounded-lg bg-surface-input overflow-hidden mb-16">
-          <img
-            src={project.heroImageUrl}
-            alt={project.title}
-            className="w-full h-full object-cover"
-          />
+        <div className="max-w-2xl mx-auto mb-16">
+          <div className="aspect-video rounded-lg bg-surface-input overflow-hidden">
+            <img
+              src={project.heroImageUrl}
+              alt={project.title}
+              className="w-full h-full object-contain"
+            />
+          </div>
         </div>
       )}
 

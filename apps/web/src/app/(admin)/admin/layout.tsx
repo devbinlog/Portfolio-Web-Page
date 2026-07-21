@@ -7,6 +7,7 @@ import { useAdminAuthStore } from '@/stores/adminAuthStore'
 const NAV_ITEMS = [
   { href: '/admin', label: '대시보드' },
   { href: '/admin/projects', label: '프로젝트' },
+  { href: '/admin/blog', label: 'DevLog' },
   { href: '/admin/contacts', label: '연락 메시지' },
   { href: '/admin/profile', label: '프로필' },
 ]

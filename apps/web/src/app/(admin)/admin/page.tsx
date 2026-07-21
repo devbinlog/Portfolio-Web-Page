@@ -3,6 +3,12 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { adminApi, type DashboardStats } from '@/lib/api/admin'
+import { useAdminAuthStore } from '@/stores/adminAuthStore'
+
+interface ViewStats {
+  totalAllTime: number
+  todayTotal: number
+}
 
 function StatCard({
   label,
@@ -35,14 +41,23 @@ function StatCard({
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [viewStats, setViewStats] = useState<ViewStats | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const { accessToken: token } = useAdminAuthStore()
 
   useEffect(() => {
     adminApi
       .stats()
       .then(setStats)
       .catch((e: Error) => setError(e.message))
-  }, [])
+
+    fetch('/api/v1/admin/views', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((json) => setViewStats(json.data))
+      .catch(() => {})
+  }, [token])
 
   return (
     <div>
@@ -57,6 +72,17 @@ export default function AdminDashboardPage() {
         <StatCard label="게시된 프로젝트" value={stats?.published} />
         <StatCard label="피처드 프로젝트" value={stats?.featured} />
         <StatCard label="읽지 않은 메시지" value={stats?.unreadMessages} href="/admin/contacts" />
+      </div>
+
+      {/* 방문자 통계 */}
+      <div className="mt-8">
+        <h2 className="text-sm font-medium text-text-secondary uppercase tracking-wider mb-4 font-mono">
+          방문자 통계
+        </h2>
+        <div className="grid grid-cols-2 gap-4">
+          <StatCard label="누적 총 방문수" value={viewStats?.totalAllTime} />
+          <StatCard label="오늘 방문수" value={viewStats?.todayTotal} />
+        </div>
       </div>
 
       <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2">
