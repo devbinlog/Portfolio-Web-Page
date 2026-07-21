@@ -1593,7 +1593,7 @@ export async function POST(req: Request) {
   await prisma.projectLink.createMany({
     data: [
       { projectId: personalizedAI.id, type: "GITHUB", label: "GitHub", url: "https://github.com/devbinlog/Personalized_AI_Assistant", order: 1 },
-      { projectId: personalizedAI.id, type: "DEMO", label: "Live Demo", url: "https://frontend-mu-liard-59.vercel.app", order: 2 },
+      { projectId: personalizedAI.id, type: "DEMO", label: "Live Demo", url: "https://personalized-ai-assistant-devbinlogs-projects.vercel.app/", order: 2 },
     ],
   });
 
